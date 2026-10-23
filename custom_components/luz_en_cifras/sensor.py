@@ -1,0 +1,226 @@
+"""Sensor entities for Luz en Cifras contracts."""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
+from decimal import Decimal
+from typing import Any
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CURRENCY_EURO, EntityCategory, UnitOfEnergy, UnitOfTime
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import CONF_CONTRACT_ID, CONF_CONTRACT_NAME, CONF_SHOW_SECONDARY, DOMAIN
+from .coordinator import CoordinatorData, LuzEnCifrasCoordinator
+from .domain import DataQuality, InvoiceResult
+
+
+@dataclass(frozen=True, kw_only=True)
+class LuzSensorDescription(SensorEntityDescription):
+    """Describe how a contract result maps to a sensor."""
+
+    value_fn: Callable[[InvoiceResult], Decimal | int | str]
+    primary: bool = False
+
+
+SENSORS: tuple[LuzSensorDescription, ...] = (
+    LuzSensorDescription(
+        key="estimated_total",
+        translation_key="estimated_total",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement=CURRENCY_EURO,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        value_fn=lambda result: result.total,
+        primary=True,
+    ),
+    LuzSensorDescription(
+        key="energy_cost",
+        translation_key="energy_cost",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement=CURRENCY_EURO,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        value_fn=lambda result: result.amount_for("energy"),
+    ),
+    LuzSensorDescription(
+        key="power_cost",
+        translation_key="power_cost",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement=CURRENCY_EURO,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        value_fn=lambda result: result.amount_for("power"),
+    ),
+    LuzSensorDescription(
+        key="electricity_tax",
+        translation_key="electricity_tax",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement=CURRENCY_EURO,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        value_fn=lambda result: result.amount_for("electricity_tax"),
+    ),
+    LuzSensorDescription(
+        key="vat",
+        translation_key="vat",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement=CURRENCY_EURO,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        value_fn=lambda result: result.amount_for("vat"),
+    ),
+    LuzSensorDescription(
+        key="other_charges",
+        translation_key="other_charges",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement=CURRENCY_EURO,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        value_fn=lambda result: result.amount_for("fixed"),
+    ),
+    LuzSensorDescription(
+        key="discounts",
+        translation_key="discounts",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement=CURRENCY_EURO,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        value_fn=lambda result: result.amount_for("discount"),
+    ),
+    LuzSensorDescription(
+        key="period_energy",
+        translation_key="period_energy",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=3,
+        value_fn=lambda result: result.total_kwh,
+    ),
+    LuzSensorDescription(
+        key="billing_days",
+        translation_key="billing_days",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.DAYS,
+        value_fn=lambda result: result.period.days,
+    ),
+    LuzSensorDescription(
+        key="effective_price",
+        translation_key="effective_price",
+        native_unit_of_measurement="€/kWh",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=4,
+        value_fn=lambda result: (
+            result.total / result.total_kwh if result.total_kwh else Decimal("0")
+        ),
+    ),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Create stable entities for one logical contract device."""
+    coordinator: LuzEnCifrasCoordinator = entry.runtime_data
+    show_secondary = coordinator.config.get(CONF_SHOW_SECONDARY, True)
+    descriptions = [description for description in SENSORS if show_secondary or description.primary]
+    entities: list[SensorEntity] = [
+        LuzContractSensor(coordinator, description) for description in descriptions
+    ]
+    entities.append(LuzQualitySensor(coordinator))
+    async_add_entities(entities)
+
+
+class LuzBaseSensor(CoordinatorEntity[LuzEnCifrasCoordinator], SensorEntity):
+    """Common stable identity and device mapping."""
+
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: LuzEnCifrasCoordinator, key: str) -> None:
+        super().__init__(coordinator)
+        contract_id = coordinator.config[CONF_CONTRACT_ID]
+        self._attr_unique_id = f"{contract_id}_{key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, contract_id)},
+            name=coordinator.config[CONF_CONTRACT_NAME],
+            manufacturer="Luz en Cifras",
+            model="Contrato eléctrico estimado",
+        )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        data: CoordinatorData = self.coordinator.data
+        attributes: dict[str, Any] = {
+            "estimate": True,
+            "data_quality": self._quality,
+        }
+        if data.error:
+            attributes["error"] = data.error
+        if data.collection_warnings:
+            attributes["warnings"] = list(data.collection_warnings)
+        if data.result:
+            attributes.update(
+                {
+                    "period_start": data.result.period.start.isoformat(),
+                    "period_end_exclusive": data.result.period.end.isoformat(),
+                    "tax_point": data.result.tax_point.isoformat(),
+                    "fiscal_rule_id": data.result.fiscal_rule_id,
+                }
+            )
+        return attributes
+
+    @property
+    def _quality(self) -> str:
+        data: CoordinatorData = self.coordinator.data
+        if data.result is None:
+            return "error"
+        if data.collection_warnings or data.result.quality == DataQuality.PARTIAL:
+            return "partial"
+        return "complete"
+
+
+class LuzContractSensor(LuzBaseSensor):
+    """A numeric value from the latest invoice estimate."""
+
+    entity_description: LuzSensorDescription
+
+    def __init__(
+        self, coordinator: LuzEnCifrasCoordinator, description: LuzSensorDescription
+    ) -> None:
+        super().__init__(coordinator, description.key)
+        self.entity_description = description
+
+    @property
+    def available(self) -> bool:
+        return self.coordinator.data.result is not None
+
+    @property
+    def native_value(self) -> Decimal | int | str | None:
+        result = self.coordinator.data.result
+        return self.entity_description.value_fn(result) if result else None
+
+
+class LuzQualitySensor(LuzBaseSensor):
+    """Diagnostic sensor that remains available when the estimate cannot be calculated."""
+
+    _attr_translation_key = "data_quality"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator: LuzEnCifrasCoordinator) -> None:
+        super().__init__(coordinator, "data_quality")
+
+    @property
+    def native_value(self) -> str:
+        return self._quality

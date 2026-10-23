@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "luz-en-cifras"
+version = "0.1.0"
+description = "Estimador auditable de facturas eléctricas españolas para Home Assistant"
+readme = "README.md"
+requires-python = ">=3.14.2"
+license = { text = "MIT" }
+authors = [{ name = "Carbanog" }]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3,<9",
+  "pytest-cov>=6,<7",
+  "ruff>=0.9,<1",
+  "mypy>=1.14,<2",
+]
+
+[tool.pytest.ini_options]
+addopts = "--strict-markers --strict-config"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+extend-exclude = [".tools", ".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+explicit_package_bases = true
+follow_imports = "skip"
+files = ["custom_components/luz_en_cifras/domain", "tests"]

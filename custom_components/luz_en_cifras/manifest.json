@@ -1,0 +1,12 @@
+{
+  "domain": "luz_en_cifras",
+  "name": "Luz en Cifras",
+  "codeowners": ["@Carbanog"],
+  "config_flow": true,
+  "documentation": "https://github.com/Carbanog/luz-en-cifras",
+  "integration_type": "service",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/Carbanog/luz-en-cifras/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}

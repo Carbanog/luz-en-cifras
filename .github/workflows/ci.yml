@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.14"
+          cache: pip
+
+      - name: Install development tools
+        run: python -m pip install --disable-pip-version-check --upgrade ".[dev]"
+
+      - name: Check formatting
+        run: ruff format --check .
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Type check calculation domain
+        run: mypy
+
+      - name: Run tests
+        run: pytest
+
+      - name: Validate JSON
+        run: python -m json.tool custom_components/luz_en_cifras/manifest.json >/dev/null && python -m json.tool custom_components/luz_en_cifras/strings.json >/dev/null && python -m json.tool custom_components/luz_en_cifras/translations/es.json >/dev/null && python -m json.tool hacs.json >/dev/null

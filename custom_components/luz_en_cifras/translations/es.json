@@ -1,0 +1,85 @@
+{
+  "title": "Luz en Cifras",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Crear contrato eléctrico",
+        "description": "Configura el periodo y los términos de potencia. Los importes son estimaciones.",
+        "data": {
+          "contract_name": "Nombre del contrato",
+          "billing_day": "Día de inicio del periodo",
+          "power_p1_kw": "Potencia P1 (kW)",
+          "power_p1_eur_per_kw_day": "Precio P1 (€/kW/día)",
+          "power_p2_kw": "Potencia P2 (kW)",
+          "power_p2_eur_per_kw_day": "Precio P2 (€/kW/día)",
+          "meter_rental_daily": "Alquiler de contador (€/día)"
+        }
+      },
+      "group": {
+        "title": "Añadir grupo de consumo",
+        "description": "Suma contadores independientes y resta solo subcontadores incluidos en los principales. Entidades incompatibles: {invalid_entities}",
+        "data": {
+          "group_name": "Nombre del grupo",
+          "add_sources": "Contadores que se suman",
+          "subtract_sources": "Subcontadores que se restan",
+          "eur_per_kwh": "Precio de energía (€/kWh)"
+        }
+      },
+      "group_menu": {
+        "title": "Grupos del contrato",
+        "description": "Añade otro grupo con precio propio o termina la configuración.",
+        "menu_options": {
+          "add_group": "Añadir otro grupo",
+          "finish": "Guardar contrato"
+        }
+      }
+    },
+    "error": {
+      "source_overlap": "Una entidad no puede sumarse y restarse dentro del mismo grupo.",
+      "invalid_units": "Todos los sensores deben medir energía acumulada en Wh o kWh."
+    },
+    "abort": {
+      "already_configured": "Este contrato ya está configurado.",
+      "duplicate_sources": "Estas entidades se facturarían más de una vez: {entities}"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Editar precios del contrato",
+        "description": "Los campos price_… corresponden a los grupos existentes. La edición de su topología llegará en una fase posterior.",
+        "data": {
+          "billing_day": "Día de inicio del periodo",
+          "power_p1_kw": "Potencia P1 (kW)",
+          "power_p1_eur_per_kw_day": "Precio P1 (€/kW/día)",
+          "power_p2_kw": "Potencia P2 (kW)",
+          "power_p2_eur_per_kw_day": "Precio P2 (€/kW/día)",
+          "meter_rental_daily": "Alquiler de contador (€/día)",
+          "show_secondary_entities": "Crear entidades de desglose"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "estimated_total": { "name": "Factura actual estimada" },
+      "energy_cost": { "name": "Coste de energía" },
+      "power_cost": { "name": "Coste de potencia" },
+      "electricity_tax": { "name": "Impuesto eléctrico" },
+      "vat": { "name": "IVA" },
+      "other_charges": { "name": "Otros cargos" },
+      "discounts": { "name": "Descuentos" },
+      "period_energy": { "name": "Energía del periodo" },
+      "billing_days": { "name": "Días del periodo" },
+      "effective_price": { "name": "Precio medio efectivo" },
+      "data_quality": {
+        "name": "Calidad de los datos",
+        "state": {
+          "complete": "Completa",
+          "partial": "Parcial",
+          "error": "Error"
+        }
+      }
+    }
+  }
+}
