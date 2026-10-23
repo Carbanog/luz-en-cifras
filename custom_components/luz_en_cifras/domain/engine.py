@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from datetime import UTC
 from decimal import ROUND_HALF_UP, Decimal, localcontext
 
 from .errors import ConfigurationError, IncompleteDataError
@@ -184,14 +185,14 @@ class BillingEngine:
     def _find_rate(
         rates: tuple[EnergyRate, ...], group_id: str, sample: EnergySample
     ) -> EnergyRate:
-        timestamp = sample.timestamp
+        timestamp = sample.timestamp.astimezone(UTC)
         tariff_period = sample.tariff_period
         matches = [
             rate
             for rate in rates
             if rate.group_id == group_id
-            and rate.valid_from <= timestamp
-            and (rate.valid_to is None or timestamp < rate.valid_to)
+            and rate.valid_from.astimezone(UTC) <= timestamp
+            and (rate.valid_to is None or timestamp < rate.valid_to.astimezone(UTC))
             and (rate.tariff_period is None or rate.tariff_period == tariff_period)
         ]
         exact = [rate for rate in matches if rate.tariff_period == tariff_period]

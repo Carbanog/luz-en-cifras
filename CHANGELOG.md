@@ -1,5 +1,12 @@
 # Changelog
 
+## Sin publicar
+
+- Distingue horas locales repetidas al seleccionar precios durante el cambio de hora.
+- Añade asignación de intervalos con rechazo de huecos y solapamientos y estimación
+  uniforme opcional marcada como parcial (motor, aún sin configuración HA).
+- Normaliza precios €/MWh y €/kWh y documenta la referencia de Domoticarte.
+
 ## 0.1.0 — en desarrollo
 
 - Crea el motor de cálculo independiente con importes `Decimal`.

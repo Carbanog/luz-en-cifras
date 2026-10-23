@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from enum import StrEnum
 
@@ -96,7 +96,7 @@ class EnergyRate:
         if self.valid_to is not None:
             if self.valid_to.tzinfo is None or self.valid_to.utcoffset() is None:
                 raise ValueError("Rate validity must be timezone-aware")
-            if self.valid_to <= self.valid_from:
+            if self.valid_to.astimezone(UTC) <= self.valid_from.astimezone(UTC):
                 raise ValueError("Rate valid_to must be after valid_from")
 
 
