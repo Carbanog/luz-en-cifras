@@ -11,6 +11,9 @@ requires-python = ">=3.14.2"
 license = { text = "MIT" }
 authors = [{ name = "Carbanog" }]
 
+[tool.setuptools.packages.find]
+include = ["custom_components*"]
+
 [project.optional-dependencies]
 dev = [
   "pytest>=8.3,<9",

@@ -12,6 +12,12 @@ formal de marcas.
 
 ## Estado
 
+**EXPERIMENTAL · EN PRUEBAS.** Este proyecto se desarrolla con ayuda de OpenAI
+Codex bajo la dirección de Carbanog. El código generado se revisa y se somete a
+pruebas automatizadas; todavía necesita validación con instalaciones y facturas
+reales antes de una versión estable. Se recomienda instalarlo primero en un HA de
+pruebas. No se ha lanzado la fase final del producto.
+
 Versión de desarrollo `0.1.0`. El núcleo probado admite:
 
 - precios fijos distintos por grupo de consumo;
@@ -62,8 +68,32 @@ como repositorio personalizado:
    **Ajustes → Dispositivos y servicios**.
 
 El repositorio tiene la estructura exigida por HACS, pero todavía no se ha
-publicado ni validado como repositorio predeterminado. La URL definitiva se añadirá
-cuando se confirme el nombre y se cree el repositorio remoto.
+validado como repositorio predeterminado. Añade como repositorio personalizado
+[Carbanog/luz-en-cifras](https://github.com/Carbanog/luz-en-cifras).
+
+## Dashboard
+
+Incluimos una [plantilla con tarjetas nativas](examples/dashboard.yaml), sin
+dependencias de frontend adicionales. Sustituye los identificadores de ejemplo por
+los que aparecen en el dispositivo de tu contrato. La plantilla es una vista para
+el editor YAML de un dashboard; no se pega en `configuration.yaml`.
+
+## Límites de la versión de pruebas
+
+- El adaptador actual admite precio fijo por grupo. Cambiar opciones recalcula el
+  periodo abierto con esos precios; los cambios contractuales fechados todavía no
+  están expuestos en la interfaz.
+- Potencia y alquiler se calculan para el periodo contractual completo; el consumo
+  corresponde a las lecturas recogidas. El total combina esas dos coberturas.
+- Las reglas fiscales incluidas llegan hasta el 31 de octubre de 2026. Después de
+  esa fecha la estimación quedará indisponible hasta incorporar reglas verificadas.
+- No reconstruye consumos anteriores a la instalación. La primera factura es parcial.
+- El cierre de históricos, la conciliación y los diagnósticos descargables están
+  pendientes. Esta versión sirve para validar configuración y cálculo inicial.
+
+Para comunicar un problema, indica versión de HA, versión de la integración,
+unidades y tipo de contador, pasos para reproducirlo y mensajes anonimizados del
+registro. Consulta también [SECURITY.md](SECURITY.md).
 
 ## Modelo de grupos
 

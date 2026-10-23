@@ -1,0 +1,41 @@
+# Vista de ejemplo. Cambia TODAS las entidades sensor.mi_contrato_* por las reales.
+# Pega este contenido como una vista en un dashboard YAML.
+title: Electricidad
+path: electricidad
+icon: mdi:lightning-bolt
+cards:
+  - type: markdown
+    content: >-
+      ## Luz en Cifras · Pruebas
+
+      Estimación experimental. Consulta la calidad de datos antes de comparar
+      importes con tu factura. Potencia y alquiler cubren el periodo completo.
+  - type: entities
+    title: Contrato eléctrico
+    show_header_toggle: false
+    entities:
+      - entity: sensor.mi_contrato_factura_actual_estimada
+        name: Factura estimada
+      - entity: sensor.mi_contrato_calidad_de_los_datos
+        name: Calidad de los datos
+      - entity: sensor.mi_contrato_energia_del_periodo
+        name: Consumo registrado
+      - entity: sensor.mi_contrato_dias_del_periodo
+        name: Días del periodo completo
+  - type: entities
+    title: Desglose de costes
+    show_header_toggle: false
+    entities:
+      - entity: sensor.mi_contrato_coste_de_energia
+      - entity: sensor.mi_contrato_coste_de_potencia
+      - entity: sensor.mi_contrato_impuesto_electrico
+      - entity: sensor.mi_contrato_iva
+      - entity: sensor.mi_contrato_otros_cargos
+      - entity: sensor.mi_contrato_descuentos
+      - entity: sensor.mi_contrato_precio_medio_efectivo
+  - type: history-graph
+    title: Evolución de la estimación
+    hours_to_show: 168
+    entities:
+      - entity: sensor.mi_contrato_factura_actual_estimada
+        name: Estimación
