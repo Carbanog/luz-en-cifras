@@ -38,10 +38,12 @@ claro/oscuro, teclado, zoom y textos largos. Solo después decidir tarjeta Lovel
 
 ## Fase F — publicación
 
-Autorizada la preparación de un repositorio independiente. La creación del remoto
-queda pendiente de confirmar el nombre provisional; las releases y el alta en HACS
-predeterminado requerirán una aprobación separada tras las pruebas en Home Assistant.
-Ya se incluyen CI y validadores Hassfest/HACS. HACS exige una sola integración por
+Repositorio público creado: https://github.com/Carbanog/luz-en-cifras. La CI,
+Hassfest, HACS y la importación contra HA 2026.10.2 han pasado. La validación de
+comportamiento en una instalación HA sigue pendiente. La versión es experimental.
+El alcance completo y las prioridades están en [cobertura.md](cobertura.md).
+Las releases estables y el alta en HACS predeterminado quedan para la fase final.
+HACS exige una sola integración por
 repositorio y todos los archivos de ejecución dentro de
 `custom_components/luz_en_cifras`, según su
 [documentación](https://www.hacs.xyz/docs/publish/integration/).

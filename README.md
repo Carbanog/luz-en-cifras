@@ -12,6 +12,7 @@ Consumo, potencia e impuestos en Home Assistant, con cálculo local y desglose v
 [![HA y HACS](https://github.com/Carbanog/luz-en-cifras/actions/workflows/validate.yml/badge.svg)](https://github.com/Carbanog/luz-en-cifras/actions/workflows/validate.yml)
 ![Estado: experimental](https://img.shields.io/badge/estado-en_pruebas-e9a23b)
 [![MIT](https://img.shields.io/badge/licencia-MIT-blue)](LICENSE)
+[![Invítame a un café](https://img.shields.io/badge/Buy_Me_a_Coffee-Carbanog-FFDD00?logo=buymeacoffee&logoColor=000000)](https://buymeacoffee.com/Carbanog)
 
 [Instalar](#instalación) · [Configurar](#configuración) · [Dashboard](#dashboard) · [Limitaciones](#limitaciones) · [Incidencias](https://github.com/Carbanog/luz-en-cifras/issues)
 
@@ -41,6 +42,17 @@ eléctrica española. Funciona localmente, sin cuentas ni credenciales externas.
 El motor también tiene soporte probado para cambios de precio fechados, cargos por
 factura y descuentos. Su configuración completa desde la interfaz está pendiente.
 Consulta el [plan de desarrollo](docs/plan-desarrollo.md).
+
+### Objetivo: cada contrato con sus módulos
+
+El precio fijo es el primer escenario de pruebas, no el alcance final. El producto
+debe permitir elegir tarifa fija, tres periodos, PVPC o indexada, y activar solo los
+conceptos necesarios: grupos, autoconsumo, descuentos, servicios e históricos.
+
+**Hoy no se puede configurar PVPC ni tarifa horaria desde la integración.** El
+motor admite precios fechados y periodos, pero falta conectar el calendario y las
+fuentes de precios con las lecturas y el asistente. La
+[matriz de cobertura](docs/cobertura.md) distingue soporte real y trabajo pendiente.
 
 ## Instalación
 
