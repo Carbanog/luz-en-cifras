@@ -1,141 +1,217 @@
+<div align="center">
+
+<img src="custom_components/luz_en_cifras/brand/icon.png" alt="Luz en Cifras" width="96">
+
 # Luz en Cifras
 
-**Entiende de qué está hecha tu factura.**
+**Entiende de qué está hecha tu factura eléctrica.**
 
-Luz en Cifras es una integración local para Home Assistant que estima y desglosa
-facturas eléctricas españolas a partir de sensores de energía. El nombre y la
-identidad técnica `luz_en_cifras` son provisionales hasta completar una búsqueda
-formal de marcas.
+Consumo, potencia e impuestos en Home Assistant, con cálculo local y desglose visible.
 
-> Los resultados son estimaciones. No son facturas oficiales ni asesoramiento
-> fiscal, contractual o jurídico.
+[![CI](https://github.com/Carbanog/luz-en-cifras/actions/workflows/ci.yml/badge.svg)](https://github.com/Carbanog/luz-en-cifras/actions/workflows/ci.yml)
+[![HA y HACS](https://github.com/Carbanog/luz-en-cifras/actions/workflows/validate.yml/badge.svg)](https://github.com/Carbanog/luz-en-cifras/actions/workflows/validate.yml)
+![Estado: experimental](https://img.shields.io/badge/estado-en_pruebas-e9a23b)
+[![MIT](https://img.shields.io/badge/licencia-MIT-blue)](LICENSE)
 
-## Estado
+[Instalar](#instalación) · [Configurar](#configuración) · [Dashboard](#dashboard) · [Limitaciones](#limitaciones) · [Incidencias](https://github.com/Carbanog/luz-en-cifras/issues)
 
-**EXPERIMENTAL · EN PRUEBAS.** Este proyecto se desarrolla con ayuda de OpenAI
-Codex bajo la dirección de Carbanog. El código generado se revisa y se somete a
-pruebas automatizadas; todavía necesita validación con instalaciones y facturas
-reales antes de una versión estable. Se recomienda instalarlo primero en un HA de
-pruebas. No se ha lanzado la fase final del producto.
+</div>
 
-Versión de desarrollo `0.1.0`. El núcleo probado admite:
+> [!WARNING]
+> **Experimental · 0.1.0 · Instalar primero en un HA de pruebas.**
+> La fase final todavía no se ha lanzado. Los importes son estimaciones y necesitan
+> contraste con facturas reales; no sustituyen la factura de tu comercializadora.
 
-- precios fijos distintos por grupo de consumo;
-- contadores independientes y expresiones «contador principal − subcontador»;
-- cambios de precio fechados y precios negativos;
-- potencia P1/P2 normalizada en €/kW/día;
-- cargos por factura o por día y descuentos porcentuales en el motor;
-- IVA e Impuesto Especial sobre la Electricidad mediante reglas versionadas;
-- periodos irregulares y fechas semiabiertas `[inicio, fin)`;
-- calidad completa/parcial y fallo cerrado ante precios o lecturas ausentes.
+## Qué puedes probar
 
-La conexión inicial con Home Assistant ofrece un `ConfigFlow`, varios contratos,
-grupos repetibles, acumulación local persistente y sensores de desglose. Empieza a
-observar los contadores al instalarse; el primer periodo se marca como parcial.
+La integración convierte sensores de energía acumulada en una estimación de factura
+eléctrica española. Funciona localmente, sin cuentas ni credenciales externas.
 
-No están implementados aún PVPC, tarifas dinámicas desde una entidad, histórico de
-facturas cerradas, autoconsumo, bono social, territorios fiscales fuera de IVA
-peninsular ni reconstrucción mediante Recorder. Consulta
-[`docs/plan-desarrollo.md`](docs/plan-desarrollo.md).
+| Función | Disponible hoy |
+| --- | --- |
+| Contratos | Varias configuraciones independientes |
+| Grupos de consumo | Suma de contadores y resta explícita de subcontadores |
+| Energía | Precio fijo diferente por grupo, incluido precio negativo |
+| Potencia | P1/P2 con precios en €/kW/día |
+| Alquiler | Cargo diario configurable |
+| Impuestos | IVA e impuesto eléctrico con reglas fechadas |
+| Persistencia | Consumos guardados localmente entre reinicios |
+| Desglose | Sensores de energía, potencia, impuestos y calidad de datos |
 
-La base apunta a Home Assistant 2026.10.2 o posterior (Python 3.14.2), la versión
-estable contrastada durante este corte.
+El motor también tiene soporte probado para cambios de precio fechados, cargos por
+factura y descuentos. Su configuración completa desde la interfaz está pendiente.
+Consulta el [plan de desarrollo](docs/plan-desarrollo.md).
 
-## Instalación manual
+## Instalación
 
-1. Descarga el código de una versión o clona el repositorio.
-2. Copia la carpeta completa `custom_components/luz_en_cifras` en
-   `/config/custom_components/luz_en_cifras` de Home Assistant.
-3. Comprueba que `manifest.json` queda directamente dentro de esa carpeta; evita una
-   carpeta duplicada como `luz_en_cifras/luz_en_cifras`.
-4. Reinicia Home Assistant.
-5. Ve a **Ajustes → Dispositivos y servicios → Añadir integración**.
-6. Busca **Luz en Cifras** y crea un contrato.
+**Referencia de compatibilidad: Home Assistant 2026.10.2**, Python 3.14.2 o posterior.
+Otras versiones de HA requieren validación. Necesitas un sensor de energía
+acumulada con clase `energy` y unidad **Wh o kWh**. Un sensor en W mide potencia
+y no sirve directamente como contador.
 
-Antes de actualizar, guarda una copia de `/config/.storage`. Para volver atrás,
-restaura la carpeta de la versión anterior, reinicia Home Assistant y conserva el
-almacenamiento; no borres la entrada de la integración si quieres mantener sus
-identificadores.
+### Con HACS · repositorio personalizado
 
-## Instalación con HACS
+1. En HACS abre **⋮ → Repositorios personalizados**.
+2. Añade esta dirección con categoría **Integración**:
 
-Mientras no exista una versión publicada, HACS solo debe usarse con este repositorio
-como repositorio personalizado:
+   ```text
+   https://github.com/Carbanog/luz-en-cifras
+   ```
 
-1. En HACS abre **Integraciones → menú ⋮ → Repositorios personalizados**.
-2. Añade la URL del repositorio y selecciona la categoría **Integración**.
-3. Instala **Luz en Cifras**, reinicia Home Assistant y añádela desde
-   **Ajustes → Dispositivos y servicios**.
+3. Busca **Luz en Cifras**, descárgala y reinicia Home Assistant.
+4. Ve a **Ajustes → Dispositivos y servicios → Añadir integración**.
+5. Busca **Luz en Cifras** y crea tu contrato.
 
-El repositorio tiene la estructura exigida por HACS, pero todavía no se ha
-validado como repositorio predeterminado. Añade como repositorio personalizado
-[Carbanog/luz-en-cifras](https://github.com/Carbanog/luz-en-cifras).
+Todavía no pertenece al catálogo predeterminado de HACS. Durante las pruebas las
+actualizaciones proceden de la rama `main`.
+
+<details>
+<summary><strong>Instalación manual</strong></summary>
+
+1. [Descarga el código](https://github.com/Carbanog/luz-en-cifras/archive/refs/heads/main.zip) y descomprímelo.
+2. Copia `custom_components/luz_en_cifras` dentro de tu directorio de configuración.
+3. Comprueba la estructura y reinicia Home Assistant:
+
+   ```text
+   config/
+   └── custom_components/
+       └── luz_en_cifras/
+           ├── manifest.json
+           ├── __init__.py
+           ├── config_flow.py
+           └── …
+   ```
+
+4. Añade la integración desde **Ajustes → Dispositivos y servicios**.
+
+Evita copiar el repositorio completo en `custom_components` o duplicar la carpeta.
+
+</details>
+
+## Configuración
+
+Ten a mano tu contrato o factura e introduce **precios sin impuestos**.
+
+| Campo | Qué introducir |
+| --- | --- |
+| Nombre | Un nombre reconocible: Casa, Garaje… |
+| Día de inicio | Día del mes en que comienza el ciclo |
+| Potencia P1/P2 | Potencia contratada en kW por periodo |
+| Precio P1/P2 | Precio de potencia en **€/kW/día** |
+| Alquiler | Importe diario del contador, sin IVA |
+| Grupos | Contadores que suman o restan y precio en **€/kWh** |
+
+Puedes añadir varios grupos antes de guardar. Encontrarás el dispositivo del
+contrato y sus sensores en **Ajustes → Dispositivos y servicios**.
+
+### Ejemplo: vivienda y vehículo eléctrico
+
+Si el contador principal ya incluye el cargador:
+
+| Grupo | Consumo | Precio ilustrativo |
+| --- | --- | --- |
+| Vivienda | Principal − cargador | 0,119 €/kWh |
+| Vehículo | Cargador | 0,075 €/kWh |
+
+Sustituye esos precios por los de tu contrato. Este reparto evita cobrar dos veces
+el consumo del vehículo. La integración no deduce relaciones por nombres.
+
+> [!TIP]
+> La primera lectura establece el punto de partida. Espera nuevos cambios del
+> contador para comprobar la acumulación. El periodo inicial será parcial.
 
 ## Dashboard
 
-Incluimos una [plantilla con tarjetas nativas](examples/dashboard.yaml), sin
-dependencias de frontend adicionales. Sustituye los identificadores de ejemplo por
-los que aparecen en el dispositivo de tu contrato. La plantilla es una vista para
-el editor YAML de un dashboard; no se pega en `configuration.yaml`.
+La [plantilla de dashboard](examples/dashboard.yaml) utiliza **tarjetas nativas**:
+resumen del contrato, calidad de datos, desglose y evolución del importe.
+No requiere tarjetas adicionales de HACS.
 
-## Límites de la versión de pruebas
+1. Copia los identificadores de las entidades desde el dispositivo del contrato.
+2. Sustituye **todas** las entidades `sensor.mi_contrato_*` de la plantilla.
+3. Incorpora la vista al dashboard YAML, dentro de su lista `views:`.
 
-- El adaptador actual admite precio fijo por grupo. Cambiar opciones recalcula el
-  periodo abierto con esos precios; los cambios contractuales fechados todavía no
-  están expuestos en la interfaz.
-- Potencia y alquiler se calculan para el periodo contractual completo; el consumo
-  corresponde a las lecturas recogidas. El total combina esas dos coberturas.
-- Las reglas fiscales incluidas llegan hasta el 31 de octubre de 2026. Después de
-  esa fecha la estimación quedará indisponible hasta incorporar reglas verificadas.
-- No reconstruye consumos anteriores a la instalación. La primera factura es parcial.
-- El cierre de históricos, la conciliación y los diagnósticos descargables están
-  pendientes. Esta versión sirve para validar configuración y cálculo inicial.
+Los identificadores dependen del contrato y del registro de entidades de HA.
+La plantilla requiere esa adaptación; **no se pega en `configuration.yaml`**.
 
-Para comunicar un problema, indica versión de HA, versión de la integración,
-unidades y tipo de contador, pasos para reproducirlo y mensajes anonimizados del
-registro. Consulta también [SECURITY.md](SECURITY.md).
+## Limitaciones
 
-## Modelo de grupos
+| Situación | Comportamiento actual |
+| --- | --- |
+| Primer periodo | Parcial; sin consumo anterior a la instalación |
+| Potencia y alquiler | Cubren el ciclo completo, aunque el consumo sea parcial |
+| Editar precios | Recalcula el periodo abierto con los nuevos valores |
+| Fiscalidad desde noviembre de 2026 | Sin regla verificada: importe indisponible |
+| Cierre de ciclo | Nuevo periodo; sin archivo de facturas cerradas todavía |
+| PVPC y precio dinámico desde entidades | Pendientes |
+| Excedentes, batería virtual y bono social | Pendientes |
+| Canarias, Ceuta y Melilla | Pendientes; solo fiscalidad de territorio IVA |
+| Histórico Recorder y comparación con factura real | Pendientes |
 
-Un grupo suma sus contadores y puede restar subcontadores declarados por el usuario.
-Ejemplo:
+Las reglas fiscales incluidas llegan **hasta el 31 de octubre de 2026**.
+[Fuentes y criterios fiscales](docs/reglas-fiscales.md).
 
-- Vivienda: `contador_principal - cargador_ev`, a 0,119 €/kWh.
-- Vehículo: `cargador_ev`, a 0,075 €/kWh.
+La edición de precios por grupo todavía muestra identificadores técnicos
+`price_…`; su presentación se mejorará antes de la fase estable.
 
-La suma económica usa 100 % del contador principal sin cobrar dos veces el vehículo.
-La integración no deduce relaciones a partir de nombres de entidades.
+<details>
+<summary><strong>Resolución de problemas</strong></summary>
 
-## Desarrollo
+- **No aparece:** comprueba la ruta de `manifest.json`, reinicia HA y revisa el registro.
+- **No puedes elegir un contador:** debe medir energía acumulada en Wh o kWh.
+- **El consumo no cambia:** espera nuevos cambios; no se reconstruye el pasado.
+- **Importe indisponible:** consulta el sensor de calidad y atributos `error` y `warnings`.
+- **No coincide con la factura:** revisa cobertura, unidades y precios sin impuestos.
 
-El motor está dentro de `custom_components/luz_en_cifras/domain` y no importa Home
-Assistant. Instala las herramientas con `python -m pip install -e ".[dev]"` y
-ejecuta:
+Para [abrir una incidencia](https://github.com/Carbanog/luz-en-cifras/issues),
+incluye versiones de HA e integración, pasos para reproducir, unidades y mensajes
+anonimizados. Evita facturas completas o datos personales.
+
+</details>
+
+## Actualización y recuperación
+
+Haz una copia de seguridad de HA antes de actualizar. Con HACS, descarga la
+actualización y reinicia; manualmente, reemplaza la carpeta de la integración.
+Conserva la versión anterior para restaurarla si es necesario.
+
+No elimines la entrada para actualizar: eliminarla borra su almacenamiento asociado.
+Conserva el respaldo de HA para recuperar también los datos.
+
+## Desarrollo y transparencia
+
+Desarrollado **con ayuda de OpenAI Codex**, bajo la dirección de **Carbanog**.
+La asistencia de IA forma parte de la implementación y documentación. Las pruebas
+automatizadas verifican parte del comportamiento; la validación real con HA y
+facturas sigue siendo necesaria antes de considerar el producto estable.
+
+El motor usa `Decimal` y está separado del adaptador HA. La CI comprueba formato,
+análisis estático, tipos y pruebas, e importa la integración contra HA de referencia.
+Otro flujo ejecuta Hassfest y HACS.
 
 ```shell
+python -m pip install -e ".[dev]"
 ruff format --check .
 ruff check .
 mypy
 pytest
-python -m compileall -q custom_components tests
 ```
 
-GitHub Actions repetirá estas comprobaciones con Python 3.14 y ejecutará además los
-validadores oficiales de Hassfest y HACS. Consulta [CONTRIBUTING.md](CONTRIBUTING.md)
-para las reglas de compatibilidad y pruebas.
+[Contribuir](CONTRIBUTING.md) · [Arquitectura](docs/arquitectura.md) ·
+[Referencias y licencias](docs/investigacion-mercado.md) · [Cambios](CHANGELOG.md) ·
+[Seguridad](SECURITY.md)
 
 ## Privacidad
 
-No hay cuenta, telemetría ni servidor propio. No se solicita CUPS, DNI o dirección.
-Los datos se guardan en el almacenamiento local de Home Assistant. Consulta
-[`docs/privacidad.md`](docs/privacidad.md).
+Sin CUPS, DNI, dirección, credenciales, telemetría ni servidor propio.
+Los datos se guardan en Home Assistant. [Más información](docs/privacidad.md).
 
-## Apoyo opcional
+## Apoyar el proyecto
 
-Si el proyecto te resulta útil, puedes apoyar su mantenimiento en
-[Buy Me a Coffee](https://buymeacoffee.com/Carbanog). No desbloquea funciones ni
-envía datos desde la integración.
+Si te resulta útil, puedes apoyar su mantenimiento con un café. Es opcional;
+todas las funciones están disponibles sin aportaciones.
 
-## Licencia
+[☕ Invítame a un café en Buy Me a Coffee](https://buymeacoffee.com/Carbanog)
 
-[MIT](LICENSE)
+---
+
+Hecho por **Carbanog**, con ayuda de **Codex** · [Licencia MIT](LICENSE)
