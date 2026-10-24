@@ -1,6 +1,6 @@
 # Matriz de cobertura
 
-Versión en validación 0.2.0.dev3. Contemplar un caso no significa implementarlo.
+Versión en validación 0.2.0. Contemplar un caso no significa implementarlo.
 
 | Módulo | Disponible y verificable | Límite actual |
 | --- | --- | --- |

@@ -19,7 +19,7 @@ Consumo, potencia e impuestos en Home Assistant, con cálculo local y desglose v
 </div>
 
 > [!WARNING]
-> **En validación · 0.2.0.dev3 · Instalar primero en un HA de pruebas.**
+> **En validación · 0.2.0 · Instalar primero en un HA de pruebas.**
 > La fase final todavía no se ha lanzado. Los importes son estimaciones y necesitan
 > contraste con facturas reales; no sustituyen la factura de tu comercializadora.
 
@@ -83,13 +83,17 @@ prueba salvo que haya una corrección necesaria.
 4. Ve a **Ajustes → Dispositivos y servicios → Añadir integración**.
 5. Busca **Luz en Cifras** y crea tu contrato.
 
-Todavía no pertenece al catálogo predeterminado de HACS. Durante las pruebas las
-actualizaciones proceden de la rama `main`.
+Todavía no pertenece al catálogo predeterminado de HACS. Las versiones instalables
+se publican en [Releases](https://github.com/Carbanog/luz-en-cifras/releases), con sus
+cambios e instrucciones. HACS utiliza esas versiones para ofrecer actualizaciones.
+Si instalaste `main`, usa **Volver a descargar** en el menú del repositorio de HACS
+y selecciona **0.2.0** para pasar al seguimiento por versiones. Reinicia HA después.
+La rama `main` queda disponible para desarrollo.
 
 <details>
 <summary><strong>Instalación manual</strong></summary>
 
-1. [Descarga el código](https://github.com/Carbanog/luz-en-cifras/archive/refs/heads/main.zip) y descomprímelo.
+1. [Descarga el código de la versión](https://github.com/Carbanog/luz-en-cifras/releases/latest) desde **Source code (zip)** y descomprímelo.
 2. Copia `custom_components/luz_en_cifras` dentro de tu directorio de configuración.
 3. Comprueba la estructura y reinicia Home Assistant:
 
