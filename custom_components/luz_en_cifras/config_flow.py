@@ -52,29 +52,45 @@ ENERGY = EntitySelector(EntitySelectorConfig(domain="sensor", multiple=True))
 SENSOR = EntitySelector(EntitySelectorConfig(domain="sensor"))
 
 
+def tariff_selector() -> SelectSelector:
+    return select(
+        [
+            ("fixed", "Precio fijo: el mismo €/kWh a cualquier hora"),
+            ("three_period", "Tres precios: punta, llano y valle"),
+            ("entity", "Precio variable: PVPC o indexada desde un sensor"),
+        ]
+    )
+
+
 def contract_schema(current: dict[str, Any]) -> vol.Schema:
     fields: dict[Any, Any] = {
         vol.Required("contract_name", default=current.get("contract_name", "Casa")): TextSelector(),
         vol.Required("billing_day", default=current.get("billing_day", 1)): number(1, 31, 1),
-        vol.Required(
-            "billing_anchor_month", default=current.get("billing_anchor_month", 1)
-        ): number(1, 12, 1),
         vol.Required("billing_months", default=current.get("billing_months", 1)): select(
             [("1", "Mensual"), ("2", "Bimestral")]
         ),
-        vol.Required("power_price_unit", default=current.get("power_price_unit", "day")): select(
-            [("day", "€/kW/día"), ("year", "€/kW/año (divisor contractual 365)")]
-        ),
-        vol.Required(
-            "approximate_intervals", default=current.get("approximate_intervals", False)
-        ): BooleanSelector(),
-        vol.Required(
-            "show_secondary_entities", default=current.get("show_secondary_entities", True)
-        ): BooleanSelector(),
-        vol.Required(
-            "power_max_age_minutes", default=float(current.get("power_max_age_minutes", 5))
-        ): number(1, 1440, 1),
     }
+    return vol.Schema(fields)
+
+
+def advanced_schema(current: dict[str, Any]) -> vol.Schema:
+    return vol.Schema(
+        {
+            vol.Required(
+                "approximate_intervals", default=current.get("approximate_intervals", False)
+            ): BooleanSelector(),
+            vol.Required(
+                "show_secondary_entities", default=current.get("show_secondary_entities", True)
+            ): BooleanSelector(),
+            vol.Required(
+                "power_max_age_minutes", default=float(current.get("power_max_age_minutes", 5))
+            ): number(1, 1440, 1),
+        }
+    )
+
+
+def power_schema(current: dict[str, Any]) -> vol.Schema:
+    fields: dict[Any, Any] = {}
     for key in (
         "power_p1_kw",
         "power_p2_kw",
@@ -82,7 +98,9 @@ def contract_schema(current: dict[str, Any]) -> vol.Schema:
         "power_p2_eur_per_kw_day",
         "meter_rental_daily",
     ):
-        fields[vol.Required(key, default=float(current.get(key, 0)))] = number()
+        fields[
+            vol.Required(key, **({"default": float(current[key])} if key in current else {}))
+        ] = number()
     return vol.Schema(fields)
 
 
@@ -92,13 +110,9 @@ def group_schema(current: dict[str, Any]) -> vol.Schema:
             vol.Required("group_name", default=current.get("group_name", "")): TextSelector(),
             vol.Required("add_sources", default=current.get("add_sources", [])): ENERGY,
             vol.Optional("subtract_sources", default=current.get("subtract_sources", [])): ENERGY,
-            vol.Required("tariff_mode", default=current.get("tariff_mode", "fixed")): select(
-                [
-                    ("fixed", "Precio fijo 24 horas"),
-                    ("three_period", "Tres periodos 2.0TD"),
-                    ("entity", "Precio dinámico / PVPC desde entidad"),
-                ]
-            ),
+            vol.Required(
+                "tariff_mode", default=current.get("tariff_mode", "fixed")
+            ): tariff_selector(),
             vol.Required("eur_per_kwh", default=float(current.get("eur_per_kwh", 0))): number(
                 -100, 100
             ),
@@ -121,7 +135,11 @@ def group_schema(current: dict[str, Any]) -> vol.Schema:
 
 def cleaned(values: dict[str, Any]) -> dict[str, Any]:
     return {
-        key: str(Decimal(str(value))) if isinstance(value, float) else value
+        key: int(value)
+        if isinstance(value, float) and value.is_integer()
+        else str(Decimal(str(value)))
+        if isinstance(value, float)
+        else value
         for key, value in values.items()
     }
 
@@ -132,6 +150,32 @@ class ContractForms:
     _config: dict[str, Any]
     _editing: str | None = None
     _draft_group: dict[str, Any]
+    _initial_setup = False
+
+    async def async_step_modality(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        if user_input is not None:
+            self._config.update(cleaned(user_input))
+            return await self.async_step_contract()
+        return self.async_show_form(
+            step_id="modality",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        "default_tariff_mode",
+                        default=self._config.get("default_tariff_mode", "fixed"),
+                    ): tariff_selector(),
+                }
+            ),
+        )
+
+    async def _after_contract(self) -> ConfigFlowResult:
+        return (
+            await self.async_step_add_group()
+            if self._initial_setup
+            else await self.async_step_menu()
+        )
 
     async def async_step_contract(
         self, user_input: dict[str, Any] | None = None
@@ -140,23 +184,95 @@ class ContractForms:
         if user_input is not None:
             if not user_input["contract_name"].strip():
                 errors["base"] = "empty_name"
+            elif not float(user_input["billing_day"]).is_integer():
+                errors["billing_day"] = "whole_number"
             else:
                 self._config.update(cleaned(user_input))
                 self._config["contract_name"] = user_input["contract_name"].strip()
-                return await self.async_step_menu()
+                if str(self._config.get("billing_months", "1")) == "2":
+                    return await self.async_step_cycle_anchor()
+                return await self._after_contract()
         return self.async_show_form(
             step_id="contract", data_schema=contract_schema(self._config), errors=errors
         )
+
+    async def async_step_cycle_anchor(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if float(user_input["billing_anchor_month"]).is_integer():
+                self._config.update(cleaned(user_input))
+                return await self._after_contract()
+            errors["billing_anchor_month"] = "whole_number"
+        return self.async_show_form(
+            step_id="cycle_anchor",
+            errors=errors,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        "billing_anchor_month", default=self._config.get("billing_anchor_month", 1)
+                    ): number(1, 12, 1),
+                }
+            ),
+        )
+
+    async def async_step_power_unit(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        if user_input is not None:
+            self._config.update(cleaned(user_input))
+            return await self.async_step_power()
+        return self.async_show_form(
+            step_id="power_unit",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        "power_price_unit", default=self._config.get("power_price_unit", "day")
+                    ): select(
+                        [
+                            ("day", "Mi factura indica €/kW/día"),
+                            ("year", "Mi contrato indica €/kW/año (divisor 365)"),
+                        ]
+                    ),
+                }
+            ),
+        )
+
+    async def async_step_power(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        if user_input is not None:
+            self._config.update(cleaned(user_input))
+            self._initial_setup = False
+            return await self.async_step_menu()
+        return self.async_show_form(
+            step_id="power",
+            data_schema=power_schema(self._config),
+            description_placeholders={
+                "power_price_unit": "€/kW/año"
+                if self._config.get("power_price_unit") == "year"
+                else "€/kW/día"
+            },
+        )
+
+    async def async_step_advanced(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        if user_input is not None:
+            self._config.update(cleaned(user_input))
+            return await self.async_step_menu()
+        return self.async_show_form(step_id="advanced", data_schema=advanced_schema(self._config))
 
     async def async_step_menu(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         return self.async_show_menu(
             step_id="menu",
             menu_options=[
                 "contract",
+                "power_unit",
                 "add_group",
                 "select_group",
                 "extras",
                 "fiscal",
+                "advanced",
                 "finish",
             ],
         )
@@ -189,7 +305,10 @@ class ContractForms:
 
     async def async_step_group(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         groups = self._config.setdefault("groups", [])
-        current = next((group for group in groups if group["group_id"] == self._editing), {})
+        current = next(
+            (group for group in groups if group["group_id"] == self._editing),
+            {"tariff_mode": self._config.get("default_tariff_mode", "fixed")},
+        )
         errors: dict[str, str] = {}
         if user_input is not None:
             if user_input.get("delete_group") and self._editing:
@@ -243,6 +362,8 @@ class ContractForms:
                 groups = self._config["groups"]
                 groups[:] = [group for group in groups if group["group_id"] != self._editing]
                 groups.append(self._draft_group)
+                if self._initial_setup:
+                    return await self.async_step_power_unit()
                 return await self.async_step_menu()
         keys = (
             {"eur_per_kwh"}
@@ -373,13 +494,14 @@ class LuzEnCifrasConfigFlow(ContractForms, ConfigFlow, domain=DOMAIN):
     """Create an independently identified electricity contract."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     def __init__(self) -> None:
         self._config = {"contract_id": uuid4().hex, "groups": [], "billing_months": "1"}
+        self._initial_setup = True
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        return await self.async_step_contract(user_input)
+        return await self.async_step_modality(user_input)
 
     @staticmethod
     def async_get_options_flow(config_entry: Any) -> LuzEnCifrasOptionsFlow:

@@ -4,6 +4,11 @@ Solo para desarrollo y validación. **El producto se instala con HACS**, no con 
 contenedor. Los sensores `LAB` son fixtures sintéticos, ajustables manualmente, y
 no representan consumos reales ni forman parte del componente distribuido.
 
+Si ya dispones de un HA de pruebas, úsalo instalando la integración por HACS:
+**no es necesario crear otro HA**. Esta configuración es opcional para desarrolladores
+que necesiten un entorno aislado. La instancia creada el 24 de octubre se retiró
+por petición del usuario; la validación continuará en su HA de pruebas existente.
+
 La imagen oficial de HA 2026.10.2 está fijada por digest. El servicio no usa modo
 privilegiado ni red del host. El puerto se liga únicamente a `127.0.0.1:18123`.
 Cambiarlo para permitir acceso LAN requiere autorización explícita.
