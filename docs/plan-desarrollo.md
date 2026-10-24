@@ -1,6 +1,6 @@
 # Plan de desarrollo y estado verificable
 
-Corte: 24 de octubre de 2026. Versión experimental 0.2.0.dev0.
+Corte: 24 de octubre de 2026. Versión experimental 0.2.0.dev1.
 
 ## A — Investigación
 
@@ -25,6 +25,10 @@ solapamientos y datos no finitos producen errores explícitos.
 Implementados: asistente por módulos, precios según modalidad, edición/eliminación
 de grupos con IDs estables, ledger persistente, migración, descarga con guardado,
 sensores por contrato/grupo, diagnósticos y aviso Repairs.
+
+La selección acepta W/kW y Wh/kWh directamente, con grupos mixtos y conversión
+estimada de potencia. Se conserva la energía y se corta la continuidad en paradas,
+lecturas inválidas y caducidad; no se reconstruye consumo no medido.
 
 Las pruebas funcionales usan HA 2026.10.2 en un contenedor aislado de desarrollo
 en docker-lab y se repiten en CI. HACS continúa siendo el método de instalación.
