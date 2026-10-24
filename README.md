@@ -10,7 +10,7 @@ Consumo, potencia e impuestos en Home Assistant, con cálculo local y desglose v
 
 [![CI](https://github.com/Carbanog/luz-en-cifras/actions/workflows/ci.yml/badge.svg)](https://github.com/Carbanog/luz-en-cifras/actions/workflows/ci.yml)
 [![HA y HACS](https://github.com/Carbanog/luz-en-cifras/actions/workflows/validate.yml/badge.svg)](https://github.com/Carbanog/luz-en-cifras/actions/workflows/validate.yml)
-![Estado: experimental](https://img.shields.io/badge/estado-en_pruebas-e9a23b)
+![Estado: en validación](https://img.shields.io/badge/estado-en_validación-e9a23b)
 [![MIT](https://img.shields.io/badge/licencia-MIT-blue)](LICENSE)
 [![Invítame a un café](https://img.shields.io/badge/Buy_Me_a_Coffee-Carbanog-FFDD00?logo=buymeacoffee&logoColor=000000)](https://buymeacoffee.com/Carbanog)
 
@@ -19,7 +19,7 @@ Consumo, potencia e impuestos en Home Assistant, con cálculo local y desglose v
 </div>
 
 > [!WARNING]
-> **Experimental · 0.2.0.dev1 · Instalar primero en un HA de pruebas.**
+> **En validación · 0.2.0.dev1 · Instalar primero en un HA de pruebas.**
 > La fase final todavía no se ha lanzado. Los importes son estimaciones y necesitan
 > contraste con facturas reales; no sustituyen la factura de tu comercializadora.
 
@@ -64,6 +64,11 @@ potencia **W/kW** o contadores acumulados **Wh/kWh**, incluso varios y mezclados
 un grupo. La unidad se detecta automáticamente. No necesitas ayudantes Integral.
 La energía calculada desde potencia es una estimación marcada como parcial.
 [Selección de sensores, precisión y caducidad](docs/sensores.md).
+
+Para pasar del HA de pruebas al uso habitual sigue la
+[guía de validación durante varios días](docs/validacion-en-ha.md). Define qué
+comprobar y cuándo dar por aceptada una versión, sin cambiar de código durante la
+prueba salvo que haya una corrección necesaria.
 
 ### Con HACS · repositorio personalizado
 
