@@ -68,12 +68,22 @@ fijada por digest, con usuario sin privilegios y datos sintéticos identificados
 `check_config` terminó correctamente y `/onboarding.html` respondió HTTP 200.
 Configuración reproducible: [laboratorio](../lab/README.md).
 
-**Pendiente:** el navegador no ha completado el asistente ni revisado los dashboards.
-La clave SSH bloquea el reenvío de puertos (`administratively prohibited`), por lo
-que el acceso mediante túnel no está disponible. Se ha solicitado autorización para
-un acceso LAN acotado; mientras no se apruebe, el servicio solo escucha en localhost.
-No se han cambiado SSH, firewall, proxy ni router. La prueba de varios días y la
-promoción estable siguen el [plan de aceptación](validacion-en-ha.md).
+**Acceso LAN verificado:** tras autorización explícita, el 24 de octubre se enlazó
+el puerto exclusivamente a `192.168.1.118:18123`. El navegador abrió la interfaz real
+y llegó a «Crear usuario». El enlace predeterminado del Compose sigue siendo local;
+el acceso LAN se utilizó solo para esta comprobación. No se han cambiado SSH, firewall,
+proxy ni router. El túnel SSH no está disponible y se cerró tras comprobarlo.
+
+**Instancia retirada:** por petición del usuario, se eliminó el contenedor, su red
+Compose y la imagen descargada para ese HA nuevo. Se verificó el cierre del puerto
+18123 y se conservó la configuración en una carpeta privada recuperable del proyecto.
+No se tocaron otros servicios ni el entorno de pruebas automatizadas.
+
+**Pendiente:** la revisión visual continuará en el HA de pruebas que ya tiene el
+usuario, tras instalar por HACS y acceder mediante su sesión. No se ha completado
+visualmente el asistente de la integración ni revisado los dashboards. No se crearon
+credenciales ni se desactivó la autenticación. La prueba de varios días sigue el
+[plan de aceptación](validacion-en-ha.md).
 
 Las pruebas de flujos se hacen a través de las APIs reales de Home Assistant. Eso
 no equivale a una inspección visual de móvil/escritorio ni a contraste con una
