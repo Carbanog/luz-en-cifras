@@ -1,6 +1,6 @@
 # Plan de desarrollo y estado verificable
 
-Corte: 24 de octubre de 2026. Versión en validación 0.2.0.dev2.
+Corte: 24 de octubre de 2026. Versión en validación 0.2.0.dev3.
 
 ## A — Investigación
 
@@ -26,11 +26,15 @@ Implementados: asistente por módulos, precios según modalidad, edición/elimin
 de grupos con IDs estables, ledger persistente, migración, descarga con guardado,
 sensores por contrato/grupo, diagnósticos y aviso Repairs.
 
+Cambiar sensores, grupos o modalidades mantiene una factura continua con las fuentes
+y precios de cada revisión. Los cargos se calculan una vez; un contador nuevo espera
+una referencia real. Los cruces ambiguos requieren consentimiento para estimar.
+
 La selección acepta W/kW y Wh/kWh directamente, con grupos mixtos y conversión
 estimada de potencia. Se conserva la energía y se corta la continuidad en paradas,
 lecturas inválidas y caducidad; no se reconstruye consumo no medido.
 
-Las pruebas funcionales usan HA 2026.10.2 en un contenedor aislado de desarrollo
+Las pruebas funcionales usan HA 2026.10.2 y 2026.10.3 en contenedores aislados de desarrollo
 en docker-lab y se repiten en CI. HACS continúa siendo el método de instalación.
 
 ## D — Histórico y conciliación
@@ -56,7 +60,7 @@ presentan como una revisión visual. No hay tarjeta propia obligatoria.
 
 Repositorio público y CI disponibles, con validación HACS/Hassfest y marca local.
 Sin release estable, etiqueta de publicación ni inclusión en HACS predeterminado.
-La distribución experimental usa main; toda actualización debe conservar una copia
+La versión en validación se distribuye desde main; toda actualización debe conservar una copia
 de seguridad y poder revertirse junto con sus datos.
 
 ## Criterio para la fase final

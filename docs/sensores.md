@@ -51,8 +51,15 @@ medición, sujeta a las comprobaciones de precios y del periodo.
 
 Un cambio de W a kW conserva la magnitud normalizada. Cambiar entre potencia y
 contador establece una referencia nueva, sin interpretar W como kWh ni borrar el
-consumo anterior. La primera lectura no es consumo: hay que esperar un intervalo
-válido para obtener un importe.
+consumo anterior. En un contador nuevo, un estado anterior en la caché de HA no sirve
+como lectura del instante de selección: se espera un reporte real para establecer la
+referencia, y después un incremento válido para obtener un importe. Retirar y volver
+a seleccionar un contador tampoco suma el consumo ocurrido mientras estaba retirado.
+
+Se conserva la parte ya medida de la factura al esperar un grupo nuevo, con aviso de
+datos parciales; el grupo sin intervalos está desconocido. Un cero solo se muestra si
+existe una medición válida de consumo cero. Si falta parte de las fuentes de un grupo
+o un reparto no está autorizado, el cálculo queda indisponible y muestra la causa.
 
 ## Periodos de factura
 

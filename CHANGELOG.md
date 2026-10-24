@@ -2,6 +2,19 @@
 
 ## Sin publicar
 
+### 0.2.0.dev3 — continuidad al cambiar sensores y tarifas
+
+- Mantiene una sola factura al sustituir sensores, añadir o retirar grupos y cambiar
+  entre tarifa fija, tres periodos y precio de entidad; conserva las revisiones previas.
+- Calcula cargos fijos e impuestos una vez y conserva la compensación de los tramos
+  anteriores aunque se desactive o cambie su sensor después.
+- Evita sumar consumos de un contador mientras está retirado y espera un reporte real
+  para establecer la referencia de un contador recién seleccionado.
+- Conserva cantidades conocidas mientras un grupo espera mediciones; un grupo sin
+  datos queda desconocido. Los cruces ambiguos requieren estimación autorizada.
+- Guarda fronteras y referencias pendientes en el esquema aditivo 3, preservando
+  históricos, cierre y recálculo reproducible. Documenta actualización y reversión.
+
 ### 0.2.0.dev2 — asistente guiado y ayudas de factura
 
 - Modalidad de energía antes del resto de datos; cada grupo mantiene sus precios.

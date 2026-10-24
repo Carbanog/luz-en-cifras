@@ -49,6 +49,9 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         super().__init__(hass, _LOGGER, config_entry=entry, name=DOMAIN)
         self.entry = entry
+        # Options mutate the entry before its reload listener runs. Keep the old
+        # collector bound to its original settings until unloading has finished.
+        self._config = deepcopy({**entry.data, **entry.options})
         self._store: Store[dict[str, Any]] = Store(
             hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}"
         )
@@ -61,7 +64,7 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
 
     @property
     def config(self) -> dict[str, Any]:
-        return {**self.entry.data, **self.entry.options}
+        return self._config
 
     @property
     def billing_period(self) -> BillingPeriod | None:
@@ -69,14 +72,7 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
 
     @property
     def source_ids(self) -> set[str]:
-        sources = {
-            source
-            for group in self.config["groups"]
-            for source in (*group["add_sources"], *group.get("subtract_sources", []))
-        }
-        if self.config.get("enable_surplus") and self.config.get("export_source"):
-            sources.add(self.config["export_source"])
-        return sources
+        return self._sources_for(self.config)
 
     @property
     def price_ids(self) -> set[str]:
@@ -106,11 +102,20 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
                     "Potencia durante parada no reconstruida; energía anterior conservada"
                 )
             if stored.get("saved_at"):
-                for group in self.config["groups"]:
+                for group in self._stored_config["groups"]:
                     if group.get("tariff_mode") == "entity":
-                        self.ledger.price(
-                            group["group_id"], None, datetime.fromisoformat(stored["saved_at"])
-                        )
+                        state = self.hass.states.get(group.get("price_entity", ""))
+                        saved_at = datetime.fromisoformat(stored["saved_at"])
+                        # A live reload can retain a quote if HA confirms the
+                        # source has not changed and it is still within its TTL.
+                        if (
+                            state
+                            and state.last_updated <= saved_at
+                            and (now - state.last_updated).total_seconds()
+                            <= 60 * float(group.get("price_max_age_minutes", 65))
+                        ):
+                            continue
+                        self.ledger.price(group["group_id"], None, saved_at)
                         self.ledger.warnings.add("Precio dinámico durante parada no reconstruido")
         elif stored:
             # Retain the original payload, and import point samples as micro-intervals.
@@ -141,28 +146,26 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
             for group in self.config["groups"]:
                 self.ledger.price(group["group_id"], Decimal(str(group["eur_per_kwh"])), start)
 
-        # A changed source expression cannot safely reinterpret previous measurements.
-        def topology(cfg: dict[str, Any]) -> tuple[Any, ...]:
-            return (
-                tuple(
-                    sorted(
-                        (
-                            g["group_id"],
-                            tuple(sorted(g["add_sources"])),
-                            tuple(sorted(g.get("subtract_sources", []))),
-                        )
-                        for g in cfg.get("groups", [])
-                    )
-                ),
-                cfg.get("export_source") if cfg.get("enable_surplus") else None,
-            )
-
-        if topology(self._stored_config) != topology(self.config):
-            self._archive("configuration_change")
-            self.ledger = MeasurementLedger()
-            self.ledger.warnings.add(
-                "Fuentes modificadas: segmento anterior archivado; seguimiento reiniciado"
-            )
+        changed = self._stored_config != self.config
+        if changed:
+            old_sources = self._sources_for(self._stored_config)
+            retained = old_sources & self.source_ids
+            # Detached meters must not contribute their off-contract increments
+            # if they are selected again later in the same billing period.
+            for source in set(self.ledger.baselines) - retained:
+                self.ledger.baselines.pop(source, None)
+            for source in set(self.ledger.pending_energy_sources) - retained:
+                self.ledger.pending_energy_sources.pop(source, None)
+            for source in retained:
+                self._collect_source(source, now)
+            self.ledger.revision_boundaries.append(now)
+            if old_sources != self.source_ids or self._stored_config.get(
+                "groups"
+            ) != self.config.get("groups"):
+                self.ledger.warnings.add(
+                    "Fuentes/tarifa revisadas: se conserva el consumo anterior; "
+                    "las fuentes nuevas parten de una nueva referencia"
+                )
         self._roll(now.date())
         if not self.revisions:
             self.revisions.append(
@@ -219,6 +222,13 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
         self.async_set_updated_data(self._calculate())
 
     def _capture_prices(self, when: datetime) -> None:
+        active_groups = {group["group_id"] for group in self.config["groups"]}
+        if self.config.get("enable_surplus"):
+            active_groups.add("__surplus")
+        for group_id in {
+            rate.group_id for rate in self.ledger.rates if rate.valid_to is None
+        } - active_groups:
+            self.ledger.price(group_id, None, when)
         if self.config.get("enable_surplus"):
             self.ledger.price("__surplus", Decimal(str(self.config.get("surplus_price", 0))), when)
         for group in self.config["groups"]:
@@ -254,6 +264,12 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
 
     def _collect_source(self, source: str, when: datetime, state: State | None = None) -> None:
         state = state or self.hass.states.get(source)
+        if (
+            state
+            and state.attributes.get("unit_of_measurement") in {"Wh", "kWh"}
+            and source not in self.ledger.baselines
+        ):
+            self.ledger.pending_energy_sources.setdefault(source, when)
         value = None
         try:
             value = Decimal(state.state) if state and not state.attributes.get("restored") else None
@@ -351,7 +367,7 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
                 quality=DataQuality.PARTIAL,
                 warnings=(*result.warnings, *sorted(self.ledger.warnings)),
             )
-        return CoordinatorData(result, None, tuple(sorted(self.ledger.warnings)))
+        return CoordinatorData(result, None, tuple(sorted(set(result.warnings))))
 
     def _archive(self, reason: str) -> None:
         self.ledger.warnings.add("Devengo provisional: último día del periodo de consumo")
@@ -418,7 +434,9 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
         )
         if ledger.warnings:
             result = replace(
-                result, quality=DataQuality.PARTIAL, warnings=tuple(sorted(ledger.warnings))
+                result,
+                quality=DataQuality.PARTIAL,
+                warnings=(*result.warnings, *sorted(ledger.warnings)),
             )
         record = snapshot(result, config)
         record.update(
@@ -435,6 +453,25 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
 
     async def async_persist(self) -> None:
         await self._store.async_save(self._serialize())
+
+    async def async_prepare_reload(self) -> None:
+        """Read the old meters at the transition without using the new options."""
+        now = _now()
+        self._roll(now.date())
+        for source in self.source_ids:
+            self._collect_source(source, now)
+        await self.async_persist()
+
+    @staticmethod
+    def _sources_for(config: dict[str, Any]) -> set[str]:
+        sources = {
+            source
+            for group in config.get("groups", [])
+            for source in (*group["add_sources"], *group.get("subtract_sources", []))
+        }
+        if config.get("enable_surplus") and config.get("export_source"):
+            sources.add(config["export_source"])
+        return sources
 
     async def async_archive_period(
         self, start: date, end: date, tax_point: date, allow_boundary_estimate: bool = False
@@ -478,7 +515,9 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
         )
         if ledger.warnings:
             result = replace(
-                result, quality=DataQuality.PARTIAL, warnings=tuple(sorted(ledger.warnings))
+                result,
+                quality=DataQuality.PARTIAL,
+                warnings=(*result.warnings, *sorted(ledger.warnings)),
             )
         record = snapshot(result, self.config)
         if any(item.get("id") == record["id"] for item in self.history):
@@ -506,7 +545,7 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
 
     def _serialize(self) -> dict[str, Any]:
         return {
-            "schema_version": 2,
+            "schema_version": 3,
             "saved_at": dt_util.now().isoformat(),
             "revisions": self.revisions,
             "ledger": self.ledger.serialize(),
