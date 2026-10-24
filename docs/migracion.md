@@ -1,4 +1,18 @@
-# Actualizar desde 0.1
+# Actualización y recuperación
+
+## Pasar de main a releases
+
+La primera release es **0.2.0** e incluye las mejoras de 0.2.0.dev3, sin cambios
+funcionales adicionales. Si instalaste `main`, abre el menú del repositorio en HACS,
+elige **Volver a descargar** y selecciona **0.2.0**. Reinicia HA y comprueba la versión
+en los diagnósticos. No elimines los contratos. A partir de ahí utiliza las versiones
+de [Releases](https://github.com/Carbanog/luz-en-cifras/releases) para actualizar.
+
+Antes de actualizar guarda un respaldo completo de HA. HACS permite seleccionar
+releases anteriores, pero una bajada con cambios de almacenamiento requiere restaurar
+también sus datos. Las notas de cada release indicarán cualquier migración necesaria.
+
+## Actualizar desde 0.1
 
 1. Crea una copia de seguridad completa de Home Assistant antes de actualizar.
 2. Actualiza la integración mediante HACS y reinicia HA. No elimines sus contratos.
