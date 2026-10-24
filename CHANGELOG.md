@@ -2,6 +2,16 @@
 
 ## Sin publicar
 
+### 0.2.0.dev2 — asistente guiado y ayudas de factura
+
+- Modalidad de energía antes del resto de datos; cada grupo mantiene sus precios.
+- Separa periodo, sensores/tarifa, unidad de potencia y potencias contratadas.
+- Explica P1/P2, kW frente a W/kWh, precios unitarios y alquiler junto a los campos.
+- Mes de referencia solo en bimestrales; opciones técnicas dentro de Avanzado.
+- Elimina el cero automático en potencias/costes desconocidos y corrige enteros
+  devueltos como `1.0` por los selectores, que impedían recargar un contrato editado.
+- Añade regresiones del recorrido y compatibilidad, y CI para HA 2026.10.3.
+
 ### 0.2.0.dev1 — sensores de potencia directos
 
 - Añade sensores directos W/kW junto a Wh/kWh, grupos mixtos y detección de unidad.

@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigEntry) -> dict:
     coordinator = entry.runtime_data
     return {
-        "version": "0.2.0.dev1",
+        "version": "0.2.0.dev2",
         "storage_schema": 2,
         "group_count": len(coordinator.config["groups"]),
         "tariff_modes": [
