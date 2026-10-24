@@ -34,7 +34,7 @@ La selección acepta W/kW y Wh/kWh directamente, con grupos mixtos y conversión
 estimada de potencia. Se conserva la energía y se corta la continuidad en paradas,
 lecturas inválidas y caducidad; no se reconstruye consumo no medido.
 
-Las pruebas funcionales usan HA 2026.10.2 en un contenedor aislado de desarrollo
+Las pruebas funcionales usan HA 2026.10.2 y 2026.10.3 en contenedores aislados de desarrollo
 en docker-lab y se repiten en CI. HACS continúa siendo el método de instalación.
 
 ## D — Histórico y conciliación
@@ -60,7 +60,7 @@ presentan como una revisión visual. No hay tarjeta propia obligatoria.
 
 Repositorio público y CI disponibles, con validación HACS/Hassfest y marca local.
 Sin release estable, etiqueta de publicación ni inclusión en HACS predeterminado.
-La distribución experimental usa main; toda actualización debe conservar una copia
+La versión en validación se distribuye desde main; toda actualización debe conservar una copia
 de seguridad y poder revertirse junto con sus datos.
 
 ## Criterio para la fase final
