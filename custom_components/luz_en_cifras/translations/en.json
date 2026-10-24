@@ -1,0 +1,287 @@
+{
+  "title": "Luz en Cifras",
+  "config": {
+    "step": {
+      "contract": {
+        "title": "Contrato y ciclo",
+        "description": "Introduce los precios sin impuestos. La potencia y los cargos diarios se calculan hasta el día actual incluido. Las modificaciones diarias se aplican desde la fecha de edición.",
+        "data": {
+          "contract_name": "Nombre del contrato",
+          "billing_day": "Día de inicio del ciclo",
+          "billing_months": "Duración del ciclo",
+          "power_price_unit": "Unidad de los precios de potencia",
+          "power_p1_kw": "Potencia P1 (kW)",
+          "power_p2_kw": "Potencia P2 (kW)",
+          "power_p1_eur_per_kw_day": "Precio de potencia P1 (según unidad elegida)",
+          "power_p2_eur_per_kw_day": "Precio de potencia P2 (según unidad elegida)",
+          "meter_rental_daily": "Alquiler del contador sin IVA (€/día)",
+          "approximate_intervals": "Permitir reparto uniforme si una lectura cruza precios (estimación parcial)",
+          "show_secondary_entities": "Mostrar entidades de desglose y grupos",
+          "billing_anchor_month": "Mes de referencia para ciclos bimestrales (1–12)"
+        }
+      },
+      "menu": {
+        "title": "Configurar contrato",
+        "description": "Elige los módulos que necesitas. Puedes volver a estas opciones después de guardar.",
+        "menu_options": {
+          "contract": "Contrato y potencia",
+          "add_group": "Añadir grupo de consumo",
+          "select_group": "Editar o eliminar un grupo",
+          "extras": "Descuentos, servicios y excedentes",
+          "finish": "Revisar validación y guardar",
+          "fiscal": "Perfil fiscal"
+        }
+      },
+      "select_group": {
+        "title": "Elegir grupo",
+        "data": {
+          "group_id": "Grupo que quieres editar"
+        }
+      },
+      "group": {
+        "title": "Consumo y tarifa del grupo",
+        "description": "Selecciona los contadores acumulados Wh/kWh y el tipo de tarifa. En el siguiente paso solo aparecen los precios que necesitas. Cambiar fuentes archiva el segmento anterior; eliminar un grupo conserva sus históricos.",
+        "data": {
+          "group_name": "Nombre",
+          "add_sources": "Contadores que suman",
+          "subtract_sources": "Subcontadores incluidos que se restan",
+          "tariff_mode": "Modalidad de tarifa",
+          "eur_per_kwh": "Precio fijo sin impuestos (€/kWh)",
+          "p1_price": "Precio punta P1 (€/kWh)",
+          "p2_price": "Precio llano P2 (€/kWh)",
+          "p3_price": "Precio valle P3 (€/kWh)",
+          "price_entity": "Entidad de precio sin impuestos (€/kWh o €/MWh)",
+          "price_markup": "Margen adicional para precio dinámico (€/kWh)",
+          "delete_group": "Eliminar este grupo al guardar"
+        }
+      },
+      "extras": {
+        "title": "Conceptos opcionales",
+        "description": "Deja cero los módulos que no necesites. El impuesto de servicios se configura aparte del de energía. La compensación requiere un contador de exportación independiente y ciclo mensual; usa el precio acordado y queda limitada al valor de energía importada. No activa batería virtual ni bono social.",
+        "data": {
+          "daily_fee": "Cuota adicional sin impuestos (€/día)",
+          "invoice_fee": "Servicio sin IVA (€/factura)",
+          "energy_discount_percent": "Descuento sobre energía (%)",
+          "daily_fee_electricity_taxable": "La cuota diaria tributa por impuesto eléctrico",
+          "enable_surplus": "Activar compensación simplificada de excedentes",
+          "export_source": "Contador acumulado de exportación (Wh/kWh)",
+          "surplus_price": "Precio de compensación acordado (€/kWh)",
+          "fees_tax_percent": "Impuesto indirecto sobre los servicios adicionales (%)"
+        }
+      },
+      "finish": {
+        "title": "Revisar configuración",
+        "description": "Corrige el problema indicado. Pulsa continuar para volver al menú sin perder los cambios."
+      },
+      "tariff": {
+        "title": "Precios del grupo",
+        "description": "Introduce importes sin impuestos. Una entidad PVPC debe entregar el término completo de energía (FEU), no el precio OMIE. No vuelvas a añadir peajes/cargos si ya están incluidos. Si solo tienes lecturas acumuladas, los cruces entre precios requieren activar el reparto temporal parcial en las opciones del contrato.",
+        "data": {
+          "eur_per_kwh": "Precio fijo sin impuestos (€/kWh)",
+          "p1_price": "Punta P1 (€/kWh)",
+          "p2_price": "Llano P2 (€/kWh)",
+          "p3_price": "Valle P3 (€/kWh)",
+          "price_entity": "Entidad de precio sin impuestos (€/kWh o €/MWh)",
+          "price_markup": "Margen adicional (€/kWh)",
+          "price_max_age_minutes": "Caducidad de una cotización sin actualizar (minutos)"
+        }
+      },
+      "fiscal": {
+        "title": "Perfil fiscal",
+        "description": "El modo automático cubre el uso doméstico general en territorio IVA en las fechas verificadas. El modo manual exige una fuente pública y confirmación de sus condiciones, porcentajes, bases y vigencia. No determina elegibilidad ni exenciones automáticamente. El final de vigencia es exclusivo.",
+        "data": {
+          "fiscal_mode": "Modo",
+          "tax_name": "Nombre del impuesto indirecto",
+          "tax_valid_from": "Vigencia desde (incluida)",
+          "tax_valid_to": "Vigencia hasta (excluida)",
+          "tax_source": "Fuente pública HTTPS sin credenciales ni datos personales",
+          "tax_rules_confirmed": "He comprobado las condiciones y bases aplicables al contrato",
+          "tax_electricity_percent": "Impuesto eléctrico (%)",
+          "tax_indirect_percent": "Impuesto indirecto (%)",
+          "tax_minimum_eur_mwh": "Mínimo de impuesto eléctrico (€/MWh)"
+        }
+      }
+    },
+    "error": {
+      "empty_name": "Introduce un nombre.",
+      "empty_group": "El grupo requiere nombre y al menos un contador.",
+      "source_overlap": "No puedes sumar y restar el mismo sensor dentro de un grupo.",
+      "invalid_units": "Selecciona contadores existentes en Wh o kWh.",
+      "missing_price_entity": "Selecciona una entidad de precio para la tarifa dinámica.",
+      "invalid_price_units": "La entidad debe indicar €/kWh, EUR/kWh, €/MWh o EUR/MWh.",
+      "missing_groups": "Añade al menos un grupo antes de guardar.",
+      "duplicate_sources": "Los grupos facturarían el mismo consumo más de una vez. Revisa las sumas y restas.",
+      "invalid_surplus": "La compensación requiere ciclo mensual y un sensor de exportación Wh/kWh distinto de los de consumo.",
+      "invalid_tax_profile": "El perfil requiere fuente HTTPS pública, confirmación, fechas coherentes y porcentajes válidos."
+    },
+    "abort": {
+      "already_configured": "Este contrato ya existe."
+    }
+  },
+  "options": {
+    "step": {
+      "contract": {
+        "title": "Contrato y ciclo",
+        "description": "Introduce los precios sin impuestos. La potencia y los cargos diarios se calculan hasta el día actual incluido. Las modificaciones diarias se aplican desde la fecha de edición.",
+        "data": {
+          "contract_name": "Nombre del contrato",
+          "billing_day": "Día de inicio del ciclo",
+          "billing_months": "Duración del ciclo",
+          "power_price_unit": "Unidad de los precios de potencia",
+          "power_p1_kw": "Potencia P1 (kW)",
+          "power_p2_kw": "Potencia P2 (kW)",
+          "power_p1_eur_per_kw_day": "Precio de potencia P1 (según unidad elegida)",
+          "power_p2_eur_per_kw_day": "Precio de potencia P2 (según unidad elegida)",
+          "meter_rental_daily": "Alquiler del contador sin IVA (€/día)",
+          "approximate_intervals": "Permitir reparto uniforme si una lectura cruza precios (estimación parcial)",
+          "show_secondary_entities": "Mostrar entidades de desglose y grupos",
+          "billing_anchor_month": "Mes de referencia para ciclos bimestrales (1–12)"
+        }
+      },
+      "menu": {
+        "title": "Configurar contrato",
+        "description": "Elige los módulos que necesitas. Puedes volver a estas opciones después de guardar.",
+        "menu_options": {
+          "contract": "Contrato y potencia",
+          "add_group": "Añadir grupo de consumo",
+          "select_group": "Editar o eliminar un grupo",
+          "extras": "Descuentos, servicios y excedentes",
+          "finish": "Revisar validación y guardar",
+          "fiscal": "Perfil fiscal"
+        }
+      },
+      "select_group": {
+        "title": "Elegir grupo",
+        "data": {
+          "group_id": "Grupo que quieres editar"
+        }
+      },
+      "group": {
+        "title": "Consumo y tarifa del grupo",
+        "description": "Selecciona los contadores acumulados Wh/kWh y el tipo de tarifa. En el siguiente paso solo aparecen los precios que necesitas. Cambiar fuentes archiva el segmento anterior; eliminar un grupo conserva sus históricos.",
+        "data": {
+          "group_name": "Nombre",
+          "add_sources": "Contadores que suman",
+          "subtract_sources": "Subcontadores incluidos que se restan",
+          "tariff_mode": "Modalidad de tarifa",
+          "eur_per_kwh": "Precio fijo sin impuestos (€/kWh)",
+          "p1_price": "Precio punta P1 (€/kWh)",
+          "p2_price": "Precio llano P2 (€/kWh)",
+          "p3_price": "Precio valle P3 (€/kWh)",
+          "price_entity": "Entidad de precio sin impuestos (€/kWh o €/MWh)",
+          "price_markup": "Margen adicional para precio dinámico (€/kWh)",
+          "delete_group": "Eliminar este grupo al guardar"
+        }
+      },
+      "extras": {
+        "title": "Conceptos opcionales",
+        "description": "Deja cero los módulos que no necesites. El impuesto de servicios se configura aparte del de energía. La compensación requiere un contador de exportación independiente y ciclo mensual; usa el precio acordado y queda limitada al valor de energía importada. No activa batería virtual ni bono social.",
+        "data": {
+          "daily_fee": "Cuota adicional sin impuestos (€/día)",
+          "invoice_fee": "Servicio sin IVA (€/factura)",
+          "energy_discount_percent": "Descuento sobre energía (%)",
+          "daily_fee_electricity_taxable": "La cuota diaria tributa por impuesto eléctrico",
+          "enable_surplus": "Activar compensación simplificada de excedentes",
+          "export_source": "Contador acumulado de exportación (Wh/kWh)",
+          "surplus_price": "Precio de compensación acordado (€/kWh)",
+          "fees_tax_percent": "Impuesto indirecto sobre los servicios adicionales (%)"
+        }
+      },
+      "finish": {
+        "title": "Revisar configuración",
+        "description": "Corrige el problema indicado. Pulsa continuar para volver al menú sin perder los cambios."
+      },
+      "tariff": {
+        "title": "Precios del grupo",
+        "description": "Introduce importes sin impuestos. Una entidad PVPC debe entregar el término completo de energía (FEU), no el precio OMIE. No vuelvas a añadir peajes/cargos si ya están incluidos. Si solo tienes lecturas acumuladas, los cruces entre precios requieren activar el reparto temporal parcial en las opciones del contrato.",
+        "data": {
+          "eur_per_kwh": "Precio fijo sin impuestos (€/kWh)",
+          "p1_price": "Punta P1 (€/kWh)",
+          "p2_price": "Llano P2 (€/kWh)",
+          "p3_price": "Valle P3 (€/kWh)",
+          "price_entity": "Entidad de precio sin impuestos (€/kWh o €/MWh)",
+          "price_markup": "Margen adicional (€/kWh)",
+          "price_max_age_minutes": "Caducidad de una cotización sin actualizar (minutos)"
+        }
+      },
+      "fiscal": {
+        "title": "Perfil fiscal",
+        "description": "El modo automático cubre el uso doméstico general en territorio IVA en las fechas verificadas. El modo manual exige una fuente pública y confirmación de sus condiciones, porcentajes, bases y vigencia. No determina elegibilidad ni exenciones automáticamente. El final de vigencia es exclusivo.",
+        "data": {
+          "fiscal_mode": "Modo",
+          "tax_name": "Nombre del impuesto indirecto",
+          "tax_valid_from": "Vigencia desde (incluida)",
+          "tax_valid_to": "Vigencia hasta (excluida)",
+          "tax_source": "Fuente pública HTTPS sin credenciales ni datos personales",
+          "tax_rules_confirmed": "He comprobado las condiciones y bases aplicables al contrato",
+          "tax_electricity_percent": "Impuesto eléctrico (%)",
+          "tax_indirect_percent": "Impuesto indirecto (%)",
+          "tax_minimum_eur_mwh": "Mínimo de impuesto eléctrico (€/MWh)"
+        }
+      }
+    },
+    "error": {
+      "empty_name": "Introduce un nombre.",
+      "empty_group": "El grupo requiere nombre y al menos un contador.",
+      "source_overlap": "No puedes sumar y restar el mismo sensor dentro de un grupo.",
+      "invalid_units": "Selecciona contadores existentes en Wh o kWh.",
+      "missing_price_entity": "Selecciona una entidad de precio para la tarifa dinámica.",
+      "invalid_price_units": "La entidad debe indicar €/kWh, EUR/kWh, €/MWh o EUR/MWh.",
+      "missing_groups": "Añade al menos un grupo antes de guardar.",
+      "duplicate_sources": "Los grupos facturarían el mismo consumo más de una vez. Revisa las sumas y restas.",
+      "invalid_surplus": "La compensación requiere ciclo mensual y un sensor de exportación Wh/kWh distinto de los de consumo.",
+      "invalid_tax_profile": "El perfil requiere fuente HTTPS pública, confirmación, fechas coherentes y porcentajes válidos."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "estimated_total": {
+        "name": "Factura actual estimada"
+      },
+      "energy_cost": {
+        "name": "Coste de energía"
+      },
+      "power_cost": {
+        "name": "Coste de potencia"
+      },
+      "electricity_tax": {
+        "name": "Impuesto eléctrico"
+      },
+      "vat": {
+        "name": "IVA"
+      },
+      "other_charges": {
+        "name": "Otros cargos"
+      },
+      "discounts": {
+        "name": "Descuentos"
+      },
+      "period_energy": {
+        "name": "Energía del periodo"
+      },
+      "surplus_compensation": {
+        "name": "Compensación de excedentes"
+      },
+      "billing_days": {
+        "name": "Días del periodo"
+      },
+      "effective_price": {
+        "name": "Precio medio efectivo"
+      },
+      "data_quality": {
+        "name": "Calidad de los datos",
+        "state": {
+          "complete": "Completa",
+          "partial": "Parcial",
+          "error": "Error"
+        }
+      }
+    }
+  },
+  "issues": {
+    "missing_fiscal_rule": {
+      "title": "Falta una regla fiscal verificada",
+      "description": "La estimación del contrato está indisponible porque su fecha de devengo no tiene una regla fiscal verificada. Actualiza la integración o configura un perfil manual documentado desde las opciones del contrato. No introduzcas porcentajes basándote en una medida condicionada aún sin resolver."
+    }
+  }
+}

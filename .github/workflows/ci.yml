@@ -46,3 +46,16 @@ jobs:
 
       - name: Import integration against Home Assistant
         run: python -c "import custom_components.luz_en_cifras.config_flow; import custom_components.luz_en_cifras.sensor; import custom_components.luz_en_cifras.coordinator"
+
+  home-assistant:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.14.2"
+      - name: Install reference HA test environment
+        run: python -m pip install pytest-homeassistant-custom-component==0.13.373
+      - name: Exercise config flows, events, history and persistence
+        run: python -m pytest -c tests_ha/pytest.ini tests_ha -q

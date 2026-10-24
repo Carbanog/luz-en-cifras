@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import defaultdict
 from datetime import UTC
 from decimal import ROUND_HALF_UP, Decimal, localcontext
+from zoneinfo import ZoneInfo
 
 from .errors import ConfigurationError, IncompleteDataError
 from .models import (
@@ -15,6 +16,7 @@ from .models import (
     InvoiceInput,
     InvoiceLine,
     InvoiceResult,
+    PowerCharge,
 )
 
 CENT = Decimal("0.01")
@@ -41,6 +43,35 @@ class BillingEngine:
             lines.extend(self._power_lines(invoice))
             lines.extend(self._fixed_lines(invoice))
             lines.extend(self._discount_lines(invoice, lines))
+            if not invoice.surplus_credit.is_finite() or invoice.surplus_credit < 0:
+                raise ConfigurationError("Surplus credit must be finite and non-negative")
+            if invoice.surplus_credit:
+                energy_base = max(
+                    Decimal(),
+                    sum(
+                        (
+                            line.amount
+                            if line.category == "energy"
+                            else Decimal(line.metadata.get("energy_adjustment", "0"))
+                            for line in lines
+                        ),
+                        Decimal(),
+                    ),
+                )
+                lines.append(
+                    InvoiceLine(
+                        code="surplus_compensation",
+                        label="Compensación simplificada de excedentes",
+                        category="compensation",
+                        amount=-min(invoice.surplus_credit, energy_base),
+                        electricity_taxable=True,
+                        vat_taxable=True,
+                        metadata={
+                            "requested_credit": str(invoice.surplus_credit),
+                            "cap": str(energy_base),
+                        },
+                    )
+                )
 
             electricity_base = sum(
                 (line.amount for line in lines if line.electricity_taxable), Decimal()
@@ -60,13 +91,25 @@ class BillingEngine:
             )
             lines.append(tax_line)
 
-            vat_base = sum((line.amount for line in lines if line.vat_taxable), Decimal())
+            vat_amount = sum(
+                (
+                    line.amount
+                    * (
+                        line.vat_rate_override
+                        if line.vat_rate_override is not None
+                        else invoice.fiscal_rule.vat_rate
+                    )
+                    for line in lines
+                    if line.vat_taxable
+                ),
+                Decimal(),
+            )
             lines.append(
                 InvoiceLine(
                     code="vat",
-                    label="IVA",
+                    label=invoice.fiscal_rule.indirect_tax_name,
                     category="vat",
-                    amount=vat_base * invoice.fiscal_rule.vat_rate,
+                    amount=vat_amount,
                     vat_taxable=False,
                     metadata={"fiscal_rule_id": invoice.fiscal_rule.rule_id},
                 )
@@ -89,6 +132,19 @@ class BillingEngine:
                 total_kwh=total_kwh.quantize(DISPLAY_ENERGY, rounding=ROUND_HALF_UP),
                 quality=DataQuality.PARTIAL if warnings else DataQuality.COMPLETE,
                 warnings=warnings,
+                fiscal_details={
+                    "electricity_tax_rate": str(invoice.fiscal_rule.electricity_tax_rate),
+                    "indirect_tax_rate": str(invoice.fiscal_rule.vat_rate),
+                    "minimum_electricity_eur_per_mwh": str(
+                        invoice.fiscal_rule.minimum_electricity_eur_per_mwh
+                    ),
+                    "valid_from": invoice.fiscal_rule.valid_from.isoformat(),
+                    "valid_to": invoice.fiscal_rule.valid_to.isoformat()
+                    if invoice.fiscal_rule.valid_to
+                    else "",
+                    "sources": "\n".join(invoice.fiscal_rule.source_urls),
+                    "indirect_tax_name": invoice.fiscal_rule.indirect_tax_name,
+                },
             )
 
     def _validate(self, invoice: InvoiceInput) -> None:
@@ -101,7 +157,11 @@ class BillingEngine:
             raise ConfigurationError("Fiscal rule is not valid at the invoice tax point")
 
         for sample in invoice.samples:
-            if not invoice.period.start <= sample.timestamp.date() < invoice.period.end:
+            if (
+                not invoice.period.start
+                <= sample.timestamp.astimezone(ZoneInfo(invoice.timezone)).date()
+                < invoice.period.end
+            ):
                 raise ConfigurationError(
                     f"Sample for {sample.source_id} falls outside the billing period"
                 )
@@ -163,6 +223,25 @@ class BillingEngine:
                 if quantity == 0:
                     continue
                 unit_price = amount / quantity
+                applied_rate = next(
+                    rate for rate in invoice.energy_rates if rate.rate_id == rate_id
+                )
+                if applied_rate.discount_rate:
+                    lines.append(
+                        InvoiceLine(
+                            code=f"discount:{group.group_id}:{rate_id}:{tariff_period}",
+                            label=f"Descuento — {group.name}",
+                            category="discount",
+                            amount=-amount * applied_rate.discount_rate,
+                            electricity_taxable=True,
+                            vat_taxable=True,
+                            metadata={
+                                "rate_id": rate_id,
+                                "discount_rate": str(applied_rate.discount_rate),
+                                "energy_adjustment": str(-amount * applied_rate.discount_rate),
+                            },
+                        )
+                    )
                 lines.append(
                     InvoiceLine(
                         code=f"energy:{group.group_id}:{rate_id}:{tariff_period}",
@@ -206,17 +285,25 @@ class BillingEngine:
 
     @staticmethod
     def _power_lines(invoice: InvoiceInput) -> list[InvoiceLine]:
-        days = Decimal(invoice.period.days)
+        def days_for(charge: PowerCharge) -> int:
+            return max(
+                0,
+                (
+                    min(invoice.period.end, charge.valid_to or invoice.period.end)
+                    - max(invoice.period.start, charge.valid_from or invoice.period.start)
+                ).days,
+            )
+
         return [
             InvoiceLine(
                 code=f"power:{charge.code}",
                 label=charge.label,
                 category="power",
-                amount=charge.contracted_kw * charge.eur_per_kw_day * days,
+                amount=charge.contracted_kw * charge.eur_per_kw_day * Decimal(days_for(charge)),
                 quantity=charge.contracted_kw,
                 unit_price=charge.eur_per_kw_day,
                 electricity_taxable=True,
-                metadata={"days": str(invoice.period.days)},
+                metadata={"days": str(days_for(charge))},
             )
             for charge in invoice.power_charges
         ]
@@ -226,7 +313,15 @@ class BillingEngine:
         lines: list[InvoiceLine] = []
         for charge in invoice.fixed_charges:
             factor = (
-                Decimal(invoice.period.days)
+                Decimal(
+                    max(
+                        0,
+                        (
+                            min(invoice.period.end, charge.valid_to or invoice.period.end)
+                            - max(invoice.period.start, charge.valid_from or invoice.period.start)
+                        ).days,
+                    )
+                )
                 if charge.frequency == BillingFrequency.DAILY
                 else Decimal(1)
             )
@@ -238,6 +333,7 @@ class BillingEngine:
                     amount=charge.amount * factor,
                     electricity_taxable=charge.electricity_taxable,
                     vat_taxable=charge.vat_taxable,
+                    vat_rate_override=charge.vat_rate_override,
                     metadata={"frequency": charge.frequency},
                 )
             )
@@ -258,7 +354,18 @@ class BillingEngine:
                     amount=-(base * discount.rate),
                     electricity_taxable=bool(discount.categories & {"energy", "power"}),
                     vat_taxable=True,
-                    metadata={"rate": str(discount.rate)},
+                    metadata={
+                        "rate": str(discount.rate),
+                        "energy_adjustment": str(
+                            -sum(
+                                (line.amount for line in lines if line.category == "energy"),
+                                Decimal(),
+                            )
+                            * discount.rate
+                            if "energy" in discount.categories
+                            else Decimal()
+                        ),
+                    },
                 )
             )
         return discount_lines

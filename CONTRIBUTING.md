@@ -26,6 +26,18 @@ pytest
 python -m compileall -q custom_components tests
 ```
 
+Las pruebas contra Home Assistant requieren un entorno separado para evitar
+mezclar las versiones de sus dependencias con las herramientas de desarrollo:
+
+```shell
+python -m pip install pytest-homeassistant-custom-component==0.13.373
+python -m pytest -c tests_ha/pytest.ini tests_ha -q
+```
+
+Consulta [la guía de pruebas](docs/pruebas.md) para el laboratorio aislado y las
+limitaciones de la comprobación visual. Los sensores de los tests son fixtures
+sintéticos; no sustituyen una validación con facturas reales anonimizadas.
+
 Toda nueva regla económica debe incluir casos de límite: comienzo y final del
 periodo, cambio de precio o impuesto, datos ausentes, redondeo y valores negativos
 cuando sean válidos. No se aceptan fórmulas fiscales sin una fuente oficial fechada.

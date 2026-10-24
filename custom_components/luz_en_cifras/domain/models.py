@@ -52,7 +52,7 @@ class EnergySample:
     def __post_init__(self) -> None:
         if self.timestamp.tzinfo is None or self.timestamp.utcoffset() is None:
             raise ValueError("Energy sample timestamp must be timezone-aware")
-        if self.kwh < 0:
+        if not self.kwh.is_finite() or self.kwh < 0:
             raise ValueError("Energy sample cannot be negative")
 
 
@@ -89,8 +89,13 @@ class EnergyRate:
     valid_from: datetime
     valid_to: datetime | None = None
     tariff_period: str | None = None
+    discount_rate: Decimal = Decimal(0)
 
     def __post_init__(self) -> None:
+        if not self.eur_per_kwh.is_finite():
+            raise ValueError("Energy price must be finite")
+        if not self.discount_rate.is_finite() or not 0 <= self.discount_rate <= 1:
+            raise ValueError("Discount must be a finite fraction between zero and one")
         if self.valid_from.tzinfo is None or self.valid_from.utcoffset() is None:
             raise ValueError("Rate validity must be timezone-aware")
         if self.valid_to is not None:
@@ -108,10 +113,16 @@ class PowerCharge:
     label: str
     contracted_kw: Decimal
     eur_per_kw_day: Decimal
+    valid_from: date | None = None
+    valid_to: date | None = None
 
     def __post_init__(self) -> None:
+        if not self.contracted_kw.is_finite() or not self.eur_per_kw_day.is_finite():
+            raise ValueError("Power values must be finite")
         if self.contracted_kw < 0 or self.eur_per_kw_day < 0:
             raise ValueError("Power and its price cannot be negative")
+        if self.valid_from and self.valid_to and self.valid_to < self.valid_from:
+            raise ValueError("Power validity end cannot precede start")
 
 
 @dataclass(frozen=True, slots=True)
@@ -124,6 +135,17 @@ class FixedCharge:
     frequency: BillingFrequency = BillingFrequency.INVOICE
     electricity_taxable: bool = False
     vat_taxable: bool = True
+    valid_from: date | None = None
+    valid_to: date | None = None
+    vat_rate_override: Decimal | None = None
+
+    def __post_init__(self) -> None:
+        if not self.amount.is_finite():
+            raise ValueError("Charge amount must be finite")
+        if self.vat_rate_override is not None and (
+            not self.vat_rate_override.is_finite() or not 0 <= self.vat_rate_override <= 1
+        ):
+            raise ValueError("VAT override must be a finite fraction")
 
 
 @dataclass(frozen=True, slots=True)
@@ -136,7 +158,7 @@ class PercentageDiscount:
     categories: frozenset[str] = frozenset({"energy"})
 
     def __post_init__(self) -> None:
-        if self.rate < 0 or self.rate > 1:
+        if not self.rate.is_finite() or self.rate < 0 or self.rate > 1:
             raise ValueError("Discount rate must be between 0 and 1")
         if not self.categories:
             raise ValueError("Discount needs at least one category")
@@ -153,13 +175,22 @@ class FiscalRule:
     vat_rate: Decimal
     minimum_electricity_eur_per_mwh: Decimal
     source_urls: tuple[str, ...]
+    indirect_tax_name: str = "IVA"
 
     def __post_init__(self) -> None:
         if self.valid_to is not None and self.valid_to <= self.valid_from:
             raise ValueError("Fiscal rule valid_to must be after valid_from")
-        if not 0 <= self.electricity_tax_rate <= 1 or not 0 <= self.vat_rate <= 1:
+        if (
+            not self.electricity_tax_rate.is_finite()
+            or not self.vat_rate.is_finite()
+            or not 0 <= self.electricity_tax_rate <= 1
+            or not 0 <= self.vat_rate <= 1
+        ):
             raise ValueError("Tax rates must be decimal fractions between 0 and 1")
-        if self.minimum_electricity_eur_per_mwh < 0:
+        if (
+            not self.minimum_electricity_eur_per_mwh.is_finite()
+            or self.minimum_electricity_eur_per_mwh < 0
+        ):
             raise ValueError("Minimum electricity tax cannot be negative")
         if not self.source_urls:
             raise ValueError("Fiscal rules require at least one source URL")
@@ -179,6 +210,8 @@ class InvoiceInput:
     power_charges: tuple[PowerCharge, ...] = ()
     fixed_charges: tuple[FixedCharge, ...] = ()
     discounts: tuple[PercentageDiscount, ...] = ()
+    surplus_credit: Decimal = Decimal(0)
+    timezone: str = "Europe/Madrid"
 
 
 @dataclass(frozen=True, slots=True)
@@ -194,6 +227,7 @@ class InvoiceLine:
     electricity_taxable: bool = False
     vat_taxable: bool = True
     metadata: dict[str, str] = field(default_factory=dict)
+    vat_rate_override: Decimal | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -210,6 +244,7 @@ class InvoiceResult:
     total_kwh: Decimal
     quality: DataQuality
     warnings: tuple[str, ...]
+    fiscal_details: dict[str, str] = field(default_factory=dict)
 
     def amount_for(self, category: str) -> Decimal:
         """Sum line amounts for one category."""

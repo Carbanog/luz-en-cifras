@@ -24,9 +24,16 @@ líneas trazables. El adaptador es responsable de unidades, estados y persistenc
 ## Persistencia
 
 Un `Store` por `ConfigEntry` conserva versión, periodo, últimas lecturas, intervalos
-y advertencias. Las escrituras se agrupan con retraso de 60 segundos. No se consulta
-Recorder en cada actualización ni se accede a sus tablas. Las facturas cerradas
-requerirán un almacén separado, snapshots inmutables y migraciones explícitas.
+y advertencias. Las escrituras se agrupan con retraso de 10 segundos y se vacían antes
+de recargar o descargar la entrada. No se consulta Recorder ni se accede a sus tablas.
+El esquema interno 2 conserva un ledger de mediciones, precios y revisiones de
+contrato, además de snapshots cerrados. La migración conserva íntegro el payload 0.1.
+Las revisiones históricas crean nuevos snapshots con referencia al anterior.
+
+Los intervalos consecutivos dentro de una hora se compactan cuando no hay cambio de
+precio entre ellos. Así se evita almacenar cada segundo de un contador de alta
+frecuencia sin perder fronteras de tarifa. El cálculo sigue siendo proporcional al
+ledger del ciclo abierto; no se recorre todo el histórico de facturas cerradas.
 
 ## Identidad y compatibilidad
 
