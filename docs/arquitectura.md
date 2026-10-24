@@ -9,7 +9,7 @@ ConfigFlow / OptionsFlow
 Adaptador Home Assistant ── eventos de estado ── almacenamiento versionado
         │                          │
         ▼                          ▼
-normalización Wh/kWh ─────── intervalos EnergySample
+normalización W/kW/Wh/kWh ── intervalos EnergySample
         │
         ▼
 motor de dominio puro ── tarifas ── fiscalidad ── InvoiceResult
@@ -53,7 +53,12 @@ la topología por nombres.
 ## Seguridad y fallos
 
 No hay red, credenciales ni evaluación de fórmulas. Entradas numéricas se convierten
-a `Decimal`; entidades se limitan a energía Wh/kWh. Lecturas inválidas generan un
+a `Decimal`; se detectan unidades W/kW/Wh/kWh. Potencia se integra por regla izquierda
+con caducidad desde `last_reported`, nunca renovada por los ticks internos. Las
+lecturas restauradas sin confirmación del dispositivo no se integran. Reiniciar
+conserva energía anterior pero elimina la continuidad de potencia durante la parada.
+Los campos nuevos del ledger son aditivos; los intervalos antiguos mantienen su
+tratamiento como mediciones. Lecturas inválidas generan un
 estado explícito. Las reglas fiscales condicionales desconocidas fallan cerradas.
 
 ## Decisión UX
