@@ -60,7 +60,10 @@ la topología por nombres.
 
 ## Seguridad y fallos
 
-No hay red, credenciales ni evaluación de fórmulas. Entradas numéricas se convierten
+No hay credenciales ni evaluación de fórmulas. El cálculo es local; solo el modo
+PVPC directo consulta REE mediante el cliente asíncrono compartido de HA. Guarda
+calendarios validados, no extrapola precios y cancela peticiones al descargar la
+entrada. Fija, tres periodos y entidad no crean el cliente de red. Entradas numéricas se convierten
 a `Decimal`; se detectan unidades W/kW/Wh/kWh. Potencia se integra por regla izquierda
 con caducidad desde `last_reported`, nunca renovada por los ticks internos. Las
 lecturas restauradas sin confirmación del dispositivo no se integran. Reiniciar

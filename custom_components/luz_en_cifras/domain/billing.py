@@ -139,6 +139,8 @@ def _window_energy(
             for rate in ledger.rates:
                 if rate.group_id != item["group_id"]:
                     continue
+                if (mode == "pvpc") != rate.rate_id.startswith("pvpc:"):
+                    continue
                 left = max(start.astimezone(UTC), rate.valid_from.astimezone(UTC))
                 right = min(
                     end.astimezone(UTC),

@@ -1,5 +1,18 @@
 # Actualización y recuperación
 
+## PVPC directo en 0.3.0
+
+Actualiza desde HACS y reinicia HA. Se conservan contratos, grupos, IDs y esquema 3.
+Ninguna modalidad cambia automáticamente: los contratos fijos y los que ya usan un
+sensor de precio mantienen su configuración. Para usar la fuente directa, edita el
+grupo, elige **PVPC directo de Red Eléctrica** y guarda. No requiere otra integración
+ni introducir un sensor de precio. Guarda un respaldo completo antes de actualizar.
+
+HACS/HA instalarán la dependencia declarada `esios-api`; solo el modo directo inicia
+peticiones de precios. Si vuelves a 0.2.x después de guardar un grupo PVPC directo,
+restaura conjuntamente código y datos del respaldo: esa versión no reconoce la
+modalidad nueva. Las releases anteriores se conservan para recuperación.
+
 ## Pasar de main a releases
 
 La primera release es **0.2.0** e incluye las mejoras de 0.2.0.dev3, sin cambios

@@ -1,12 +1,12 @@
 # Matriz de cobertura
 
-Versión en validación 0.2.1. Contemplar un caso no significa implementarlo.
+Versión en validación 0.3.0. Contemplar un caso no significa implementarlo.
 
 | Módulo | Disponible y verificable | Límite actual |
 | --- | --- | --- |
 | Fija 24 h | Configuración por grupo, precio negativo, revisiones | Sin promociones de duración arbitraria |
 | Tres periodos | Calendario 2.0TD y configuración P1/P2/P3 | Península/Baleares, calendario 2026 |
-| PVPC | Captura de entidad FEU nativa, sin impuestos | Sin reconstrucción de precios durante paradas |
+| PVPC | Descarga directa FEU de REE y sensor del precio actual; opción de entidad existente | Directo para Península/Baleares; requiere Internet, no extrapola horas ni importa días antiguos no descargados |
 | Indexada | Entidad con precio contractual y margen adicional | No construye fórmulas comerciales arbitrarias |
 | Vivienda/EV | Varios precios y expresiones explícitas sin duplicar energía | Sin cupos promocionales automáticos |
 | Potencia | P1/P2, unidad diaria/anual y cambios por fecha | Sin seis periodos ni prorrateo intradía |

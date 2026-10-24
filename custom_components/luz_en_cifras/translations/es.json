@@ -4,18 +4,24 @@
     "step": {
       "modality": {
         "title": "1. ¿Cómo te cobran la energía?",
-        "description": "Mira el apartado Energía consumida de tu factura. Precio fijo: pagas el mismo €/kWh a cualquier hora. Tres precios: tu contrato indica importes distintos para punta, llano y valle. Precio variable: el precio cambia por horas u otros intervalos, como en PVPC o una tarifa indexada. Mercado libre no significa necesariamente precio fijo: también puede tener tres precios o ser indexado. Cada grupo (por ejemplo Casa y Coche) podrá tener su propia modalidad y precios.",
-        "data": {"default_tariff_mode": "Modalidad de la energía de tu contrato"}
+        "description": "Mira el apartado Energía consumida de tu factura. Precio fijo: pagas el mismo €/kWh a cualquier hora. Tres precios: tu contrato indica importes distintos para punta, llano y valle. Precio variable: el precio cambia por horas u otros intervalos, como en PVPC o una tarifa indexada. Mercado libre no significa necesariamente precio fijo: también puede tener tres precios o ser indexado. Cada grupo (por ejemplo Casa y Coche) podrá tener su propia modalidad y precios. PVPC directo consulta Red Eléctrica sin otra integración de HA; la opción de sensor permite seguir usando una entidad existente.",
+        "data": {
+          "default_tariff_mode": "Modalidad de la energía de tu contrato"
+        }
       },
       "cycle_anchor": {
         "title": "¿En qué mes comienza tu ciclo de dos meses?",
         "description": "Solo para facturación bimestral. Mira el inicio de un periodo en tu factura e introduce su mes: enero = 1, febrero = 2, etc. Por ejemplo, si empieza el 15 de febrero y termina el 15 de abril, el mes de referencia es 2. No es el mes de emisión de la factura.",
-        "data": {"billing_anchor_month": "Mes en que empieza un periodo de consumo de tu factura (1–12)"}
+        "data": {
+          "billing_anchor_month": "Mes en que empieza un periodo de consumo de tu factura (1–12)"
+        }
       },
       "power_unit": {
         "title": "Potencia contratada: localiza la unidad en tu factura",
         "description": "La energía (kWh) es lo que consumes; la potencia contratada (kW) es la capacidad que tienes contratada y genera un coste fijo. En 2.0TD se indican dos potencias: P1 punta y P2 valle, aunque la energía tenga tres precios o sea PVPC. Mira Datos del contrato o Término de potencia y elige la unidad del precio. No uses los W de tus sensores ni el total en euros de la línea.",
-        "data": {"power_price_unit": "¿Cómo aparece el precio de potencia en tu factura o contrato?"}
+        "data": {
+          "power_price_unit": "¿Cómo aparece el precio de potencia en tu factura o contrato?"
+        }
       },
       "power": {
         "title": "Potencias y costes fijos de tu factura",
@@ -110,7 +116,7 @@
       },
       "tariff": {
         "title": "Precios del grupo",
-        "description": "Introduce importes sin impuestos. Una entidad PVPC debe entregar el término completo de energía (FEU), no el precio OMIE. No vuelvas a añadir peajes/cargos si ya están incluidos. Si solo tienes lecturas acumuladas, los cruces entre precios requieren activar el reparto temporal parcial en las opciones del contrato.",
+        "description": "PVPC directo descarga el precio horario FEU sin impuestos de Red Eléctrica para Península/Baleares: no necesitas otra integración, un sensor de precio ni introducir importes. Requiere Internet; guarda las horas publicadas y no extrapola las ausentes. En las otras modalidades introduce precios sin impuestos o selecciona la entidad contractual completa, no OMIE. Los cruces de lecturas acumuladas entre precios requieren autorizar el reparto temporal parcial.",
         "data": {
           "eur_per_kwh": "Precio fijo sin impuestos (€/kWh)",
           "p1_price": "Punta P1 (€/kWh)",
@@ -158,18 +164,24 @@
     "step": {
       "modality": {
         "title": "1. ¿Cómo te cobran la energía?",
-        "description": "Mira el apartado Energía consumida de tu factura. Precio fijo: pagas el mismo €/kWh a cualquier hora. Tres precios: tu contrato indica importes distintos para punta, llano y valle. Precio variable: el precio cambia por horas u otros intervalos, como en PVPC o una tarifa indexada. Mercado libre no significa necesariamente precio fijo: también puede tener tres precios o ser indexado. Cada grupo (por ejemplo Casa y Coche) podrá tener su propia modalidad y precios.",
-        "data": {"default_tariff_mode": "Modalidad de la energía de tu contrato"}
+        "description": "Mira el apartado Energía consumida de tu factura. Precio fijo: pagas el mismo €/kWh a cualquier hora. Tres precios: tu contrato indica importes distintos para punta, llano y valle. Precio variable: el precio cambia por horas u otros intervalos, como en PVPC o una tarifa indexada. Mercado libre no significa necesariamente precio fijo: también puede tener tres precios o ser indexado. Cada grupo (por ejemplo Casa y Coche) podrá tener su propia modalidad y precios. PVPC directo consulta Red Eléctrica sin otra integración de HA; la opción de sensor permite seguir usando una entidad existente.",
+        "data": {
+          "default_tariff_mode": "Modalidad de la energía de tu contrato"
+        }
       },
       "cycle_anchor": {
         "title": "¿En qué mes comienza tu ciclo de dos meses?",
         "description": "Solo para facturación bimestral. Mira el inicio de un periodo en tu factura e introduce su mes: enero = 1, febrero = 2, etc. Por ejemplo, si empieza el 15 de febrero y termina el 15 de abril, el mes de referencia es 2. No es el mes de emisión de la factura.",
-        "data": {"billing_anchor_month": "Mes en que empieza un periodo de consumo de tu factura (1–12)"}
+        "data": {
+          "billing_anchor_month": "Mes en que empieza un periodo de consumo de tu factura (1–12)"
+        }
       },
       "power_unit": {
         "title": "Potencia contratada: localiza la unidad en tu factura",
         "description": "La energía (kWh) es lo que consumes; la potencia contratada (kW) es la capacidad que tienes contratada y genera un coste fijo. En 2.0TD se indican dos potencias: P1 punta y P2 valle, aunque la energía tenga tres precios o sea PVPC. Mira Datos del contrato o Término de potencia y elige la unidad del precio. No uses los W de tus sensores ni el total en euros de la línea.",
-        "data": {"power_price_unit": "¿Cómo aparece el precio de potencia en tu factura o contrato?"}
+        "data": {
+          "power_price_unit": "¿Cómo aparece el precio de potencia en tu factura o contrato?"
+        }
       },
       "power": {
         "title": "Potencias y costes fijos de tu factura",
@@ -264,7 +276,7 @@
       },
       "tariff": {
         "title": "Precios del grupo",
-        "description": "Introduce importes sin impuestos. Una entidad PVPC debe entregar el término completo de energía (FEU), no el precio OMIE. No vuelvas a añadir peajes/cargos si ya están incluidos. Si solo tienes lecturas acumuladas, los cruces entre precios requieren activar el reparto temporal parcial en las opciones del contrato.",
+        "description": "PVPC directo descarga el precio horario FEU sin impuestos de Red Eléctrica para Península/Baleares: no necesitas otra integración, un sensor de precio ni introducir importes. Requiere Internet; guarda las horas publicadas y no extrapola las ausentes. En las otras modalidades introduce precios sin impuestos o selecciona la entidad contractual completa, no OMIE. Los cruces de lecturas acumuladas entre precios requieren autorizar el reparto temporal parcial.",
         "data": {
           "eur_per_kwh": "Precio fijo sin impuestos (€/kWh)",
           "p1_price": "Punta P1 (€/kWh)",

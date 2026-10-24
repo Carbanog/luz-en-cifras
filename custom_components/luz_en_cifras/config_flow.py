@@ -57,6 +57,7 @@ def tariff_selector() -> SelectSelector:
         [
             ("fixed", "Precio fijo: el mismo €/kWh a cualquier hora"),
             ("three_period", "Tres precios: punta, llano y valle"),
+            ("pvpc", "PVPC directo de Red Eléctrica (Península/Baleares)"),
             ("entity", "Precio variable: PVPC o indexada desde un sensor"),
         ]
     )
@@ -370,6 +371,8 @@ class ContractForms:
             if mode == "fixed"
             else {"p1_price", "p2_price", "p3_price"}
             if mode == "three_period"
+            else set()
+            if mode == "pvpc"
             else {"price_entity", "price_markup", "price_max_age_minutes"}
         )
         schema = vol.Schema(
