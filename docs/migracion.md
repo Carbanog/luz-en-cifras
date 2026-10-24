@@ -12,6 +12,14 @@ Antes de actualizar guarda un respaldo completo de HA. HACS permite seleccionar
 releases anteriores, pero una bajada con cambios de almacenamiento requiere restaurar
 también sus datos. Las notas de cada release indicarán cualquier migración necesaria.
 
+## Corrección de arranque en 0.2.1
+
+Actualiza desde HACS y reinicia HA. No elimines el contrato ni sus datos. Esta versión
+no cambia el esquema 3: sincroniza el instante de precios y mediciones y utiliza la
+tarifa fija de cada revisión para calcular los datos ya recogidos. Un contrato 0.2.0
+afectado por el hueco inicial puede recuperar su cálculo después de actualizar.
+No se extrapolan precios de entidades para rellenar huecos dinámicos auténticos.
+
 ## Actualizar desde 0.1
 
 1. Crea una copia de seguridad completa de Home Assistant antes de actualizar.

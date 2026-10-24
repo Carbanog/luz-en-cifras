@@ -5,8 +5,8 @@ Los datos sintéticos están en `tests/` y `tests_ha/`, fuera del componente dis
 
 ## Última comprobación del desarrollo
 
-El 24 de octubre de 2026, la revisión de desarrollo `0.2.0.dev3` pasó **100 pruebas
-en cada versión de HA 2026.10.2 y 2026.10.3**, con Python 3.14.2: 70 del motor y 30
+El 24 de octubre de 2026, la revisión `0.2.1` pasó **104 pruebas
+en cada versión de HA 2026.10.2 y 2026.10.3**, con Python 3.14.2: 72 del motor y 32
 del adaptador HA. También se ejecutaron Ruff (formato y análisis), mypy sobre el dominio
 y sus pruebas, y `git diff --check`. Los trabajos de GitHub Actions proporcionan la
 evidencia por commit de las siguientes revisiones; esta nota no garantiza commits
@@ -77,6 +77,29 @@ servicios de otros proyectos. La imagen de pruebas se puede reutilizar.
   días antiguos con formato `1.0` y rechazo de días/meses fraccionarios sin truncarlos.
 
 ## HA completo: preparación de la aceptación
+
+### Revisión de 0.2.0 instalada en el HA del usuario
+
+Se confirmó HACS 2.0.5, Core 2026.10.3 y release descargada 0.2.0. El asistente abrió
+modalidad antes de periodo, pidió mes solo al elegir bimestral y mostró la ayuda de
+P1/P2. Tras autorización se crearon tres sensores Template **PRUEBA LEC … simulada**,
+con potencias sintéticas que cambian cada minuto, y un contrato identificado como
+simulado: dos filas a 0,20 €/kWh y coche a 0,10 €/kWh. Son fixtures de aceptación,
+no mediciones reales ni valores del contrato del usuario.
+
+La revisión encontró `Missing or overlapping prices in measured interval` tras el
+arranque. Dos regresiones con el reloj avanzando reprodujeron el error tanto con
+precio fijo como dinámico; las pruebas previas congelaban el reloj. La corrección
+0.2.1 se verifica en el laboratorio y CI, sin instalarla ni reiniciar el HA del usuario.
+La comprobación visual de los importes en esa instalación queda pendiente de que el
+usuario actualice y reinicie.
+
+También se observó el logo relativo roto en HACS y se cambió a URL absoluta. Los
+selectores numéricos de HA muestran cero al abrir campos sin valor predeterminado:
+la ausencia de un default en el schema no garantiza un campo visual vacío. Sus ayudas
+indican copiar los valores de la factura; no debe darse por validado ese aspecto de UX.
+
+### Laboratorio completo anterior
 
 El 24 de octubre se arrancó también la imagen oficial completa de HA 2026.10.2,
 fijada por digest, con usuario sin privilegios y datos sintéticos identificados.
