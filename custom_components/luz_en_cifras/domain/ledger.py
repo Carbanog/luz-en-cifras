@@ -24,6 +24,8 @@ class MeasurementLedger:
         self._last_interval: dict[str, int] = {}
         self.input_kinds: dict[str, str] = {}
         self.power_samples: dict[str, tuple[Decimal, datetime, datetime]] = {}
+        self.revision_boundaries: list[datetime] = []
+        self.pending_energy_sources: dict[str, datetime] = {}
 
     def observe_input(
         self,
@@ -52,7 +54,17 @@ class MeasurementLedger:
         self.input_kinds[source] = kind
         normalized = value / 1000 if unit in {"W", "Wh"} else value
         if kind == "energy":
-            self.observe(source, normalized, when)
+            reported = reported_at or when
+            activation = self.pending_energy_sources.get(source)
+            if activation is not None:
+                if reported.astimezone(UTC) < activation.astimezone(UTC):
+                    self.warnings.add(
+                        f"{source}: esperando lectura nueva tras seleccionar el contador"
+                    )
+                    return
+                self.pending_energy_sources.pop(source)
+                self.baselines.pop(source, None)
+            self.observe(source, normalized, reported)
             return
         self.advance_power(source, when, max_age_seconds)
         self.power_samples[source] = (normalized, reported_at or when, when)
@@ -106,6 +118,8 @@ class MeasurementLedger:
             )
             price_changed = any(
                 first < rate.valid_from.astimezone(UTC) < last for rate in self.rates
+            ) or any(
+                first < boundary.astimezone(UTC) < last for boundary in self.revision_boundaries
             )
             if (
                 prior.end == start
@@ -202,6 +216,11 @@ class MeasurementLedger:
 
     def serialize(self) -> dict[str, Any]:
         return {
+            "pending_energy_sources": {
+                source: instant.isoformat()
+                for source, instant in self.pending_energy_sources.items()
+            },
+            "revision_boundaries": [boundary.isoformat() for boundary in self.revision_boundaries],
             "input_kinds": dict(self.input_kinds),
             "power_samples": {
                 source: [str(kw), report.isoformat(), cursor.isoformat()]
@@ -219,6 +238,13 @@ class MeasurementLedger:
     @classmethod
     def restore(cls, data: dict[str, Any]) -> MeasurementLedger:
         ledger = cls()
+        ledger.pending_energy_sources = {
+            source: datetime.fromisoformat(value)
+            for source, value in data.get("pending_energy_sources", {}).items()
+        }
+        ledger.revision_boundaries = [
+            datetime.fromisoformat(value) for value in data.get("revision_boundaries", [])
+        ]
         ledger.input_kinds = dict(data.get("input_kinds", {}))
         ledger.power_samples = {
             source: (Decimal(kw), datetime.fromisoformat(report), datetime.fromisoformat(cursor))

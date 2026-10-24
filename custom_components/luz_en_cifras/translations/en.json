@@ -75,7 +75,7 @@
       },
       "group": {
         "title": "Consumo y tarifa del grupo",
-        "description": "Selecciona uno o varios sensores W/kW o Wh/kWh: se detectan por su unidad y puedes combinarlos. W/kW se convierte en energía estimada con la última potencia conocida, hasta su caducidad; no requiere ayudantes. No selecciones a la vez un sensor de potencia y su contador derivado: duplicaría consumo. Cada grupo tiene su tarifa. Cambiar fuentes archiva el segmento anterior.",
+        "description": "Selecciona uno o varios sensores W/kW o Wh/kWh: se detectan por su unidad y puedes combinarlos. W/kW se convierte en energía estimada con la última potencia conocida, hasta su caducidad; no requiere ayudantes. No selecciones a la vez un sensor de potencia y su contador derivado: duplicaría consumo. Cada grupo tiene su tarifa. Puedes cambiar sensores o tarifas conservando lo acumulado en la misma factura. Un contador nuevo espera un reporte real de referencia; un grupo sin mediciones queda desconocido.",
         "data": {
           "group_name": "Nombre",
           "add_sources": "Sensores que suman (W/kW o Wh/kWh)",
@@ -229,7 +229,7 @@
       },
       "group": {
         "title": "Consumo y tarifa del grupo",
-        "description": "Selecciona uno o varios sensores W/kW o Wh/kWh: se detectan por su unidad y puedes combinarlos. W/kW se convierte en energía estimada con la última potencia conocida, hasta su caducidad; no requiere ayudantes. No selecciones a la vez un sensor de potencia y su contador derivado: duplicaría consumo. Cada grupo tiene su tarifa. Cambiar fuentes archiva el segmento anterior.",
+        "description": "Selecciona uno o varios sensores W/kW o Wh/kWh: se detectan por su unidad y puedes combinarlos. W/kW se convierte en energía estimada con la última potencia conocida, hasta su caducidad; no requiere ayudantes. No selecciones a la vez un sensor de potencia y su contador derivado: duplicaría consumo. Cada grupo tiene su tarifa. Puedes cambiar sensores o tarifas conservando lo acumulado en la misma factura. Un contador nuevo espera un reporte real de referencia; un grupo sin mediciones queda desconocido.",
         "data": {
           "group_name": "Nombre",
           "add_sources": "Sensores que suman (W/kW o Wh/kWh)",

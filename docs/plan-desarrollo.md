@@ -1,6 +1,6 @@
 # Plan de desarrollo y estado verificable
 
-Corte: 24 de octubre de 2026. Versión en validación 0.2.0.dev2.
+Corte: 24 de octubre de 2026. Versión en validación 0.2.0.dev3.
 
 ## A — Investigación
 
@@ -25,6 +25,10 @@ solapamientos y datos no finitos producen errores explícitos.
 Implementados: asistente por módulos, precios según modalidad, edición/eliminación
 de grupos con IDs estables, ledger persistente, migración, descarga con guardado,
 sensores por contrato/grupo, diagnósticos y aviso Repairs.
+
+Cambiar sensores, grupos o modalidades mantiene una factura continua con las fuentes
+y precios de cada revisión. Los cargos se calculan una vez; un contador nuevo espera
+una referencia real. Los cruces ambiguos requieren consentimiento para estimar.
 
 La selección acepta W/kW y Wh/kWh directamente, con grupos mixtos y conversión
 estimada de potencia. Se conserva la energía y se corta la continuidad en paradas,

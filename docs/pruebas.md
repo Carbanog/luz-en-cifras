@@ -5,8 +5,8 @@ Los datos sintéticos están en `tests/` y `tests_ha/`, fuera del componente dis
 
 ## Última comprobación del desarrollo
 
-El 24 de octubre de 2026, la revisión de desarrollo `0.2.0.dev2` pasó **85 pruebas
-en cada versión de HA 2026.10.2 y 2026.10.3**, con Python 3.14.2: 61 del motor y 24
+El 24 de octubre de 2026, la revisión de desarrollo `0.2.0.dev3` pasó **100 pruebas
+en cada versión de HA 2026.10.2 y 2026.10.3**, con Python 3.14.2: 70 del motor y 30
 del adaptador HA. También se ejecutaron Ruff (formato y análisis), mypy sobre el dominio
 y sus pruebas, y `git diff --check`. Los trabajos de GitHub Actions proporcionan la
 evidencia por commit de las siguientes revisiones; esta nota no garantiza commits
@@ -56,8 +56,15 @@ servicios de otros proyectos. La imagen de pruebas se puede reutilizar.
 - Consentimiento para repartir lecturas que cruzan fechas de factura y conservación
   de las mediciones originales; los descuentos de potencia no reducen el límite
   económico de la compensación de energía.
-- Renombrado y reordenación de grupos sin reiniciar los consumos; cambiar la fuente
-  de excedentes sí cambia la topología del seguimiento.
+- Renombrado y reordenación de grupos sin reiniciar consumos; sustitución y reselección
+  de contadores, grupos añadidos/eliminados y cambios fijo/tres periodos/dinámico.
+- Una factura conserva el consumo previo, cargos fijos sin duplicación, compensación
+  histórica, cierre y recálculo después de cambiar sensores y reiniciar el colector.
+- Un contador nuevo con estado antiguo espera un reporte real, incluso tras recargar;
+  no suma consumo mientras está retirado. Un grupo pendiente queda desconocido.
+- Un cambio de tarifa sin lectura en la frontera exige consentimiento para estimar;
+  activarlo después conserva los precios históricos. Renombrar o editar cuotas diarias
+  no exige repartir la energía por sí solo.
 - Aviso Repairs cuando falta una regla fiscal y resolución mediante un perfil explícito.
 - Detección W/kW/Wh/kWh, integración de potencia, grupos mixtos y casa/coche con
   precios distintos; caducidad, huecos, reinicios y estados restaurados.

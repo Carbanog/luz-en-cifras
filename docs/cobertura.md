@@ -1,6 +1,6 @@
 # Matriz de cobertura
 
-Versión en validación 0.2.0.dev2. Contemplar un caso no significa implementarlo.
+Versión en validación 0.2.0.dev3. Contemplar un caso no significa implementarlo.
 
 | Módulo | Disponible y verificable | Límite actual |
 | --- | --- | --- |
@@ -17,7 +17,7 @@ Versión en validación 0.2.0.dev2. Contemplar un caso no significa implementarl
 | Periodos | Mes desplazado/bimestral y cierre manual con fechas reales | Las lecturas en límites pueden requerir aproximación explícita |
 | Históricos | Snapshots, exportación, comparación y revisión conservando el original | Sin importación de Recorder/Datadis/CSV |
 | Medición | W/kW y Wh/kWh directos, grupos mixtos, huecos, correcciones y persistencia | Potencia estimada, caducidad configurable; no reconstruye paradas ni infiere circuitos duplicados |
-| Configuración | Edición de grupos y fuentes, IDs estables, copia anterior | Cambiar fuentes abre un segmento parcial |
+| Configuración | Edición de grupos, sensores y tarifas con revisiones; una factura continua e IDs estables | Sin cambios retroactivos; lecturas que cruzan revisiones pueden necesitar reparto estimado autorizado |
 | Privacidad | Sin cuentas ni telemetría propias, diagnóstico sin lecturas/nombres | Exportar históricos sí contiene configuración y entidades |
 
 ## Qué es precio por horas

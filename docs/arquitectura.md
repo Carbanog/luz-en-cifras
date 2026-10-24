@@ -26,14 +26,22 @@ líneas trazables. El adaptador es responsable de unidades, estados y persistenc
 Un `Store` por `ConfigEntry` conserva versión, periodo, últimas lecturas, intervalos
 y advertencias. Las escrituras se agrupan con retraso de 10 segundos y se vacían antes
 de recargar o descargar la entrada. No se consulta Recorder ni se accede a sus tablas.
-El esquema interno 2 conserva un ledger de mediciones, precios y revisiones de
+El esquema interno 3 conserva un ledger de mediciones, precios y revisiones de
 contrato, además de snapshots cerrados. La migración conserva íntegro el payload 0.1.
 Las revisiones históricas crean nuevos snapshots con referencia al anterior.
 
 Los intervalos consecutivos dentro de una hora se compactan cuando no hay cambio de
-precio entre ellos. Así se evita almacenar cada segundo de un contador de alta
+precio ni revisión entre ellos. Así se evita almacenar cada segundo de un contador de alta
 frecuencia sin perder fronteras de tarifa. El cálculo sigue siendo proporcional al
 ledger del ciclo abierto; no se recorre todo el histórico de facturas cerradas.
+
+El colector mantiene una copia de su configuración hasta terminar la recarga: una
+edición de opciones no cambia las fuentes del colector antiguo. Al recargar se guardan
+mediciones, fronteras de revisión y contadores pendientes de referencia nueva.
+El cálculo aplica cada expresión de fuentes a su ventana temporal, con identidades
+internas por tramo y un ID lógico estable por grupo. Las ventanas sin cambios
+energéticos se unen para no exigir repartos por un simple renombrado. Un único paso
+del motor aplica cargos, límite de compensación e impuestos a toda la factura.
 
 ## Identidad y compatibilidad
 
