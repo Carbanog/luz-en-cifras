@@ -110,7 +110,22 @@ def _window_energy(
                 tuple(item.get("subtract_sources", [])),
             )
         )
-        if item.get("tariff_mode") == "three_period":
+        mode = item.get("tariff_mode", "fixed")
+        if mode == "fixed" and "eur_per_kwh" in item:
+            # Fixed contractual prices are known for the whole revision, unlike
+            # observed dynamic quotes. This also prices pre-0.2.1 startup data
+            # without deleting measurements or modifying stored quote history.
+            working.rates.append(
+                EnergyRate(
+                    f"{virtual}:fixed",
+                    virtual,
+                    Decimal(str(item["eur_per_kwh"])),
+                    start,
+                    valid_to=end,
+                    discount_rate=discount,
+                )
+            )
+        elif mode == "three_period":
             working.rates.extend(
                 replace(rate, discount_rate=discount)
                 for rate in three_period_rates(

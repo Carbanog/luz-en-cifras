@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.2.1 — 24 de octubre de 2026
+
+- Corrige un hueco de microsegundos entre precios y mediciones de potencia al arrancar
+  o cambiar de ciclo, detectado en el HA de pruebas con dos filas y un coche simulados.
+- Usa el precio fijo de cada revisión contractual para calcular sus mediciones; permite
+  recuperar el cálculo de datos ya recogidos sin borrarlos ni modificar cotizaciones.
+  Las tarifas dinámicas siguen rechazando huecos reales de precio.
+- Añade regresiones con un reloj que avanza durante el arranque; los tests congelados
+  no reproducían este fallo. Corrige la ruta del logo para el README mostrado en HACS.
+- Conserva esquema de almacenamiento e identificadores. Requiere actualizar y reiniciar
+  HA; la actualización en la instalación del usuario sigue siendo manual.
+
 ## 0.2.0 — 24 de octubre de 2026
 
 Primera release versionada para actualizar mediante HACS. Incluye las mejoras de

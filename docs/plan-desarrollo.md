@@ -1,6 +1,6 @@
 # Plan de desarrollo y estado verificable
 
-Corte: 24 de octubre de 2026. Versión en validación 0.2.0.
+Corte: 24 de octubre de 2026. Versión en validación 0.2.1.
 
 ## A — Investigación
 
