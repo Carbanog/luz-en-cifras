@@ -50,6 +50,7 @@ async def test_fractional_billing_day_or_month_has_actionable_validation(hass):
     [
         ("fixed", {"eur_per_kwh"}),
         ("three_period", {"p1_price", "p2_price", "p3_price"}),
+        ("pvpc", set()),
         ("entity", {"price_entity", "price_markup", "price_max_age_minutes"}),
     ],
 )

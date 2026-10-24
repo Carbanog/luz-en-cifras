@@ -1,7 +1,7 @@
 # Development only. HACS users do not need Docker.
 FROM python:3.14.2-slim@sha256:1a3c6dbfd2173971abba880c3cc2ec4643690901f6ad6742d0827bae6cefc925
 ARG HA_TEST_VERSION=0.13.373
-RUN pip install --no-cache-dir pytest-homeassistant-custom-component==${HA_TEST_VERSION} ruff==0.17.2 mypy==1.20.2
+RUN pip install --no-cache-dir pytest-homeassistant-custom-component==${HA_TEST_VERSION} esios-api==4.4.0 ruff==0.17.2 mypy==1.20.2
 WORKDIR /workspace
 ENV PYTHONDONTWRITEBYTECODE=1
 CMD ["pytest", "-c", "tests_ha/pytest.ini", "tests_ha", "-q", "-p", "no:cacheprovider"]

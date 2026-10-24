@@ -19,14 +19,15 @@ Consumo, potencia e impuestos en Home Assistant, con cálculo local y desglose v
 </div>
 
 > [!WARNING]
-> **En validación · 0.2.1 · Instalar primero en un HA de pruebas.**
+> **En validación · 0.3.0 · Instalar primero en un HA de pruebas.**
 > La fase final todavía no se ha lanzado. Los importes son estimaciones y necesitan
 > contraste con facturas reales; no sustituyen la factura de tu comercializadora.
 
 ## Qué puedes probar
 
-La integración convierte sensores de energía acumulada en una estimación de factura
-eléctrica española. Funciona localmente, sin cuentas ni credenciales externas.
+La integración convierte sensores W/kW y Wh/kWh en una estimación de factura
+eléctrica española. El cálculo es local. PVPC directo consulta precios públicos de
+Red Eléctrica, sin cuentas ni credenciales; las otras modalidades leen datos locales.
 
 | Función | Disponible hoy |
 | --- | --- |
@@ -159,10 +160,15 @@ Consulta [actualización y compatibilidad](docs/migracion.md).
 
 ### Tres periodos y PVPC
 
-Selecciona **Tres periodos 2.0TD** para introducir P1/P2/P3. Para PVPC, instala la
-integración nativa de HA y elige su entidad de precio **FEU sin impuestos** en el
-modo dinámico. También puedes usar una entidad indexada que incluya la fórmula
-completa de tu contrato. No vuelvas a sumar peajes y cargos ya incluidos.
+Selecciona **Tres periodos 2.0TD** para introducir P1/P2/P3. Para PVPC puedes elegir
+**PVPC directo de Red Eléctrica (Península/Baleares)**: obtiene el FEU horario sin
+impuestos, sin otra integración ni sensor de precio. Aparece un sensor por grupo
+con el precio publicado de la hora actual. Necesita Internet y conserva las horas
+descargadas; una caída de red no prolonga un precio más allá de su hora publicada.
+
+También puedes seguir usando el sensor de la integración nativa PVPC o una entidad
+indexada mediante **Precio variable desde un sensor**. No vuelvas a sumar peajes y
+cargos ya incluidos. [Fuente, caché y límites](docs/tarifas.md).
 
 Si una lectura acumulada atraviesa varios precios, el reparto exacto es desconocido.
 Puedes activar el reparto uniforme temporal, marcado como parcial. Un precio ausente
