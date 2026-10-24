@@ -56,18 +56,25 @@ async def test_native_flow_creates_group(hass, contract):
         "sensor.test_energy", "0", {"unit_of_measurement": "kWh", "device_class": "energy"}
     )
     result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
-    assert result["step_id"] == "contract"
-    values = {key: value for key, value in contract.items() if key not in {"contract_id", "groups"}}
-    values.update(
-        billing_months="1",
-        power_price_unit="day",
-        approximate_intervals=False,
-        show_secondary_entities=True,
-    )
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], values)
+    assert result["step_id"] == "modality"
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "add_group"}
+        result["flow_id"], {"default_tariff_mode": "fixed"}
     )
+    assert result["step_id"] == "contract"
+    assert {str(key) for key in result["data_schema"].schema} == {
+        "contract_name",
+        "billing_day",
+        "billing_months",
+    }
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "contract_name": "Casa",
+            "billing_day": 1,
+            "billing_months": "1",
+        },
+    )
+    assert result["step_id"] == "group"
     group = {
         key: value
         for key, value in contract["groups"][0].items()
@@ -77,6 +84,18 @@ async def test_native_flow_creates_group(hass, contract):
     result = await hass.config_entries.flow.async_configure(result["flow_id"], group)
     assert result["step_id"] == "tariff"
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {"eur_per_kwh": 0.2})
+    assert result["step_id"] == "power_unit"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"power_price_unit": "day"}
+    )
+    assert result["step_id"] == "power"
+    assert result["description_placeholders"]["power_price_unit"] == "€/kW/día"
+    values = {
+        key: value
+        for key, value in contract.items()
+        if key.startswith("power_") or key == "meter_rental_daily"
+    }
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], values)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "finish"}
     )
@@ -204,7 +223,7 @@ async def test_v1_storage_migration_retains_original_payload(hass, contract, fre
     assert await hass.config_entries.async_setup(entry.entry_id)
     assert entry.runtime_data._legacy == original
     assert entry.runtime_data.data.result.total_kwh == Decimal(2)
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
 
 
 async def test_unverified_fiscal_period_creates_repair_and_manual_profile_can_resolve(

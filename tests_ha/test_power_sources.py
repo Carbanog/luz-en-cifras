@@ -109,16 +109,16 @@ async def test_flow_accepts_power_and_rejects_incompatible_units(hass, contract)
     )
     hass.states.async_set("sensor.voltage", "230", {"unit_of_measurement": "V"})
     result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
-    values = {key: value for key, value in contract.items() if key not in {"contract_id", "groups"}}
-    values.update(
-        billing_months="1",
-        power_price_unit="day",
-        approximate_intervals=False,
-        show_secondary_entities=True,
-    )
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], values)
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "add_group"}
+        result["flow_id"], {"default_tariff_mode": "fixed"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "contract_name": "Casa",
+            "billing_day": 1,
+            "billing_months": "1",
+        },
     )
     group = {
         "group_name": "Casa",

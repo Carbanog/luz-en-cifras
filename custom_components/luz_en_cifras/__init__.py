@@ -6,6 +6,7 @@ and reused without starting Home Assistant.
 
 from __future__ import annotations
 
+from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -52,7 +53,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Upgrade configuration additively; the coordinator retains the original v1 store."""
-    if entry.version != 1:
+    if entry.version != 1 or entry.minor_version > 3:
         return False
     data = {
         "billing_months": "1",
@@ -60,5 +61,21 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "approximate_intervals": False,
         **entry.data,
     }
-    hass.config_entries.async_update_entry(entry, data=data, version=1, minor_version=2)
+    options = dict(entry.options)
+    # Older numeric selectors stored whole days as strings like "1.0".
+    # Normalize only exact whole values; never truncate an invalid billing date.
+    for values in (data, options):
+        for key in ("billing_day", "billing_anchor_month"):
+            if key not in values:
+                continue
+            try:
+                number = Decimal(str(values[key]))
+                if not number.is_finite() or number != number.to_integral_value():
+                    return False
+                values[key] = int(number)
+            except InvalidOperation:
+                return False
+    hass.config_entries.async_update_entry(
+        entry, data=data, options=options, version=1, minor_version=3
+    )
     return True
