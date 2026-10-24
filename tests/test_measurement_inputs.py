@@ -2,6 +2,7 @@
 
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from zoneinfo import ZoneInfo
 
 from custom_components.luz_en_cifras.domain import ConsumptionGroup, DataQuality
 from custom_components.luz_en_cifras.domain.billing import calculate_contract
@@ -14,6 +15,26 @@ START = datetime(2026, 10, 23, 12, tzinfo=UTC)
 
 def total(ledger: MeasurementLedger) -> Decimal:
     return sum((interval.kwh for interval in ledger.intervals), D())
+
+
+def test_month_of_minute_reports_preserves_energy_with_bounded_storage() -> None:
+    ledger = MeasurementLedger()
+    ledger.price("g", D("0.2"), START)
+    for minute in range(31 * 24 * 60 + 1):
+        ledger.observe_input("p", D(1), "kW", START + timedelta(minutes=minute))
+    assert abs(total(ledger) - D(744)) < D("1e-20")
+    assert len(ledger.intervals) <= 2 * 744 + 1
+    assert ledger.serialize() == MeasurementLedger.restore(ledger.serialize()).serialize()
+
+
+def test_repeated_autumn_hour_integrates_real_elapsed_time() -> None:
+    zone = ZoneInfo("Europe/Madrid")
+    start = datetime(2026, 10, 25, 2, 0, tzinfo=zone, fold=0)
+    end = datetime(2026, 10, 25, 2, 0, tzinfo=zone, fold=1)
+    ledger = MeasurementLedger()
+    ledger.observe_input("p", D(1), "kW", start)
+    ledger.advance_power("p", end, max_age_seconds=7200)
+    assert total(ledger) == 1
 
 
 def test_power_units_and_constant_updates() -> None:

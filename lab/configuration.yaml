@@ -1,0 +1,64 @@
+# Synthetic, manually adjustable devices for end-to-end validation. Not production data.
+homeassistant:
+  name: Luz en Cifras LAB
+  time_zone: Europe/Madrid
+  country: ES
+  currency: EUR
+  unit_system: metric
+frontend:
+config:
+http:
+api:
+history:
+recorder:
+  purge_keep_days: 7
+logbook:
+input_number:
+  lab_fila_uno_w:
+    name: "LAB sintético · Fila 1 W"
+    min: 0
+    max: 10000
+    step: 100
+    initial: 1000
+  lab_fila_dos_w:
+    name: "LAB sintético · Fila 2 W"
+    min: 0
+    max: 10000
+    step: 100
+    initial: 500
+  lab_coche_w:
+    name: "LAB sintético · Coche W"
+    min: 0
+    max: 11000
+    step: 100
+    initial: 2300
+template:
+  - triggers:
+      - trigger: homeassistant
+        event: start
+      - trigger: time_pattern
+        minutes: "/1"
+      - trigger: state
+        entity_id:
+          - input_number.lab_fila_uno_w
+          - input_number.lab_fila_dos_w
+          - input_number.lab_coche_w
+    sensor:
+      - name: LAB fila uno
+        unique_id: luz_lab_row1
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        state: "{{ states('input_number.lab_fila_uno_w') }}"
+      - name: LAB fila dos
+        unique_id: luz_lab_row2
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        state: "{{ states('input_number.lab_fila_dos_w') }}"
+      - name: LAB coche
+        unique_id: luz_lab_car
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        state: "{{ states('input_number.lab_coche_w') }}"
