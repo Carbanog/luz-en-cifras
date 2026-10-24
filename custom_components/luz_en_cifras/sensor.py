@@ -21,6 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_CONTRACT_ID, CONF_CONTRACT_NAME, CONF_SHOW_SECONDARY, DOMAIN
 from .coordinator import CoordinatorData, LuzEnCifrasCoordinator
@@ -165,6 +166,11 @@ async def async_setup_entry(
             LuzGroupSensor(coordinator, group, metric)
             for group in coordinator.config["groups"]
             for metric in ("energy", "cost")
+        )
+        entities.extend(
+            LuzPvpcPriceSensor(coordinator, group)
+            for group in coordinator.config["groups"]
+            if group.get("tariff_mode") == "pvpc"
         )
     async_add_entities(entities)
 
@@ -325,3 +331,42 @@ class LuzGroupSensor(LuzBaseSensor):
             ),
             Decimal(),
         )
+
+
+class LuzPvpcPriceSensor(LuzBaseSensor):
+    """Show the published current-hour FEU even before a consumption interval exists."""
+
+    _attr_native_unit_of_measurement = "€/kWh"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 5
+
+    def __init__(self, coordinator: LuzEnCifrasCoordinator, group: dict[str, Any]) -> None:
+        super().__init__(coordinator, f"group_{group['group_id']}_pvpc_price")
+        self.group_id = group["group_id"]
+        self._attr_name = f"{group['group_name']} — precio PVPC sin impuestos"
+
+    @property
+    def available(self) -> bool:
+        return self.native_value is not None
+
+    @property
+    def native_value(self) -> Decimal | None:
+        now = dt_util.utcnow()
+        matches = [
+            rate
+            for rate in self.coordinator.ledger.rates
+            if rate.group_id == self.group_id
+            and rate.rate_id.startswith("pvpc:")
+            and rate.valid_from.astimezone(UTC) <= now
+            and rate.valid_to is not None
+            and now < rate.valid_to.astimezone(UTC)
+        ]
+        return matches[0].eur_per_kwh if len(matches) == 1 else None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        return {
+            "attribution": "Red Eléctrica / ESIOS",
+            "price_term": "FEU",
+            "taxes_included": False,
+        }

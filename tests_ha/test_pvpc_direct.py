@@ -53,6 +53,7 @@ async def test_direct_pvpc_prices_each_hour_and_restarts_offline_from_published_
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         assert not hass.config_entries.async_entries("pvpc_hourly_pricing")
+        assert hass.states.get("sensor.casa_vivienda_precio_pvpc_sin_impuestos").state == "0.1"
         assert factory.call_args.kwargs["sensor_keys"] == ("PVPC",)
         assert "api_token" not in factory.call_args.kwargs
         for _ in range(2):
@@ -62,6 +63,9 @@ async def test_direct_pvpc_prices_each_hour_and_restarts_offline_from_published_
         assert result.total_kwh == Decimal("2.400")
         assert result.amount_for("energy") == Decimal("0.42")
         assert len(entry.runtime_data.ledger.rates) == 25
+        # A genuine device report refreshes power TTL; reloading must not do so.
+        hass.states.async_set("sensor.test_energy", "1000", {"unit_of_measurement": "W"})
+        hass.states.async_set("sensor.car", "200", {"unit_of_measurement": "W"})
         await hass.config_entries.async_unload(entry.entry_id)
         api.async_update_all = AsyncMock(side_effect=TimeoutError)
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -179,3 +183,27 @@ async def test_fixed_contract_never_initializes_a_network_client(hass, contract)
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         factory.assert_not_called()
+
+
+async def test_cached_calendar_is_not_extrapolated_into_a_missing_day(hass, contract, freezer):
+    freezer.move_to("2026-10-24 23:58:00+02:00")
+    contract["groups"][0]["tariff_mode"] = "pvpc"
+    hass.states.async_set("sensor.test_energy", "1000", {"unit_of_measurement": "W"})
+    with patch("custom_components.luz_en_cifras.pvpc.PVPCData") as factory:
+        api = factory.return_value
+        api.async_update_all = AsyncMock(return_value=published())
+        entry = MockConfigEntry(domain=DOMAIN, data=contract, title="Casa", version=1)
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        freezer.tick(timedelta(minutes=2))
+        entry.runtime_data._tick(dt_util.now())
+        assert entry.runtime_data.data.result.total_kwh == Decimal("0.033")
+        freezer.tick(timedelta(minutes=1))
+        entry.runtime_data._tick(dt_util.now())
+        assert entry.runtime_data.data.result is None
+        assert (
+            hass.states.get("sensor.casa_vivienda_precio_pvpc_sin_impuestos").state == "unavailable"
+        )
+        api.async_update_all = AsyncMock(return_value=published(date(2026, 10, 25)))
+        await entry.runtime_data._async_refresh_pvpc(dt_util.now())
+        assert entry.runtime_data.data.result.total_kwh == Decimal("0.050")
