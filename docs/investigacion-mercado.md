@@ -46,3 +46,11 @@ vigente, en vez de revalorizar todo un periodo con el último precio conocido.
 
 Las licencias se registran para trazabilidad; esta comparación no concede ni exige
 compatibilidad de código porque la implementación es independiente.
+
+## Dependencia del PVPC directo
+
+Desde 0.3.0 se utiliza [esios-api](https://github.com/chiro79/esios-api), licencia MIT,
+como biblioteca de descarga y normalización de los precios públicos de REE, sin
+copiarla dentro del componente. Se probó la versión 4.4.0, también declarada por HA
+2026.10.2/2026.10.3. No se reutiliza el coordinador ni las entidades de la integración
+PVPC de HA: el ciclo de vida, persistencia y cálculo de Luz en Cifras son propios.

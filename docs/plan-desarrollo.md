@@ -1,6 +1,6 @@
 # Plan de desarrollo y estado verificable
 
-Corte: 24 de octubre de 2026. Versión en validación 0.2.1.
+Corte: 24 de octubre de 2026. Versión en validación 0.3.0.
 
 ## A — Investigación
 
@@ -25,6 +25,11 @@ solapamientos y datos no finitos producen errores explícitos.
 Implementados: asistente por módulos, precios según modalidad, edición/eliminación
 de grupos con IDs estables, ledger persistente, migración, descarga con guardado,
 sensores por contrato/grupo, diagnósticos y aviso Repairs.
+
+PVPC directo consulta precios públicos de REE sin otra integración, conserva horas
+publicadas y expone el precio actual. Las fuentes por entidad siguen disponibles.
+La aceptación acelerada cubre 61 días sintéticos y cierre mensual/bimestral; no
+sustituye la comprobación de dispositivos reales ni la resolución fiscal pendiente.
 
 Cambiar sensores, grupos o modalidades mantiene una factura continua con las fuentes
 y precios de cada revisión. Los cargos se calculan una vez; un contador nuevo espera
