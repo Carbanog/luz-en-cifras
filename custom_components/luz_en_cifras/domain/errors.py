@@ -11,3 +11,7 @@ class ConfigurationError(BillingError):
 
 class IncompleteDataError(BillingError):
     """Required measurements, prices, or fiscal rules are missing."""
+
+
+class MissingFiscalRuleError(IncompleteDataError):
+    """No verified rule covers the invoice tax point."""

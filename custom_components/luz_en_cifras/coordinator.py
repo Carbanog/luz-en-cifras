@@ -1,68 +1,50 @@
-"""Event-driven accumulation and invoice coordination."""
+"""Event-driven, persisted measurement and immutable billing history."""
 
 from __future__ import annotations
 
+import calendar
 import logging
-from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from copy import deepcopy
+from dataclasses import dataclass, replace
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from typing import Any
+from uuid import uuid4
+from zoneinfo import ZoneInfo
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import Event, HomeAssistant, State, callback
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.event import async_track_state_change_event, async_track_time_interval
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    CONF_ADD_SOURCES,
-    CONF_BILLING_DAY,
-    CONF_CONTRACT_ID,
-    CONF_EUR_PER_KWH,
-    CONF_GROUP_ID,
-    CONF_GROUP_NAME,
-    CONF_GROUPS,
-    CONF_METER_RENTAL_DAILY,
-    CONF_POWER_P1_KW,
-    CONF_POWER_P1_PRICE,
-    CONF_POWER_P2_KW,
-    CONF_POWER_P2_PRICE,
-    CONF_SUBTRACT_SOURCES,
-    DOMAIN,
-    STORAGE_VERSION,
-)
-from .domain import (
-    SPAIN_MAINLAND_2026,
-    BillingEngine,
-    BillingFrequency,
-    BillingPeriod,
-    ConsumptionGroup,
-    EnergyRate,
-    EnergySample,
-    FixedCharge,
-    InvoiceInput,
-    InvoiceResult,
-    PowerCharge,
-    find_fiscal_rule,
-)
-from .domain.errors import BillingError
+from .const import DOMAIN, STORAGE_VERSION
+from .domain import BillingPeriod, DataQuality, InvoiceResult
+from .domain.billing import calculate_contract
+from .domain.errors import BillingError, MissingFiscalRuleError
+from .domain.history import reconcile, snapshot
+from .domain.intervals import MeasuredInterval, normalize_price
+from .domain.ledger import MeasurementLedger
 
 _LOGGER = logging.getLogger(__name__)
 
 
+def _now() -> datetime:
+    """Use the supported contract's timezone independently of the HA server setting."""
+    return dt_util.now().astimezone(ZoneInfo("Europe/Madrid"))
+
+
 @dataclass(frozen=True, slots=True)
 class CoordinatorData:
-    """Latest trustworthy result, or an explicit reason it is unavailable."""
-
     result: InvoiceResult | None
     error: str | None
     collection_warnings: tuple[str, ...] = ()
 
 
 class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
-    """Accumulate deltas from energy counters without querying Recorder repeatedly."""
+    """Keep raw data, effective prices and frozen historical calculations."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         super().__init__(hass, _LOGGER, config_entry=entry, name=DOMAIN)
@@ -70,257 +52,453 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
         self._store: Store[dict[str, Any]] = Store(
             hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}"
         )
-        self._baselines: dict[str, Decimal] = {}
-        self._samples: list[EnergySample] = []
-        self._collection_warnings: set[str] = set()
+        self.ledger = MeasurementLedger()
+        self.history: list[dict[str, Any]] = []
         self._period: BillingPeriod | None = None
+        self._stored_config: dict[str, Any] = {}
+        self._legacy: dict[str, Any] | None = None
+        self.revisions: list[dict[str, Any]] = []
 
     @property
     def config(self) -> dict[str, Any]:
-        """Return config-entry data with options as explicit overrides."""
         return {**self.entry.data, **self.entry.options}
 
     @property
+    def billing_period(self) -> BillingPeriod | None:
+        return self._period
+
+    @property
     def source_ids(self) -> set[str]:
-        """Return every configured entity used by a group expression."""
-        sources: set[str] = set()
-        for group in self.config[CONF_GROUPS]:
-            sources.update(group[CONF_ADD_SOURCES])
-            sources.update(group.get(CONF_SUBTRACT_SOURCES, []))
+        sources = {
+            source
+            for group in self.config["groups"]
+            for source in (*group["add_sources"], *group.get("subtract_sources", []))
+        }
+        if self.config.get("enable_surplus") and self.config.get("export_source"):
+            sources.add(self.config["export_source"])
         return sources
 
+    @property
+    def price_ids(self) -> set[str]:
+        return {
+            group["price_entity"]
+            for group in self.config["groups"]
+            if group.get("tariff_mode") == "entity" and group.get("price_entity")
+        }
+
     async def async_initialize(self) -> None:
-        """Load persisted state, establish baselines, and start listening."""
         stored = await self._store.async_load() or {}
-        self._restore(stored)
-        self._roll_period_if_needed(dt_util.now().date())
-        self._establish_missing_baselines()
+        self.history = stored.get("history", [])
+        self._legacy = stored.get("legacy_v1")
+        self._stored_config = stored.get("config", self.config)
+        now = _now()
+        self.revisions = stored.get("revisions", [])
+        if stored.get("period"):
+            self._period = BillingPeriod(
+                date.fromisoformat(stored["period"]["start"]),
+                date.fromisoformat(stored["period"]["end"]),
+            )
+        if "ledger" in stored:
+            self.ledger = MeasurementLedger.restore(stored["ledger"])
+            if stored.get("saved_at"):
+                for group in self.config["groups"]:
+                    if group.get("tariff_mode") == "entity":
+                        self.ledger.price(
+                            group["group_id"], None, datetime.fromisoformat(stored["saved_at"])
+                        )
+                        self.ledger.warnings.add("Precio dinámico durante parada no reconstruido")
+        elif stored:
+            # Retain the original payload, and import point samples as micro-intervals.
+            # Their original collection precision cannot be reconstructed.
+            self._legacy = stored
+            for item in stored.get("samples", []):
+                stamp = datetime.fromisoformat(item["timestamp"])
+                self.ledger.intervals.append(
+                    MeasuredInterval(
+                        item["source_id"],
+                        stamp,
+                        stamp + timedelta(microseconds=1),
+                        Decimal(item["kwh"]),
+                    )
+                )
+            self.ledger.baselines = {
+                source: (Decimal(value), now)
+                for source, value in stored.get("baselines", {}).items()
+            }
+            self.ledger.warnings.add(
+                "Migración 0.1: precisión temporal anterior desconocida; copia original conservada"
+            )
+            start = (
+                datetime.combine(self._period.start, datetime.min.time(), now.tzinfo)
+                if self._period
+                else now
+            )
+            for group in self.config["groups"]:
+                self.ledger.price(group["group_id"], Decimal(str(group["eur_per_kwh"])), start)
+
+        # A changed source expression cannot safely reinterpret previous measurements.
+        def topology(cfg: dict[str, Any]) -> tuple[Any, ...]:
+            return (
+                tuple(
+                    sorted(
+                        (
+                            g["group_id"],
+                            tuple(sorted(g["add_sources"])),
+                            tuple(sorted(g.get("subtract_sources", []))),
+                        )
+                        for g in cfg.get("groups", [])
+                    )
+                ),
+                cfg.get("export_source") if cfg.get("enable_surplus") else None,
+            )
+
+        if topology(self._stored_config) != topology(self.config):
+            self._archive("configuration_change")
+            self.ledger = MeasurementLedger()
+            self.ledger.warnings.add(
+                "Fuentes modificadas: segmento anterior archivado; seguimiento reiniciado"
+            )
+        self._roll(now.date())
+        if not self.revisions:
+            self.revisions.append(
+                {
+                    "from": datetime.combine(
+                        self._period.start, datetime.min.time(), now.tzinfo
+                    ).isoformat(),
+                    "config": deepcopy(self._stored_config),
+                }
+            )
+        if self._stored_config != self.config:
+            self.revisions.append({"from": now.isoformat(), "config": deepcopy(self.config)})
+        self._capture_prices(now)
+        for source in self.source_ids:
+            state = self.hass.states.get(source)
+            reading = self._reading_kwh(state) if state else None
+            if reading is not None:
+                self.ledger.observe(source, reading, now)
+            else:
+                self.ledger.warnings.add(f"{source}: lectura inicial no disponible")
+        self._stored_config = self.config
         self.data = self._calculate()
         self.entry.async_on_unload(
             async_track_state_change_event(
-                self.hass,
-                list(self.source_ids),
-                self._handle_state_event,
+                self.hass, list(self.source_ids | self.price_ids), self._handle_state_event
             )
         )
+        self.entry.async_on_unload(
+            async_track_time_interval(self.hass, self._tick, timedelta(minutes=1))
+        )
+        await self.async_persist()
 
     async def _async_update_data(self) -> CoordinatorData:
         return self._calculate()
 
     @callback
+    def _tick(self, now: datetime) -> None:
+        local = now.astimezone(ZoneInfo("Europe/Madrid"))
+        self._roll(local.date())
+        self._capture_prices(local)
+        self._publish()
+
+    @callback
     def _handle_state_event(self, event: Event) -> None:
-        entity_id = event.data["entity_id"]
-        new_state: State | None = event.data.get("new_state")
-        if new_state is None:
-            self._collection_warnings.add(f"{entity_id}: entidad eliminada")
-            self.async_set_updated_data(self._calculate())
-            return
-
-        now = dt_util.now()
-        self._roll_period_if_needed(now.date())
-        reading = self._reading_kwh(new_state)
-        if reading is None:
-            self._collection_warnings.add(f"{entity_id}: lectura no disponible o no válida")
-            self.async_set_updated_data(self._calculate())
-            return
-
-        previous = self._baselines.get(entity_id)
-        self._baselines[entity_id] = reading
-        if previous is None:
-            self._collection_warnings.add(
-                f"{entity_id}: falta la lectura inicial del periodo; la estimación es parcial"
-            )
-        else:
-            if reading >= previous:
-                delta = reading - previous
+        now = _now()
+        self._roll(now.date())
+        source = event.data["entity_id"]
+        state = event.data.get("new_state")
+        if source in self.price_ids:
+            self._capture_prices(now)
+        if source in self.source_ids:
+            reading = self._reading_kwh(state) if state else None
+            if reading is None:
+                self.ledger.warnings.add(f"{source}: lectura no disponible")
             else:
-                delta = reading
-                self._collection_warnings.add(
-                    f"{entity_id}: reinicio o corrección del contador detectado"
-                )
-            if delta:
-                self._samples.append(
-                    EnergySample(
-                        source_id=entity_id,
-                        timestamp=now,
-                        kwh=delta,
-                        complete=not self._collection_warnings,
-                    )
-                )
+                self.ledger.observe(source, reading, now)
+        self._publish()
 
-        self._store.async_delay_save(self._serialize, 60)
+    def _publish(self) -> None:
+        self._store.async_delay_save(self._serialize, 10)
         self.async_set_updated_data(self._calculate())
 
-    def _establish_missing_baselines(self) -> None:
-        sampled_sources = {sample.source_id for sample in self._samples}
-        now = dt_util.now()
-        for entity_id in self.source_ids:
-            if entity_id in self._baselines:
+    def _capture_prices(self, when: datetime) -> None:
+        if self.config.get("enable_surplus"):
+            self.ledger.price("__surplus", Decimal(str(self.config.get("surplus_price", 0))), when)
+        for group in self.config["groups"]:
+            mode = group.get("tariff_mode", "fixed")
+            if mode == "three_period":
+                self.ledger.price(group["group_id"], None, when)
                 continue
-            state = self.hass.states.get(entity_id)
-            reading = self._reading_kwh(state) if state else None
-            if reading is not None:
-                self._baselines[entity_id] = reading
-                if entity_id not in sampled_sources:
-                    # A zero marker lets the engine produce an explicitly partial
-                    # estimate from now onward instead of pretending prior usage was zero.
-                    self._samples.append(EnergySample(entity_id, now, Decimal(), complete=False))
-            self._collection_warnings.add(
-                f"{entity_id}: seguimiento iniciado sin histórico anterior"
+            value: Decimal | None = None
+            if mode == "fixed":
+                value = Decimal(str(group["eur_per_kwh"]))
+            elif mode == "entity":
+                state = self.hass.states.get(group.get("price_entity", ""))
+                age = (when - state.last_updated).total_seconds() if state else float("inf")
+                max_age = 60 * float(group.get("price_max_age_minutes", 65))
+                if state and state.state not in {"unknown", "unavailable"} and age <= max_age:
+                    try:
+                        value = normalize_price(
+                            Decimal(state.state), state.attributes.get("unit_of_measurement", "")
+                        )
+                        value += Decimal(str(group.get("price_markup", 0)))
+                    except BillingError, InvalidOperation:
+                        self.ledger.warnings.add(f"{group['group_name']}: precio no válido")
+                elif age > max_age:
+                    self.ledger.warnings.add(
+                        f"{group['group_name']}: precio caducado o no disponible"
+                    )
+            self.ledger.price(
+                group["group_id"],
+                value,
+                when,
+                discount_rate=Decimal(str(self.config.get("energy_discount_percent", 0))) / 100,
             )
-        self._store.async_delay_save(self._serialize, 60)
 
     @staticmethod
     def _reading_kwh(state: State) -> Decimal | None:
-        if state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-            return None
         try:
             reading = Decimal(state.state)
+            if not reading.is_finite() or reading < 0:
+                return None
+            unit = state.attributes.get("unit_of_measurement")
+            return reading / 1000 if unit == "Wh" else reading if unit == "kWh" else None
         except InvalidOperation:
             return None
-        unit = state.attributes.get("unit_of_measurement")
-        if unit == "Wh":
-            reading /= Decimal("1000")
-        elif unit != "kWh":
-            return None
-        return reading if reading >= 0 else None
 
-    def _roll_period_if_needed(self, today: date) -> None:
-        period = self._current_period(today, int(self.config[CONF_BILLING_DAY]))
+    def _roll(self, today: date) -> None:
+        period = self._current_period(
+            today,
+            int(self.config["billing_day"]),
+            int(self.config.get("billing_months", 1)),
+            int(self.config.get("billing_anchor_month", 1)),
+        )
         if self._period == period:
             return
-        if self._period is not None:
-            self._collection_warnings.add(
-                "El cierre histórico aún no está implementado; se ha iniciado el nuevo periodo"
-            )
+        if self._period:
+            self._archive("cycle_closed")
+            self.ledger = MeasurementLedger()
         self._period = period
-        self._samples.clear()
+        self._capture_prices(dt_util.now())
+        for source in self.source_ids:
+            state = self.hass.states.get(source)
+            reading = self._reading_kwh(state) if state else None
+            if reading is not None:
+                self.ledger.observe(source, reading, dt_util.now())
 
     @staticmethod
-    def _current_period(today: date, billing_day: int) -> BillingPeriod:
-        def safe_date(year: int, month: int, day: int) -> date:
-            next_month = date(year + 1, 1, 1) if month == 12 else date(year, month + 1, 1)
-            last_day = (next_month - timedelta(days=1)).day
-            return date(year, month, min(day, last_day))
+    def _current_period(
+        today: date, billing_day: int, months: int = 1, anchor_month: int = 1
+    ) -> BillingPeriod:
+        if not 1 <= billing_day <= 31 or months not in {1, 2} or not 1 <= anchor_month <= 12:
+            raise ValueError("Invalid billing cycle")
+        index = today.year * 12 + today.month - 1
+        anchor = index - (today.month - anchor_month) % months
 
-        this_month = safe_date(today.year, today.month, billing_day)
-        if today >= this_month:
-            start = this_month
-            if today.month == 12:
-                end = safe_date(today.year + 1, 1, billing_day)
-            else:
-                end = safe_date(today.year, today.month + 1, billing_day)
-        else:
-            end = this_month
-            if today.month == 1:
-                start = safe_date(today.year - 1, 12, billing_day)
-            else:
-                start = safe_date(today.year, today.month - 1, billing_day)
-        return BillingPeriod(start, end)
+        def boundary(value: int) -> date:
+            year, month = divmod(value, 12)
+            return date(year, month + 1, min(billing_day, calendar.monthrange(year, month + 1)[1]))
 
-    def _calculate(self) -> CoordinatorData:
+        if today < boundary(anchor):
+            anchor -= months
+        return BillingPeriod(boundary(anchor), boundary(anchor + months))
+
+    def _calculate(
+        self, *, closed: bool = False, config: dict[str, Any] | None = None
+    ) -> CoordinatorData:
         if self._period is None:
-            return CoordinatorData(None, "No se ha podido determinar el periodo")
+            return CoordinatorData(None, "No se ha determinado el periodo")
         try:
-            tax_point = dt_util.now().date()
-            fiscal_rule = find_fiscal_rule(tax_point, SPAIN_MAINLAND_2026)
-            groups = tuple(
-                ConsumptionGroup(
-                    group_id=group[CONF_GROUP_ID],
-                    name=group[CONF_GROUP_NAME],
-                    add_sources=tuple(group[CONF_ADD_SOURCES]),
-                    subtract_sources=tuple(group.get(CONF_SUBTRACT_SOURCES, [])),
-                )
-                for group in self.config[CONF_GROUPS]
+            today = _now().date()
+            end = self._period.end if closed else min(self._period.end, today + timedelta(days=1))
+            period = BillingPeriod(self._period.start, end)
+            result = calculate_contract(
+                config or self.config,
+                self.ledger,
+                period,
+                self._period.end - timedelta(days=1) if closed else today,
+                revisions=self.revisions,
             )
-            rates = tuple(
-                EnergyRate(
-                    rate_id=f"{group[CONF_GROUP_ID]}-fixed",
-                    group_id=group[CONF_GROUP_ID],
-                    eur_per_kwh=Decimal(group[CONF_EUR_PER_KWH]),
-                    valid_from=datetime.combine(
-                        self._period.start,
-                        datetime.min.time(),
-                        tzinfo=dt_util.get_time_zone("Europe/Madrid"),
-                    ),
+        except (BillingError, ValueError, KeyError, InvalidOperation) as err:
+            if isinstance(err, MissingFiscalRuleError):
+                ir.async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"fiscal_{self.entry.entry_id}",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="missing_fiscal_rule",
                 )
-                for group in self.config[CONF_GROUPS]
+            return CoordinatorData(None, str(err), tuple(sorted(self.ledger.warnings)))
+        ir.async_delete_issue(self.hass, DOMAIN, f"fiscal_{self.entry.entry_id}")
+        if self.ledger.warnings:
+            result = replace(
+                result,
+                quality=DataQuality.PARTIAL,
+                warnings=(*result.warnings, *sorted(self.ledger.warnings)),
             )
-            power_charges = tuple(
-                PowerCharge(code, label, Decimal(self.config[kw]), Decimal(self.config[price]))
-                for code, label, kw, price in (
-                    ("p1", "Potencia P1", CONF_POWER_P1_KW, CONF_POWER_P1_PRICE),
-                    ("p2", "Potencia P2", CONF_POWER_P2_KW, CONF_POWER_P2_PRICE),
-                )
-                if Decimal(self.config.get(kw, "0")) > 0
+        return CoordinatorData(result, None, tuple(sorted(self.ledger.warnings)))
+
+    def _archive(self, reason: str) -> None:
+        self.ledger.warnings.add("Devengo provisional: último día del periodo de consumo")
+        data = self._calculate(closed=True, config=self._stored_config or self.config)
+        if data.result:
+            record = snapshot(data.result, self._stored_config or self.config)
+        else:
+            record = {
+                "schema_version": 1,
+                "result": None,
+                "error": data.error,
+                "config": deepcopy(self._stored_config or self.config),
+                "id": f"{self.config['contract_id']}:incomplete:{uuid4().hex}",
+            }
+        record.update(
+            {
+                "closed_at": dt_util.now().isoformat(),
+                "reason": reason,
+                "raw": self.ledger.serialize(),
+                "revisions": deepcopy(self.revisions),
+                "warnings": sorted(self.ledger.warnings),
+                "period": {
+                    "start": self._period.start.isoformat(),
+                    "end": self._period.end.isoformat(),
+                },
+            }
+        )
+        if any(item.get("id") == record.get("id") for item in self.history):
+            record["id"] = f"{record['id']}:segment:{uuid4().hex}"
+        self.history.append(record)
+
+    async def async_recalculate(
+        self, record_id: str, reason: str, current_tax_profile: bool, tax_point: date | None = None
+    ) -> dict[str, Any]:
+        """Create a superseding snapshot; never overwrite the original estimate."""
+        original = next((item for item in self.history if item.get("id") == record_id), None)
+        if not original or not original.get("raw") or not reason.strip():
+            raise ValueError(
+                "Se requiere un periodo con datos guardados y el motivo de la revisión"
             )
-            fixed_charges: tuple[FixedCharge, ...] = ()
-            rental = Decimal(self.config.get(CONF_METER_RENTAL_DAILY, "0"))
-            if rental:
-                fixed_charges = (
-                    FixedCharge(
-                        "meter_rental",
-                        "Alquiler de contador",
-                        rental,
-                        BillingFrequency.DAILY,
-                    ),
-                )
-            result = BillingEngine().calculate(
-                InvoiceInput(
-                    contract_id=self.config[CONF_CONTRACT_ID],
-                    period=self._period,
-                    tax_point=tax_point,
-                    samples=tuple(self._samples),
-                    groups=groups,
-                    energy_rates=rates,
-                    fiscal_rule=fiscal_rule,
-                    power_charges=power_charges,
-                    fixed_charges=fixed_charges,
-                )
+        values = original.get("period") or original["result"]["period"]
+        period = BillingPeriod(
+            date.fromisoformat(values["start"]), date.fromisoformat(values["end"])
+        )
+        config = deepcopy(original["config"])
+        if current_tax_profile:
+            for key, value in self.config.items():
+                if key.startswith("tax_") or key == "fiscal_mode":
+                    config[key] = value
+        ledger = MeasurementLedger.restore(original["raw"])
+        effective_tax_point = tax_point or (
+            date.fromisoformat(original["result"]["tax_point"])
+            if original.get("result")
+            else period.end - timedelta(days=1)
+        )
+        if tax_point:
+            ledger.warnings.discard("Devengo provisional: último día del periodo de consumo")
+        result = calculate_contract(
+            config,
+            ledger,
+            period,
+            effective_tax_point,
+            revisions=original.get("revisions"),
+        )
+        if ledger.warnings:
+            result = replace(
+                result, quality=DataQuality.PARTIAL, warnings=tuple(sorted(ledger.warnings))
             )
-        except (BillingError, KeyError, ValueError) as err:
-            return CoordinatorData(None, str(err), tuple(sorted(self._collection_warnings)))
-        return CoordinatorData(result, None, tuple(sorted(self._collection_warnings)))
+        record = snapshot(result, config)
+        record.update(
+            id=f"{record['id']}:revision:{uuid4().hex}",
+            supersedes=record_id,
+            reason=reason.strip(),
+            closed_at=_now().isoformat(),
+            raw=deepcopy(original["raw"]),
+            revisions=deepcopy(original.get("revisions", [])),
+        )
+        self.history.append(record)
+        await self.async_persist()
+        return deepcopy(record)
+
+    async def async_persist(self) -> None:
+        await self._store.async_save(self._serialize())
+
+    async def async_archive_period(
+        self, start: date, end: date, tax_point: date, allow_boundary_estimate: bool = False
+    ) -> dict[str, Any]:
+        """Freeze a past date range without deleting or reinterpreting live data."""
+        period = BillingPeriod(start, end)
+        if end > _now().date():
+            raise ValueError("Solo se pueden cerrar días completos anteriores a hoy")
+        ledger = MeasurementLedger.restore(self.ledger.serialize())
+        bounds = [
+            datetime.combine(day, datetime.min.time(), dt_util.get_time_zone("Europe/Madrid"))
+            for day in (start, end)
+        ]
+        selected = []
+        for interval in ledger.intervals:
+            if interval.end <= bounds[0] or interval.start >= bounds[1]:
+                continue
+            if interval.start < bounds[0] or interval.end > bounds[1]:
+                if not allow_boundary_estimate:
+                    raise ValueError(
+                        "Una lectura cruza el límite: requiere autorizar la estimación parcial"
+                    )
+                left, right = max(interval.start, bounds[0]), min(interval.end, bounds[1])
+                fraction = Decimal(
+                    str((right.astimezone(UTC) - left.astimezone(UTC)).total_seconds())
+                ) / Decimal(
+                    str(
+                        (
+                            interval.end.astimezone(UTC) - interval.start.astimezone(UTC)
+                        ).total_seconds()
+                    )
+                )
+                interval = replace(interval, start=left, end=right, kwh=interval.kwh * fraction)
+                ledger.warnings.add(
+                    "Consumo en límites de factura repartido por tiempo: estimación parcial"
+                )
+            selected.append(interval)
+        ledger.intervals = selected
+        result = calculate_contract(
+            self.config, ledger, period, tax_point, revisions=self.revisions
+        )
+        if ledger.warnings:
+            result = replace(
+                result, quality=DataQuality.PARTIAL, warnings=tuple(sorted(ledger.warnings))
+            )
+        record = snapshot(result, self.config)
+        if any(item.get("id") == record["id"] for item in self.history):
+            raise ValueError("El periodo ya está cerrado; el original se conserva")
+        record.update(
+            reason="manual",
+            closed_at=_now().isoformat(),
+            raw=ledger.serialize(),
+            revisions=deepcopy(self.revisions),
+            original_measurements=self.ledger.serialize() if allow_boundary_estimate else None,
+        )
+        self.history.append(record)
+        await self.async_persist()
+        return deepcopy(record)
+
+    async def async_compare(self, record_id: str, total: Decimal, kwh: Decimal) -> dict[str, Any]:
+        index = next(
+            (n for n, item in enumerate(self.history) if item.get("id") == record_id), None
+        )
+        if index is None:
+            raise ValueError("No existe ese periodo cerrado")
+        self.history[index] = reconcile(self.history[index], total, kwh, dt_util.now())
+        await self.async_persist()
+        return self.history[index]
 
     def _serialize(self) -> dict[str, Any]:
         return {
-            "period": {
-                "start": self._period.start.isoformat(),
-                "end": self._period.end.isoformat(),
-            }
+            "schema_version": 2,
+            "saved_at": dt_util.now().isoformat(),
+            "revisions": self.revisions,
+            "ledger": self.ledger.serialize(),
+            "history": self.history,
+            "config": self._stored_config or self.config,
+            "legacy_v1": self._legacy,
+            "period": {"start": self._period.start.isoformat(), "end": self._period.end.isoformat()}
             if self._period
             else None,
-            "baselines": {key: str(value) for key, value in self._baselines.items()},
-            "samples": [
-                {
-                    "source_id": sample.source_id,
-                    "timestamp": sample.timestamp.isoformat(),
-                    "kwh": str(sample.kwh),
-                    "tariff_period": sample.tariff_period,
-                    "complete": sample.complete,
-                }
-                for sample in self._samples
-            ],
-            "warnings": sorted(self._collection_warnings),
         }
-
-    def _restore(self, stored: dict[str, Any]) -> None:
-        period = stored.get("period")
-        if period:
-            self._period = BillingPeriod(
-                date.fromisoformat(period["start"]), date.fromisoformat(period["end"])
-            )
-        self._baselines = {
-            key: Decimal(value) for key, value in stored.get("baselines", {}).items()
-        }
-        self._samples = [
-            EnergySample(
-                source_id=item["source_id"],
-                timestamp=datetime.fromisoformat(item["timestamp"]),
-                kwh=Decimal(item["kwh"]),
-                tariff_period=item.get("tariff_period", "flat"),
-                complete=bool(item.get("complete", True)),
-            )
-            for item in stored.get("samples", [])
-        ]
-        self._collection_warnings = set(stored.get("warnings", []))

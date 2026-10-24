@@ -19,7 +19,7 @@ Consumo, potencia e impuestos en Home Assistant, con cálculo local y desglose v
 </div>
 
 > [!WARNING]
-> **Experimental · 0.1.0 · Instalar primero en un HA de pruebas.**
+> **Experimental · 0.2.0.dev0 · Instalar primero en un HA de pruebas.**
 > La fase final todavía no se ha lanzado. Los importes son estimaciones y necesitan
 > contraste con facturas reales; no sustituyen la factura de tu comercializadora.
 
@@ -32,27 +32,29 @@ eléctrica española. Funciona localmente, sin cuentas ni credenciales externas.
 | --- | --- |
 | Contratos | Varias configuraciones independientes |
 | Grupos de consumo | Suma de contadores y resta explícita de subcontadores |
-| Energía | Precio fijo diferente por grupo, incluido precio negativo |
-| Potencia | P1/P2 con precios en €/kW/día |
+| Energía | Precio fijo, tres periodos 2.0TD o entidad dinámica/PVPC por grupo |
+| Potencia | P1/P2 en €/kW/día o €/kW/año, con revisiones fechadas |
 | Alquiler | Cargo diario configurable |
-| Impuestos | IVA e impuesto eléctrico con reglas fechadas |
+| Impuestos | Reglas automáticas verificadas y perfil avanzado documentado |
 | Persistencia | Consumos guardados localmente entre reinicios |
 | Desglose | Sensores de energía, potencia, impuestos y calidad de datos |
+| Conceptos opcionales | Cuota diaria, servicio por factura y descuento energético |
+| Excedentes | Precio acordado fijo y compensación limitada al valor de energía |
+| Históricos | Cierre automático/manual, exportación, comparación y revisión auditable |
+| Diagnóstico | Datos anonimizados y aviso Repairs cuando falta una regla fiscal |
 
-El motor también tiene soporte probado para cambios de precio fechados, cargos por
-factura y descuentos. Su configuración completa desde la interfaz está pendiente.
-Consulta el [plan de desarrollo](docs/plan-desarrollo.md).
+Consulta la [matriz de cobertura](docs/cobertura.md): distingue las modalidades
+disponibles de los casos que todavía requieren desarrollo y verificación.
 
 ### Objetivo: cada contrato con sus módulos
 
-El precio fijo es el primer escenario de pruebas, no el alcance final. El producto
-debe permitir elegir tarifa fija, tres periodos, PVPC o indexada, y activar solo los
-conceptos necesarios: grupos, autoconsumo, descuentos, servicios e históricos.
+Cada grupo tiene su modalidad de tarifa y sus fuentes. Solo configuras los conceptos
+adicionales que necesites. El asistente separa selección de contadores y precios,
+mostrando únicamente los campos de la tarifa elegida. La interfaz está en español;
+también usa español como fallback cuando HA está configurado en otro idioma.
 
-**Hoy no se puede configurar PVPC ni tarifa horaria desde la integración.** El
-motor admite precios fechados y periodos, pero falta conectar el calendario y las
-fuentes de precios con las lecturas y el asistente. La
-[matriz de cobertura](docs/cobertura.md) distingue soporte real y trabajo pendiente.
+**No necesitas Docker.** Es una integración HACS. El contenedor del repositorio se
+utiliza exclusivamente para ejecutar pruebas de desarrollo con HA real.
 
 ## Instalación
 
@@ -107,14 +109,34 @@ Ten a mano tu contrato o factura e introduce **precios sin impuestos**.
 | Campo | Qué introducir |
 | --- | --- |
 | Nombre | Un nombre reconocible: Casa, Garaje… |
-| Día de inicio | Día del mes en que comienza el ciclo |
+| Día de inicio | Día del mes en que comienza el ciclo mensual o bimestral |
 | Potencia P1/P2 | Potencia contratada en kW por periodo |
-| Precio P1/P2 | Precio de potencia en **€/kW/día** |
+| Precio P1/P2 | Precio según la unidad **€/kW/día** o **€/kW/año** elegida |
 | Alquiler | Importe diario del contador, sin IVA |
 | Grupos | Contadores que suman o restan y precio en **€/kWh** |
 
-Puedes añadir varios grupos antes de guardar. Encontrarás el dispositivo del
-contrato y sus sensores en **Ajustes → Dispositivos y servicios**.
+Puedes añadir, editar o eliminar grupos desde las opciones. Encontrarás el
+dispositivo del contrato y los sensores por grupo en **Ajustes → Dispositivos y
+servicios**. Renombrar conserva sus identificadores únicos. Cambiar las fuentes
+archiva el segmento anterior antes de comenzar otro seguimiento parcial.
+
+### Tres periodos y PVPC
+
+Selecciona **Tres periodos 2.0TD** para introducir P1/P2/P3. Para PVPC, instala la
+integración nativa de HA y elige su entidad de precio **FEU sin impuestos** en el
+modo dinámico. También puedes usar una entidad indexada que incluya la fórmula
+completa de tu contrato. No vuelvas a sumar peajes y cargos ya incluidos.
+
+Si una lectura acumulada atraviesa varios precios, el reparto exacto es desconocido.
+Puedes activar el reparto uniforme temporal, marcado como parcial. Un precio ausente
+o caducado no se convierte en cero. [Guía de tarifas y precisión](docs/tarifas.md).
+
+### Históricos y factura real
+
+El cierre de ciclo conserva los datos y el desglose. Desde las acciones nativas de
+HA puedes exportarlos, cerrar fechas reales, comparar con una factura y crear una
+revisión conservando el original. El devengo se indica por separado del periodo de
+consumo. [Cómo usar los históricos](docs/historicos.md).
 
 ### Ejemplo: vivienda y vehículo eléctrico
 
@@ -150,20 +172,24 @@ La plantilla requiere esa adaptación; **no se pega en `configuration.yaml`**.
 | Situación | Comportamiento actual |
 | --- | --- |
 | Primer periodo | Parcial; sin consumo anterior a la instalación |
-| Potencia y alquiler | Cubren el ciclo completo, aunque el consumo sea parcial |
-| Editar precios | Recalcula el periodo abierto con los nuevos valores |
-| Fiscalidad desde noviembre de 2026 | Sin regla verificada: importe indisponible |
-| Cierre de ciclo | Nuevo periodo; sin archivo de facturas cerradas todavía |
-| PVPC y precio dinámico desde entidades | Pendientes |
-| Excedentes, batería virtual y bono social | Pendientes |
-| Canarias, Ceuta y Melilla | Pendientes; solo fiscalidad de territorio IVA |
-| Histórico Recorder y comparación con factura real | Pendientes |
+| Potencia y alquiler | Se acumulan hasta hoy incluido; todavía no hay prorrateo intradía |
+| Editar precios | Conserva el pasado; cambios desde la revisión guardada |
+| Fiscalidad desde noviembre de 2026 | Sin regla automática resuelta: requiere actualización o perfil manual verificado |
+| Cierre automático | Devengo provisional al último día del consumo, revisable con la fecha real |
+| Contratos indexados | Aportar una entidad de precio completo; no genera fórmulas comerciales arbitrarias |
+| Compensación de excedentes | Básica con precio fijo acordado, ciclo mensual y contador separado |
+| Batería virtual y bono social | Sin gestión automática de saldos, elegibilidad o límites sociales |
+| Otros territorios | Sin perfil territorial automático; un porcentaje manual no reproduce todas sus particularidades |
+| Histórico anterior a la instalación | Sin importación de Recorder/Datadis ni reconstrucción automática |
+| Cuotas planas y promociones complejas | Sin regularización específica automática |
 
 Las reglas fiscales incluidas llegan **hasta el 31 de octubre de 2026**.
 [Fuentes y criterios fiscales](docs/reglas-fiscales.md).
 
-La edición de precios por grupo todavía muestra identificadores técnicos
-`price_…`; su presentación se mejorará antes de la fase estable.
+El calendario 2.0TD verificado incluido cubre 2026 en Península y Baleares. El perfil
+fiscal avanzado exige fuente, confirmación y vigencia; no determina por sí solo la
+elegibilidad para exenciones ni convierte esta versión en compatible con cualquier
+contrato. No se anuncian como terminados los supuestos sin pruebas.
 
 <details>
 <summary><strong>Resolución de problemas</strong></summary>
@@ -184,7 +210,11 @@ anonimizados. Evita facturas completas o datos personales.
 
 Haz una copia de seguridad de HA antes de actualizar. Con HACS, descarga la
 actualización y reinicia; manualmente, reemplaza la carpeta de la integración.
-Conserva la versión anterior para restaurarla si es necesario.
+Conserva la versión anterior y el respaldo de datos para restaurarlos si es necesario.
+
+**Si actualizas desde 0.1**, consulta la [guía de migración](docs/migracion.md). Se
+conserva una copia del payload antiguo, pero volver a 0.1 requiere restaurar también
+su almacenamiento, no solo sus archivos Python.
 
 No elimines la entrada para actualizar: eliminarla borra su almacenamiento asociado.
 Conserva el respaldo de HA para recuperar también los datos.
@@ -198,7 +228,8 @@ facturas sigue siendo necesaria antes de considerar el producto estable.
 
 El motor usa `Decimal` y está separado del adaptador HA. La CI comprueba formato,
 análisis estático, tipos y pruebas, e importa la integración contra HA de referencia.
-Otro flujo ejecuta Hassfest y HACS.
+Otro trabajo ejecuta pruebas funcionales con los fixtures de HA real. Hassfest y
+HACS validan estructura y metadatos. [Pruebas reproducibles](docs/pruebas.md).
 
 ```shell
 python -m pip install -e ".[dev]"

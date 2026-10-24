@@ -1,44 +1,33 @@
 # Requisitos y alcance
 
-## Personas y tareas
+## Tareas
 
-Usuario principal: residente en España con Home Assistant, capaz de identificar sus
-sensores pero no necesariamente de editar YAML. Tareas prioritarias:
+Crear contratos y grupos sin YAML; elegir tarifa fija, tres periodos o entidad;
+estimar energía, potencia y conceptos habilitados; identificar datos ausentes;
+conservar histórico y comparar con facturas reales.
 
-1. saber cuánto lleva acumulado en el periodo;
-2. entender energía, potencia e impuestos;
-3. separar vivienda, vehículo y otros consumos con precios propios;
-4. detectar datos incompletos o doble contabilización;
-5. comparar más adelante la estimación con la factura real.
+## Versión de pruebas
 
-## MVP actual
+- Contratos independientes, grupos sumados/restados e identidad estable.
+- Contadores Wh/kWh; sensores W mediante ayudante Integral externo de HA.
+- Precios fijos, calendario 2.0TD y entidad dinámica/PVPC; márgenes y unidades.
+- Revisiones de precio/descuento por instante y potencia/cuotas por fecha.
+- Cargos, bases y perfil fiscal automático/manual con fuente y vigencia.
+- Excedentes de mercado libre con precio fijo y compensación simplificada limitada.
+- Ciclos mensuales/bimestrales, cierre, exportación, comparación y revisión auditable.
+- Sensores por contrato/grupo, diagnósticos, Repairs y almacenamiento local.
 
-- varios contratos independientes;
-- configuración visual de uno o más grupos;
-- sensores acumulativos Wh/kWh;
-- sumas y restas explícitas de fuentes;
-- precio fijo por grupo;
-- potencia P1/P2, alquiler diario e impuestos peninsulares verificados;
-- sensores de total, desglose, consumo y calidad;
-- almacenamiento local, sin PII ni telemetría.
+## Criterios que no se rebajan
 
-## Fuera del MVP actual
+- unknown/unavailable nunca equivale a cero.
+- Un precio ausente/caducado no se extrapola.
+- Una aproximación temporal se autoriza y se marca parcial.
+- No se distinguen reinicio y corrección sin metadatos suficientes; no se inventa consumo.
+- Los importes del motor usan Decimal y los instantes comparables usan UTC.
+- Se conservan configuración, parámetros fiscales y datos originales de los cierres.
+- Las operaciones se limitan a un contrato y no modifican tablas de Recorder.
+- La configuración anterior se migra sin borrar sus datos ni cambiar identidades.
 
-- tarifa de tres periodos en la UI (el motor ya la admite);
-- precio dinámico/PVPC, potencia instantánea y exportación;
-- descuentos/cargos arbitrarios en la UI (el motor ya admite su estructura);
-- cierre histórico, factura real, CSV/Datadis, Repairs y migraciones;
-- edición visual de topología después de crear el contrato;
-- tarjeta Lovelace propia.
-
-Estas ausencias deben mostrarse como limitaciones, nunca como funciones simuladas.
-
-## Criterios de calidad
-
-- un `unknown`/`unavailable` nunca equivale a cero;
-- una tarifa ausente invalida el resultado;
-- el primer periodo es parcial;
-- IDs de contrato y entidades no dependen del nombre visible;
-- ningún dato económico usa `float` dentro del motor;
-- cada preset fiscal tiene fuente y vigencia;
-- la integración no modifica Recorder ni bases de datos internas.
+La [matriz de cobertura](cobertura.md) es la referencia de funciones soportadas y
+exclusiones. Las pruebas de API no acreditan una revisión visual ni equivalencia
+universal con las facturas de todas las comercializadoras.

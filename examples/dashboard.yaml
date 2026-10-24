@@ -9,7 +9,7 @@ cards:
       ## Luz en Cifras · Pruebas
 
       Estimación experimental. Consulta la calidad de datos antes de comparar
-      importes con tu factura. Potencia y alquiler cubren el periodo completo.
+      importes con tu factura. Potencia y alquiler se acumulan hasta hoy incluido.
   - type: entities
     title: Contrato eléctrico
     show_header_toggle: false
@@ -21,7 +21,7 @@ cards:
       - entity: sensor.mi_contrato_energia_del_periodo
         name: Consumo registrado
       - entity: sensor.mi_contrato_dias_del_periodo
-        name: Días del periodo completo
+        name: Días calculados
   - type: entities
     title: Desglose de costes
     show_header_toggle: false
@@ -32,6 +32,7 @@ cards:
       - entity: sensor.mi_contrato_iva
       - entity: sensor.mi_contrato_otros_cargos
       - entity: sensor.mi_contrato_descuentos
+      - entity: sensor.mi_contrato_compensacion_de_excedentes
       - entity: sensor.mi_contrato_precio_medio_efectivo
   - type: history-graph
     title: Evolución de la estimación
