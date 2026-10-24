@@ -5,8 +5,8 @@ Los datos sintéticos están en `tests/` y `tests_ha/`, fuera del componente dis
 
 ## Última comprobación del desarrollo
 
-El 24 de octubre de 2026, la revisión de desarrollo `0.2.0.dev1` pasó **76 pruebas**
-en el laboratorio aislado con HA 2026.10.2 y Python 3.14.2: 59 del motor y 17 del
+El 24 de octubre de 2026, la revisión de desarrollo `0.2.0.dev1` pasó **78 pruebas**
+en el laboratorio aislado con HA 2026.10.2 y Python 3.14.2: 61 del motor y 17 del
 adaptador HA. También se ejecutaron Ruff (formato y análisis), mypy sobre el dominio
 y sus pruebas, y `git diff --check`. Los trabajos de GitHub Actions proporcionan la
 evidencia por commit de las siguientes revisiones; esta nota no garantiza commits
@@ -58,6 +58,22 @@ servicios de otros proyectos. La imagen de pruebas se puede reutilizar.
 - Detección W/kW/Wh/kWh, integración de potencia, grupos mixtos y casa/coche con
   precios distintos; caducidad, huecos, reinicios y estados restaurados.
 - Ciclos mensuales/bimestrales, meses cortos, cambio de año y corte local de potencia.
+- Un mes de reportes por minuto conserva energía con almacenamiento acotado; la
+  potencia también respeta el tiempo real de la hora repetida de otoño.
+
+## HA completo: preparación de la aceptación
+
+El 24 de octubre se arrancó también la imagen oficial completa de HA 2026.10.2,
+fijada por digest, con usuario sin privilegios y datos sintéticos identificados.
+`check_config` terminó correctamente y `/onboarding.html` respondió HTTP 200.
+Configuración reproducible: [laboratorio](../lab/README.md).
+
+**Pendiente:** el navegador no ha completado el asistente ni revisado los dashboards.
+La clave SSH bloquea el reenvío de puertos (`administratively prohibited`), por lo
+que el acceso mediante túnel no está disponible. Se ha solicitado autorización para
+un acceso LAN acotado; mientras no se apruebe, el servicio solo escucha en localhost.
+No se han cambiado SSH, firewall, proxy ni router. La prueba de varios días y la
+promoción estable siguen el [plan de aceptación](validacion-en-ha.md).
 
 Las pruebas de flujos se hacen a través de las APIs reales de Home Assistant. Eso
 no equivale a una inspección visual de móvil/escritorio ni a contraste con una
