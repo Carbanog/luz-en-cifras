@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="custom_components/luz_en_cifras/brand/icon.png" alt="Luz en Cifras" width="96">
+<img src="https://raw.githubusercontent.com/Carbanog/luz-en-cifras/main/custom_components/luz_en_cifras/brand/icon.png" alt="Luz en Cifras" width="96">
 
 # Luz en Cifras
 
@@ -19,7 +19,7 @@ Consumo, potencia e impuestos en Home Assistant, con cálculo local y desglose v
 </div>
 
 > [!WARNING]
-> **En validación · 0.2.0 · Instalar primero en un HA de pruebas.**
+> **En validación · 0.2.1 · Instalar primero en un HA de pruebas.**
 > La fase final todavía no se ha lanzado. Los importes son estimaciones y necesitan
 > contraste con facturas reales; no sustituyen la factura de tu comercializadora.
 
@@ -87,7 +87,7 @@ Todavía no pertenece al catálogo predeterminado de HACS. Las versiones instala
 se publican en [Releases](https://github.com/Carbanog/luz-en-cifras/releases), con sus
 cambios e instrucciones. HACS utiliza esas versiones para ofrecer actualizaciones.
 Si instalaste `main`, usa **Volver a descargar** en el menú del repositorio de HACS
-y selecciona **0.2.0** para pasar al seguimiento por versiones. Reinicia HA después.
+y selecciona la release más reciente para pasar al seguimiento por versiones. Reinicia HA después.
 La rama `main` queda disponible para desarrollo.
 
 <details>
@@ -126,7 +126,8 @@ y los precios del grupo; finalmente, la potencia contratada y el alquiler.
 para punta y valle. No se copian los W instantáneos de los sensores ni los tres
 precios de energía. Si tu factura indica 4,6 kW en ambos periodos, introduce 4,6 en
 ambos campos. Primero se elige si su precio está en €/kW/día o €/kW/año. Cada campo
-incluye ayuda; ya no se rellenan datos desconocidos con cero.
+incluye ayuda. Si HA muestra cero inicialmente, sustitúyelo por el dato de tu factura:
+solo es válido cuando realmente no se contrata o cobra ese concepto.
 
 El mes de referencia solo se pide en ciclos bimestrales. Caducidad, reparto temporal
 y visibilidad del desglose están en **Ajustes avanzados de medición**. Los contratos

@@ -166,7 +166,7 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
                     "Fuentes/tarifa revisadas: se conserva el consumo anterior; "
                     "las fuentes nuevas parten de una nueva referencia"
                 )
-        self._roll(now.date())
+        self._roll(now.date(), when=now)
         if not self.revisions:
             self.revisions.append(
                 {
@@ -199,7 +199,7 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
     @callback
     def _tick(self, now: datetime) -> None:
         local = now.astimezone(ZoneInfo("Europe/Madrid"))
-        self._roll(local.date())
+        self._roll(local.date(), when=local)
         self._collect_power(local)
         self._capture_prices(local)
         self._publish()
@@ -207,7 +207,7 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
     @callback
     def _handle_state_event(self, event: Event) -> None:
         now = _now()
-        self._roll(now.date())
+        self._roll(now.date(), when=now)
         source = event.data["entity_id"]
         state = event.data.get("new_state")
         if source in self.price_ids:
@@ -292,7 +292,7 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
             ):
                 self._collect_source(source, when, state)
 
-    def _roll(self, today: date) -> None:
+    def _roll(self, today: date, *, when: datetime | None = None) -> None:
         period = self._current_period(
             today,
             int(self.config["billing_day"]),
@@ -312,9 +312,12 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
             self._archive("cycle_closed")
             self.ledger = MeasurementLedger()
         self._period = period
-        self._capture_prices(dt_util.now())
+        # One event instant must govern both prices and measurement cursors.
+        # Reading the clock again here used to leave startup microsecond gaps.
+        instant = when if when is not None else _now()
+        self._capture_prices(instant)
         for source in self.source_ids:
-            self._collect_source(source, _now())
+            self._collect_source(source, instant)
 
     @staticmethod
     def _current_period(
@@ -457,7 +460,7 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
     async def async_prepare_reload(self) -> None:
         """Read the old meters at the transition without using the new options."""
         now = _now()
-        self._roll(now.date())
+        self._roll(now.date(), when=now)
         for source in self.source_ids:
             self._collect_source(source, now)
         await self.async_persist()

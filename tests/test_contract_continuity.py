@@ -1,7 +1,7 @@
 """One invoice across dated source expressions and tariff revisions."""
 
 from copy import deepcopy
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -111,6 +111,33 @@ def test_measured_zero_retains_an_energy_line_instead_of_looking_unmeasured() ->
     assert len(lines) == 1
     assert lines[0].quantity == 0
     assert lines[0].metadata["group_id"] == "g"
+
+
+def _assert_startup_gap(dynamic: bool) -> None:
+    settings = config()
+    if dynamic:
+        settings["groups"][0]["tariff_mode"] = "entity"
+    ledger = MeasurementLedger()
+    ledger.observe_input("old", D(1000), "W", at(1))
+    ledger.price("g", D("0.1"), at(1) + timedelta(microseconds=20))
+    ledger.advance_power("old", at(1) + timedelta(minutes=1))
+    original = ledger.serialize()
+    if dynamic:
+        with pytest.raises(IncompleteDataError, match="Missing or overlapping prices"):
+            calculate_contract(settings, ledger, PERIOD, date(2026, 10, 31))
+    else:
+        result = calculate_contract(settings, ledger, PERIOD, date(2026, 10, 31))
+        assert result.total_kwh == D("0.017")
+        assert abs(result.amount_for("energy") - D(1) / 600) < D("1e-25")
+    assert ledger.serialize() == original
+
+
+def test_contractual_fixed_price_recovers_startup_gap_without_mutating_measurements() -> None:
+    _assert_startup_gap(False)
+
+
+def test_dynamic_quote_never_extrapolates_over_a_startup_gap() -> None:
+    _assert_startup_gap(True)
 
 
 def test_compaction_never_merges_across_a_persisted_configuration_boundary() -> None:
