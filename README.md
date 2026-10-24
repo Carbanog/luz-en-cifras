@@ -19,7 +19,7 @@ Consumo, potencia e impuestos en Home Assistant, con cálculo local y desglose v
 </div>
 
 > [!WARNING]
-> **En validación · 0.2.0.dev1 · Instalar primero en un HA de pruebas.**
+> **En validación · 0.2.0.dev2 · Instalar primero en un HA de pruebas.**
 > La fase final todavía no se ha lanzado. Los importes son estimaciones y necesitan
 > contraste con facturas reales; no sustituyen la factura de tu comercializadora.
 
@@ -58,7 +58,7 @@ utiliza exclusivamente para ejecutar pruebas de desarrollo con HA real.
 
 ## Instalación
 
-**Referencia de compatibilidad: Home Assistant 2026.10.2**, Python 3.14.2 o posterior.
+**Compatibilidad probada: Home Assistant 2026.10.2 y 2026.10.3**, Python 3.14.2 o posterior.
 Otras versiones de HA requieren validación. Puedes elegir directamente sensores de
 potencia **W/kW** o contadores acumulados **Wh/kWh**, incluso varios y mezclados en
 un grupo. La unidad se detecta automáticamente. No necesitas ayudantes Integral.
@@ -112,6 +112,21 @@ Evita copiar el repositorio completo en `custom_components` o duplicar la carpet
 ## Configuración
 
 Ten a mano tu contrato o factura e introduce **precios sin impuestos**.
+
+El alta comienza por **la modalidad de energía**: precio fijo, tres precios
+punta/llano/valle o precio variable desde una entidad (PVPC/indexada). Mercado libre
+no significa necesariamente precio fijo. Después se piden el periodo, los sensores
+y los precios del grupo; finalmente, la potencia contratada y el alquiler.
+
+**Potencia contratada no es consumo:** P1 y P2 son los kW que figuran en tu contrato
+para punta y valle. No se copian los W instantáneos de los sensores ni los tres
+precios de energía. Si tu factura indica 4,6 kW en ambos periodos, introduce 4,6 en
+ambos campos. Primero se elige si su precio está en €/kW/día o €/kW/año. Cada campo
+incluye ayuda; ya no se rellenan datos desconocidos con cero.
+
+El mes de referencia solo se pide en ciclos bimestrales. Caducidad, reparto temporal
+y visibilidad del desglose están en **Ajustes avanzados de medición**. Los contratos
+existentes conservan sus campos, consumos e identificadores.
 
 | Campo | Qué introducir |
 | --- | --- |

@@ -77,3 +77,11 @@ línea temporal será secundaria y el tablero de grupos quedará para opciones
 avanzadas. Se evita una cuadrícula genérica de KPI. En el MVP se usan entidades y
 formularios nativos; una tarjeta propia solo se justificará tras validar límites
 reales de Lovelace.
+
+El asistente sigue el orden mental de leer una factura: modalidad de energía,
+periodo, sensores y precios del grupo, unidad y potencias contratadas. Cada pantalla
+tiene una decisión principal; los ajustes técnicos se separan en Avanzado. El mes
+de referencia solo aparece tras elegir bimestral. P1/P2 de potencia se explican al
+lado de sus campos para no confundirlos con P1/P2/P3 de energía. Las ayudas no
+dependen de consultar el README. No se cambia el esquema persistente ni los IDs:
+las opciones actualizan únicamente los campos del paso editado.

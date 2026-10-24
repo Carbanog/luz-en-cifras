@@ -19,3 +19,13 @@ reemplazar archivos Python: esa versión no entiende el nuevo ledger. La copia
 
 La eliminación de un contrato es independiente del resto y utiliza la API pública
 Store. No se han modificado datos de HA, Recorder ni otras integraciones.
+
+## Asistente de 0.2.0.dev2
+
+La versión menor de configuración pasa a 3. Conserva los campos del contrato y sus
+opciones; normaliza días/meses enteros antiguos que los selectores habían guardado
+como cadenas `1.0`. No trunca valores fraccionarios ni borra mediciones. Los pasos
+nuevos no requieren eliminar ni volver a crear un contrato.
+
+Si tenías un alta sin guardar abierta al actualizar, ciérrala y vuelve a abrirla
+después del reinicio. Los contratos ya guardados se editan desde sus opciones.
