@@ -137,11 +137,20 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
                 self.ledger.price(group["group_id"], Decimal(str(group["eur_per_kwh"])), start)
 
         # A changed source expression cannot safely reinterpret previous measurements.
-        def topology(cfg: dict[str, Any]) -> list[tuple[Any, ...]]:
-            return [
-                (g["group_id"], g["add_sources"], g.get("subtract_sources", []))
-                for g in cfg.get("groups", [])
-            ]
+        def topology(cfg: dict[str, Any]) -> tuple[Any, ...]:
+            return (
+                tuple(
+                    sorted(
+                        (
+                            g["group_id"],
+                            tuple(sorted(g["add_sources"])),
+                            tuple(sorted(g.get("subtract_sources", []))),
+                        )
+                        for g in cfg.get("groups", [])
+                    )
+                ),
+                cfg.get("export_source") if cfg.get("enable_surplus") else None,
+            )
 
         if topology(self._stored_config) != topology(self.config):
             self._archive("configuration_change")

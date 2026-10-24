@@ -1,5 +1,6 @@
 """Exercise real Home Assistant setup, state events, options and persistence."""
 
+from copy import deepcopy
 from datetime import timedelta
 from decimal import Decimal
 
@@ -296,3 +297,32 @@ async def test_manual_archive_requires_consent_for_boundary_allocation(hass, con
     saved = entry.runtime_data.history[-1]
     assert saved["original_measurements"]["intervals"][0]["kwh"] == "2"
     assert entry.runtime_data.data.result.total_kwh == Decimal(2)
+
+
+async def test_group_rename_and_reordering_preserve_measurements(hass, contract, freezer):
+    freezer.move_to("2026-10-23 12:00:00+00:00")
+    attributes = {"unit_of_measurement": "kWh", "device_class": "energy"}
+    contract["groups"].append(
+        {
+            "group_id": "garage",
+            "group_name": "Garaje",
+            "add_sources": ["sensor.garage"],
+            "subtract_sources": [],
+            "eur_per_kwh": "0.1",
+        }
+    )
+    for source in ("sensor.test_energy", "sensor.garage"):
+        hass.states.async_set(source, "100", attributes)
+    entry = MockConfigEntry(domain=DOMAIN, data=contract, title="Casa", version=1)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    freezer.tick(timedelta(minutes=1))
+    hass.states.async_set("sensor.test_energy", "102", attributes)
+    await hass.async_block_till_done()
+    modified = deepcopy(contract)
+    modified["groups"].reverse()
+    modified["groups"][1]["group_name"] = "Casa renombrada"
+    hass.config_entries.async_update_entry(entry, options=modified)
+    await hass.async_block_till_done()
+    assert entry.runtime_data.data.result.total_kwh == Decimal(2)
+    assert not entry.runtime_data.history

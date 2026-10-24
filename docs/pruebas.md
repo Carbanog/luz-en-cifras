@@ -5,8 +5,8 @@ Los datos sintéticos están en `tests/` y `tests_ha/`, fuera del componente dis
 
 ## Última comprobación del desarrollo
 
-El 24 de octubre de 2026, la revisión de desarrollo `0.2.0.dev0` pasó **62 pruebas**
-en el laboratorio aislado con HA 2026.10.2 y Python 3.14.2: 52 del motor y 10 del
+El 24 de octubre de 2026, la revisión de desarrollo `0.2.0.dev0` pasó **63 pruebas**
+en el laboratorio aislado con HA 2026.10.2 y Python 3.14.2: 52 del motor y 11 del
 adaptador HA. También se ejecutaron Ruff (formato y análisis), mypy sobre el dominio
 y sus pruebas, y `git diff --check`. Los trabajos de GitHub Actions proporcionan la
 evidencia por commit de las siguientes revisiones; esta nota no garantiza commits
@@ -52,6 +52,8 @@ servicios de otros proyectos. La imagen de pruebas se puede reutilizar.
 - Consentimiento para repartir lecturas que cruzan fechas de factura y conservación
   de las mediciones originales; los descuentos de potencia no reducen el límite
   económico de la compensación de energía.
+- Renombrado y reordenación de grupos sin reiniciar los consumos; cambiar la fuente
+  de excedentes sí cambia la topología del seguimiento.
 - Aviso Repairs cuando falta una regla fiscal y resolución mediante un perfil explícito.
 
 Las pruebas de flujos se hacen a través de las APIs reales de Home Assistant. Eso
