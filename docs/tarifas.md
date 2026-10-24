@@ -4,6 +4,8 @@
 
 - Fija: un precio de energía sin impuestos en €/kWh.
 - Tres periodos: P1/P2/P3 en €/kWh. Calendario 2.0TD de Península y Baleares.
+- PVPC directo: FEU horario publicado por Red Eléctrica, sin impuestos y sin otra
+  integración de HA. Alcance de esta modalidad: Península/Baleares.
 - Entidad: precio completo sin impuestos en €/kWh o €/MWh. Puede ser el FEU de la
   integración nativa PVPC o una entidad calculada con tu contrato indexado.
 
@@ -23,16 +25,36 @@ entre 365 cuando eliges esa unidad; verifica que ese es el divisor de tu contrat
 
 ## Fuente PVPC
 
-Instala la integración nativa **Spain electricity hourly pricing (PVPC)** y selecciona
-su entidad FEU. Según la [documentación de HA](https://www.home-assistant.io/integrations/pvpc_hourly_pricing/),
-ese precio incluye producción, peajes y cargos de energía, sin impuestos. No añadas
-estos componentes de nuevo como margen o servicio.
+Puedes elegir **PVPC directo de Red Eléctrica** o mantener una entidad de la integración
+nativa. Ambas opciones deben usar el FEU: incluye producción, peajes y cargos de
+energía, sin impuestos. No añadas estos componentes de nuevo como margen o servicio.
+[Fuente oficial](https://www.esios.ree.es/es/pvpc) y
+[documentación de HA](https://www.home-assistant.io/integrations/pvpc_hourly_pricing/).
 
-Los precios se guardan desde que comienza el seguimiento. Un reinicio no autoriza a
-suponer cuál fue el precio durante la parada: los huecos se conservan como tales.
-La caducidad predeterminada de una cotización sin actualizar es de 65 minutos y se
-puede ajustar entre 1 y 1440. No hay descarga obligatoria de precios desde esta
-integración; si usas PVPC, la integración nativa es quien consulta su proveedor.
+El modo directo usa `esios-api>=4.4.0`, probada con 4.4.0, la misma biblioteca de HA
+2026.10.2/2026.10.3. Consulta el recurso público de precios diarios de REE sin token,
+al iniciar y cada 30 minutos; la biblioteca evita repetir descargas ya disponibles.
+No requiere tener instalada ni configurada `pvpc_hourly_pricing`. No obtiene OMIE
+para construir una fórmula PVPC propia. No añade márgenes comerciales al FEU.
+
+Se validan calendarios completos de 23, 24 o 25 horas, conservando horas en UTC.
+Cada precio vale solo en su hora publicada; las horas descargadas, incluso las
+futuras cuando están publicadas, se guardan en el ledger. El sensor de precio de
+cada grupo muestra el FEU vigente, antes de descuentos e impuestos. Si falta su hora,
+queda indisponible. Una corrección publicada de un precio ya guardado genera aviso
+y conserva la cotización original; no revaloriza el pasado silenciosamente.
+
+El límite de red es 20 segundos por actualización, sin reintentos inmediatos. Ante
+una caída se conserva el calendario válido: solo se calcula lo que sus horas cubren.
+Si faltan precios, se guardan las mediciones y se muestra el error; no se factura
+a cero ni se extrapola. Una descarga posterior puede completar las horas pendientes
+del día disponible. No se importan automáticamente calendarios antiguos de días
+que nunca se descargaron, ni consumo de Recorder o durante una parada de HA.
+
+En el modo **entidad**, se guardan las cotizaciones observadas y se mantiene la
+caducidad configurable de 65 minutos por defecto (1–1440). Un reinicio no permite
+suponer sus precios durante la parada. Esta caducidad no se aplica a un calendario
+oficial: sus precios tienen horas de validez explícitas.
 
 ## Lecturas que cruzan precios
 

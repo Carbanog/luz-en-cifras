@@ -5,14 +5,44 @@ Los datos sintéticos están en `tests/` y `tests_ha/`, fuera del componente dis
 
 ## Última comprobación del desarrollo
 
-El 24 de octubre de 2026, la revisión `0.2.1` pasó **104 pruebas
-en cada versión de HA 2026.10.2 y 2026.10.3**, con Python 3.14.2: 72 del motor y 32
+El 24 de octubre de 2026, la revisión `0.3.0` pasó **118 pruebas
+en cada versión de HA 2026.10.2 y 2026.10.3**, con Python 3.14.2: 76 del motor y 42
 del adaptador HA. También se ejecutaron Ruff (formato y análisis), mypy sobre el dominio
 y sus pruebas, y `git diff --check`. Los trabajos de GitHub Actions proporcionan la
 evidencia por commit de las siguientes revisiones; esta nota no garantiza commits
 posteriores ni compatibilidad con otras versiones de HA.
 
 ## Motor
+
+### Aceptación acelerada y PVPC directo
+
+Se ejecutaron 61 días sintéticos (septiembre/octubre de 2026) en instancias aisladas
+de HA: dos cierres mensuales o un cierre bimestral, con la hora adicional de otoño,
+recarga del colector y recálculo idéntico. Se verificaron **864 kWh en septiembre,
+894 kWh en octubre y 1758 kWh en el bimestre**, para potencias sintéticas constantes
+de 1 kW en Casa y 0,2 kW en Coche. Cada factura aplica una sola cuota por factura y
+sus días de alquiler. Esto no adelanta el reloj ni crea lecturas en el HA del usuario.
+
+Las pruebas PVPC incluyen caché al recargar sin red, fallo inicial con conservación
+de mediciones, recuperación, rechazo de calendario incompleto, cancelación de
+peticiones, cambio de modalidad sin solapamientos y día siguiente sin precios.
+También verifican que el modo fijo no instancia el cliente de red y que el precio
+actual aparece sin necesitar `pvpc_hourly_pricing`.
+
+Separadamente, el 24 de octubre el cliente nuevo consultó el recurso público real de
+REE: obtuvo **24 precios horarios del día**, normalizados a €/kWh y sin advertencia.
+La librería probada fue `esios-api==4.4.0`; los requisitos mínimos permiten seguir
+las actualizaciones compatibles de la dependencia usada por Home Assistant.
+
+La VM docker-lab no respondió por SSH en esta revisión (timeout de conexión). Las
+pruebas HA se ejecutaron en GitHub Actions para ambas versiones, sin desplegar en
+el HA del usuario. El asistente nuevo y el PVPC directo aún requieren comprobación
+visual en su instalación tras actualizar; los tests no se presentan como esa revisión.
+
+La simulación conserva el fallo explícito al llegar a noviembre sin perfil fiscal
+verificado. No resuelve normativa pendiente ni sustituye una factura real.
+
+### Ejecutar el dominio
 
 Con Python 3.14.2 o posterior:
 
@@ -27,7 +57,7 @@ pytest tests
 ## Home Assistant real
 
 ```shell
-python -m pip install pytest-homeassistant-custom-component==0.13.373
+python -m pip install pytest-homeassistant-custom-component==0.13.373 esios-api==4.4.0
 python -m pytest -c tests_ha/pytest.ini tests_ha -q
 ```
 

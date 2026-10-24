@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.3.0 — 24 de octubre de 2026
+
+- Añade PVPC directo desde REE/ESIOS, sin otra integración de HA ni sensor externo,
+  para Península/Baleares. Mantiene la selección de una entidad existente.
+- Valida calendarios completos de 23/24/25 horas, conserva precios publicados por
+  hora, muestra el precio actual por grupo y rechaza huecos sin extrapolar ni poner cero.
+- Limita las consultas, conserva caché, recupera mediciones pendientes del día y
+  cancela descargas al descargar la entrada. Precio fijo no crea cliente de red.
+- Añade simulaciones de 61 días para cierres mensuales/bimestrales, cambio de hora,
+  recarga y recálculo. No se cambia la hora del HA del usuario ni se instalan fixtures.
+- Declara `esios-api>=4.4.0`, probada con 4.4.0 como HA de referencia; actualiza
+  privacidad, cobertura, actualización y evidencias de pruebas.
+- Mantiene el esquema de datos 3. La fiscalidad automática de noviembre sigue
+  pendiente: las pruebas aceleradas no se presentan como resolución fiscal.
+
 ## 0.2.1 — 24 de octubre de 2026
 
 - Corrige un hueco de microsegundos entre precios y mediciones de potencia al arrancar

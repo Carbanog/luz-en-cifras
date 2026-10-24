@@ -45,7 +45,31 @@ reporte y cualquier hueco; no exijas igualdad exacta con un contador físico.
 No adelantes el reloj de tu HA ni reinicies contadores físicos para forzar un cierre.
 El cierre por rango de fechas permite probar el histórico sin esas operaciones.
 
-## Contraste con una factura
+## Pruebas aceleradas sin alterar el reloj de tu HA
+
+La suite `tests_ha/test_accelerated_acceptance.py` ejecuta 61 días sintéticos en una
+instancia aislada de HA con reloj controlado por pytest. Comprueba septiembre y
+octubre de 2026, la hora adicional de otoño, dos cierres mensuales o un cierre
+bimestral, persistencia al recargar el colector y recálculo idéntico. Los kWh y
+cargos se contrastan con resultados analíticos. No usa el HA del usuario ni cambia
+la hora del anfitrión, contadores físicos, automatizaciones o Recorder.
+
+`tests_ha/test_pvpc_direct.py` comprueba cambios de precio horario, caché tras recarga,
+caída de la fuente, calendario ausente del día siguiente, recuperación, cambio a
+precio de entidad y cancelación de descargas. Las respuestas de red de esos tests
+son fixtures explícitos. Una consulta real al servicio oficial se verifica aparte.
+
+Con el entorno de [pruebas](pruebas.md) instalado:
+
+```shell
+python -m pytest -c tests_ha/pytest.ini tests_ha/test_accelerated_acceptance.py tests_ha/test_pvpc_direct.py -q
+```
+
+Esto acelera las transiciones del software; no convierte una prueba sintética en
+una factura real ni resuelve normas fiscales pendientes. La simulación verifica
+también que noviembre sin perfil fiscal resuelto sigue fallando explícitamente.
+
+## Contraste con una factura real
 
 Compara energía, potencia, alquiler, descuentos, compensación y cada impuesto por
 separado. El periodo y el devengo deben coincidir, igual que precios, bases y
