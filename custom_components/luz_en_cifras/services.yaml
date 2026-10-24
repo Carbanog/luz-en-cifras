@@ -1,0 +1,94 @@
+export_history:
+  name: Exportar histórico
+  description: Devuelve las estimaciones cerradas del contrato, con precios, reglas y comparación real.
+  fields:
+    entry_id:
+      name: Contrato
+      required: true
+      selector:
+        config_entry:
+          integration: luz_en_cifras
+recalculate_period:
+  name: Revisar un periodo cerrado
+  description: Crea una nueva revisión y conserva el original. Mantiene precios históricos; puede usar el perfil fiscal actual si lo solicitas.
+  fields:
+    entry_id:
+      name: Contrato
+      required: true
+      selector:
+        config_entry:
+          integration: luz_en_cifras
+    record_id:
+      name: Identificador del periodo exportado
+      required: true
+      selector:
+        text:
+    reason:
+      name: Motivo de la revisión
+      required: true
+      selector:
+        text:
+    use_current_tax_profile:
+      name: Aplicar el perfil fiscal actual a la fecha del periodo
+      default: false
+      selector:
+        boolean:
+    tax_point:
+      name: Fecha real de devengo (opcional, conserva la anterior si se omite)
+      selector:
+        date:
+archive_period:
+  name: Cerrar un periodo pasado
+  description: Guarda una copia inmutable. La fecha final es exclusiva. Rechaza límites sin mediciones suficientes.
+  fields:
+    entry_id:
+      name: Contrato
+      required: true
+      selector:
+        config_entry:
+          integration: luz_en_cifras
+    start:
+      name: Inicio incluido
+      required: true
+      selector:
+        date:
+    end:
+      name: Fin excluido
+      required: true
+      selector:
+        date:
+    tax_point:
+      name: Fecha de devengo del impuesto
+      required: true
+      selector:
+        date:
+    allow_boundary_estimate:
+      name: Autorizar reparto temporal en límites de lectura (parcial)
+      default: false
+      selector:
+        boolean:
+record_invoice:
+  name: Comparar con factura real
+  description: Añade una comparación auditable sin modificar la estimación cerrada.
+  fields:
+    entry_id:
+      name: Contrato
+      required: true
+      selector:
+        config_entry:
+          integration: luz_en_cifras
+    record_id:
+      name: Identificador del periodo exportado
+      required: true
+      selector:
+        text:
+    real_total:
+      name: Total real en euros (puede ser un abono)
+      required: true
+      selector:
+        text:
+    real_kwh:
+      name: Energía real en kWh
+      required: true
+      selector:
+        text:

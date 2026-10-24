@@ -1,49 +1,63 @@
-# Plan de desarrollo
+# Plan de desarrollo y estado verificable
 
-## Fase A — investigación y definición
+Corte: 24 de octubre de 2026. Versión experimental 0.2.0.dev0.
 
-Estado: **en progreso**. Completados nombre provisional, mapa de producto,
-arquitectura, fiscalidad peninsular hasta octubre de 2026 y comparación técnica y de
-licencias de los proyectos de referencia.
-Pendientes: peajes/cargos, bono social, territorios, PVPC operativo y búsqueda formal
-de marca.
+## A — Investigación
 
-## Fase B — motor
+Hecho: referencias de producto/licencias, fiscalidad ordinaria verificada hasta
+octubre de 2026, calendario 2.0TD de 2026, integración PVPC nativa y compensación
+simplificada básica. Las medidas condicionadas no se presentan como resueltas.
 
-Estado: **parcialmente implementado**.
+Pendiente: perfiles territoriales automáticos, bono social y fórmulas comerciales
+especiales. La disponibilidad del nombre no equivale a exclusividad registral.
 
-- Hecho: grupos, precios fijos/periodos/cambios, potencia, cargos, descuentos,
-  fiscalidad, calidad y 26 pruebas.
-- Siguiente: normalizador formal de contadores, tarifas por calendario español,
-  autoconsumo y snapshots cerrados.
+## B — Motor
 
-## Fase C — Home Assistant
+Implementados y probados: fuentes y grupos, precios fijos y por intervalos, calendario
+tres periodos, vigencias en UTC, potencia fechada, cargos y sus bases, descuentos,
+perfil fiscal versionado/manual, compensación limitada y snapshots auditables.
 
-Estado: **esqueleto funcional no validado dentro de Home Assistant**.
+El cálculo del consumo medido se separa del reparto temporal estimado. Huecos,
+solapamientos y datos no finitos producen errores explícitos.
 
-- Hecho: manifest, flujo visual, varios contratos, grupos, persistencia y sensores.
-- Siguiente: entorno de pruebas HA, pruebas de ConfigFlow/OptionsFlow, migraciones,
-  diagnósticos, Repairs y recarga automática al editar opciones.
+## C — Home Assistant
 
-## Fase D — históricos
+Implementados: asistente por módulos, precios según modalidad, edición/eliminación
+de grupos con IDs estables, ledger persistente, migración, descarga con guardado,
+sensores por contrato/grupo, diagnósticos y aviso Repairs.
 
-Pendiente: cierre/reapertura auditable, factura real, diferencias y retención. Antes
-de implementarlo se verificará la API pública de estadísticas vigente, que cambió en
-Home Assistant 2026.10.
+Las pruebas funcionales usan HA 2026.10.2 en un contenedor aislado de desarrollo
+en docker-lab y se repiten en CI. HACS continúa siendo el método de instalación.
 
-## Fase E — experiencia
+## D — Histórico y conciliación
 
-Pendiente: validar el flujo nativo en móvil (≈390 px) y escritorio (≈1440 px), temas
-claro/oscuro, teclado, zoom y textos largos. Solo después decidir tarjeta Lovelace.
+Implementados: cierre automático, cierre manual con fechas y devengo explícitos,
+exportación mediante acciones nativas, comparación de importes/energía, auditoría y
+revisión con enlace al original. Un cierre sin datos suficientes conserva el error
+y los datos, sin asignarle un resultado válido.
 
-## Fase F — publicación
+No se importa aún Recorder/CSV/Datadis. Los datos cerrados no se recalculan al editar
+precios. No hay purga automática. La retención requiere una decisión explícita futura.
 
-Repositorio público creado: https://github.com/Carbanog/luz-en-cifras. La CI,
-Hassfest, HACS y la importación contra HA 2026.10.2 han pasado. La validación de
-comportamiento en una instalación HA sigue pendiente. La versión es experimental.
-El alcance completo y las prioridades están en [cobertura.md](cobertura.md).
-Las releases estables y el alta en HACS predeterminado quedan para la fase final.
-HACS exige una sola integración por
-repositorio y todos los archivos de ejecución dentro de
-`custom_components/luz_en_cifras`, según su
-[documentación](https://www.hacs.xyz/docs/publish/integration/).
+## E — Experiencia
+
+Hecho: formularios nativos con selección de tarifa y campos progresivos; plantillas
+Lovelace con tarjetas nativas y README con instalación, límites y recuperación.
+
+Pendiente: inspección visual del flujo renderizado en 390/1440 px, temas, teclado y
+contraste con facturas reales anonimizadas. Las pruebas de API de flujos no se
+presentan como una revisión visual. No hay tarjeta propia obligatoria.
+
+## F — Distribución
+
+Repositorio público y CI disponibles, con validación HACS/Hassfest y marca local.
+Sin release estable, etiqueta de publicación ni inclusión en HACS predeterminado.
+La distribución experimental usa main; toda actualización debe conservar una copia
+de seguridad y poder revertirse junto con sus datos.
+
+## Criterio para la fase final
+
+No se dará por completo el alcance nacional o cualquier contrato comercial mientras
+la matriz de cobertura mantenga excepciones. Las siguientes ampliaciones requieren
+sus reglas documentadas y casos de prueba: bono social con límites, batería virtual,
+cuota plana/regularización, peajes de otros tipos de acceso y perfiles territoriales.
