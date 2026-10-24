@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 import calendar
 import logging
+from contextlib import suppress
 from copy import deepcopy
 from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime, timedelta
@@ -15,6 +17,7 @@ from zoneinfo import ZoneInfo
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_state_change_event, async_track_time_interval
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -27,6 +30,7 @@ from .domain.errors import BillingError, MissingFiscalRuleError
 from .domain.history import reconcile, snapshot
 from .domain.intervals import MeasuredInterval, normalize_price
 from .domain.ledger import MeasurementLedger
+from .domain.models import EnergyRate
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,6 +65,9 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
         self._stored_config: dict[str, Any] = {}
         self._legacy: dict[str, Any] | None = None
         self.revisions: list[dict[str, Any]] = []
+        self._pvpc = None
+        self._pvpc_task: asyncio.Task | None = None
+        self._stopping = False
 
     @property
     def config(self) -> dict[str, Any]:
@@ -88,6 +95,12 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
         self._legacy = stored.get("legacy_v1")
         self._stored_config = stored.get("config", self.config)
         now = _now()
+        if any(group.get("tariff_mode") == "pvpc" for group in self.config["groups"]):
+            from .pvpc import PvpcClient
+
+            self._pvpc = PvpcClient(async_get_clientsession(self.hass))
+            await self._pvpc.async_refresh(now)
+            now = _now()
         self.revisions = stored.get("revisions", [])
         if stored.get("period"):
             self._period = BillingPeriod(
@@ -191,6 +204,33 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
         self.entry.async_on_unload(
             async_track_time_interval(self.hass, self._tick, timedelta(minutes=1))
         )
+        if self._pvpc is not None:
+            self.entry.async_on_unload(
+                async_track_time_interval(
+                    self.hass, self._async_refresh_pvpc, timedelta(minutes=30)
+                )
+            )
+        await self.async_persist()
+
+    async def _async_refresh_pvpc(self, when: datetime) -> None:
+        if self._stopping or self._pvpc_task is not None or self._pvpc is None:
+            return
+        self._pvpc_task = asyncio.current_task()
+        try:
+            await self._pvpc.async_refresh(when)
+            if not self._stopping:
+                self._capture_prices(_now())
+                self._publish()
+        finally:
+            self._pvpc_task = None
+
+    async def async_shutdown(self) -> None:
+        """Do not let an in-flight download write after unloading the contract."""
+        self._stopping = True
+        if task := self._pvpc_task:
+            task.cancel()
+            with suppress(asyncio.CancelledError):
+                await task
         await self.async_persist()
 
     async def _async_update_data(self) -> CoordinatorData:
@@ -233,6 +273,10 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
             self.ledger.price("__surplus", Decimal(str(self.config.get("surplus_price", 0))), when)
         for group in self.config["groups"]:
             mode = group.get("tariff_mode", "fixed")
+            if mode == "pvpc":
+                self.ledger.price(group["group_id"], None, when)
+                self._capture_pvpc(group)
+                continue
             if mode == "three_period":
                 self.ledger.price(group["group_id"], None, when)
                 continue
@@ -260,6 +304,24 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
                 value,
                 when,
                 discount_rate=Decimal(str(self.config.get("energy_discount_percent", 0))) / 100,
+            )
+
+    def _capture_pvpc(self, group: dict[str, Any]) -> None:
+        if self._pvpc is None:
+            return
+        if self._pvpc.warning:
+            self.ledger.warnings.add(self._pvpc.warning)
+        known = {rate.rate_id: rate for rate in self.ledger.rates}
+        for stamp, price in self._pvpc.prices.items():
+            key = f"pvpc:{group['group_id']}:{stamp.isoformat()}"
+            if key in known:
+                if known[key].eur_per_kwh != price:
+                    self.ledger.warnings.add(
+                        "PVPC publicado revisado: se conserva la cotización original guardada"
+                    )
+                continue
+            self.ledger.rates.append(
+                EnergyRate(key, group["group_id"], price, stamp, stamp + timedelta(hours=1))
             )
 
     def _collect_source(self, source: str, when: datetime, state: State | None = None) -> None:
