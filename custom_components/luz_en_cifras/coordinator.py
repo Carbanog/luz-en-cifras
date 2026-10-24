@@ -100,6 +100,11 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
             )
         if "ledger" in stored:
             self.ledger = MeasurementLedger.restore(stored["ledger"])
+            if self.ledger.power_samples:
+                self.ledger.power_samples.clear()
+                self.ledger.warnings.add(
+                    "Potencia durante parada no reconstruida; energía anterior conservada"
+                )
             if stored.get("saved_at"):
                 for group in self.config["groups"]:
                     if group.get("tariff_mode") == "entity":
@@ -172,12 +177,7 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
             self.revisions.append({"from": now.isoformat(), "config": deepcopy(self.config)})
         self._capture_prices(now)
         for source in self.source_ids:
-            state = self.hass.states.get(source)
-            reading = self._reading_kwh(state) if state else None
-            if reading is not None:
-                self.ledger.observe(source, reading, now)
-            else:
-                self.ledger.warnings.add(f"{source}: lectura inicial no disponible")
+            self._collect_source(source, now)
         self._stored_config = self.config
         self.data = self._calculate()
         self.entry.async_on_unload(
@@ -197,6 +197,7 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
     def _tick(self, now: datetime) -> None:
         local = now.astimezone(ZoneInfo("Europe/Madrid"))
         self._roll(local.date())
+        self._collect_power(local)
         self._capture_prices(local)
         self._publish()
 
@@ -207,13 +208,10 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
         source = event.data["entity_id"]
         state = event.data.get("new_state")
         if source in self.price_ids:
+            self._collect_power(now)
             self._capture_prices(now)
         if source in self.source_ids:
-            reading = self._reading_kwh(state) if state else None
-            if reading is None:
-                self.ledger.warnings.add(f"{source}: lectura no disponible")
-            else:
-                self.ledger.observe(source, reading, now)
+            self._collect_source(source, now, state)
         self._publish()
 
     def _publish(self) -> None:
@@ -254,16 +252,29 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
                 discount_rate=Decimal(str(self.config.get("energy_discount_percent", 0))) / 100,
             )
 
-    @staticmethod
-    def _reading_kwh(state: State) -> Decimal | None:
+    def _collect_source(self, source: str, when: datetime, state: State | None = None) -> None:
+        state = state or self.hass.states.get(source)
+        value = None
         try:
-            reading = Decimal(state.state)
-            if not reading.is_finite() or reading < 0:
-                return None
-            unit = state.attributes.get("unit_of_measurement")
-            return reading / 1000 if unit == "Wh" else reading if unit == "kWh" else None
+            value = Decimal(state.state) if state and not state.attributes.get("restored") else None
         except InvalidOperation:
-            return None
+            value = None  # Domain collector records the gap; never substitute zero.
+        self.ledger.observe_input(
+            source,
+            value,
+            state.attributes.get("unit_of_measurement", "") if state else "",
+            when,
+            reported_at=state.last_reported if state else when,
+            max_age_seconds=int(float(self.config.get("power_max_age_minutes", 5)) * 60),
+        )
+
+    def _collect_power(self, when: datetime) -> None:
+        for source in self.source_ids:
+            state = self.hass.states.get(source)
+            if source in self.ledger.power_samples or (
+                state and state.attributes.get("unit_of_measurement") in {"W", "kW"}
+            ):
+                self._collect_source(source, when, state)
 
     def _roll(self, today: date) -> None:
         period = self._current_period(
@@ -275,15 +286,19 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
         if self._period == period:
             return
         if self._period:
+            boundary = datetime.combine(
+                self._period.end, datetime.min.time(), ZoneInfo("Europe/Madrid")
+            )
+            for source in tuple(self.ledger.power_samples):
+                self.ledger.advance_power(
+                    source, boundary, int(float(self.config.get("power_max_age_minutes", 5)) * 60)
+                )
             self._archive("cycle_closed")
             self.ledger = MeasurementLedger()
         self._period = period
         self._capture_prices(dt_util.now())
         for source in self.source_ids:
-            state = self.hass.states.get(source)
-            reading = self._reading_kwh(state) if state else None
-            if reading is not None:
-                self.ledger.observe(source, reading, dt_util.now())
+            self._collect_source(source, _now())
 
     @staticmethod
     def _current_period(

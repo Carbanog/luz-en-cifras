@@ -9,7 +9,8 @@ conservar histórico y comparar con facturas reales.
 ## Versión de pruebas
 
 - Contratos independientes, grupos sumados/restados e identidad estable.
-- Contadores Wh/kWh; sensores W mediante ayudante Integral externo de HA.
+- Sensores W/kW y contadores Wh/kWh directos, detección por unidad y grupos mixtos;
+  integración temporal estimada con caducidad configurable y sin reconstruir paradas.
 - Precios fijos, calendario 2.0TD y entidad dinámica/PVPC; márgenes y unidades.
 - Revisiones de precio/descuento por instante y potencia/cuotas por fecha.
 - Cargos, bases y perfil fiscal automático/manual con fuente y vigencia.
