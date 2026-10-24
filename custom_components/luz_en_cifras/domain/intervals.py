@@ -42,6 +42,28 @@ def normalize_price(value: Decimal, unit: str) -> Decimal:
     raise ConfigurationError(f"Unsupported price unit: {unit}")
 
 
+def clip_interval(
+    interval: MeasuredInterval, start: datetime, end: datetime, *, approximate: bool = False
+) -> MeasuredInterval | None:
+    """Select a half-open revision window without silently estimating meter deltas."""
+    original_start, original_end = interval.start.astimezone(UTC), interval.end.astimezone(UTC)
+    left, right = max(original_start, start.astimezone(UTC)), min(original_end, end.astimezone(UTC))
+    if left >= right:
+        return None
+    if left == original_start and right == original_end:
+        return interval
+    if not (approximate or interval.estimated):
+        raise IncompleteDataError(
+            "Meter interval crosses a configuration boundary; temporal estimate requires consent"
+        )
+    fraction = Decimal(str((right - left).total_seconds())) / Decimal(
+        str((original_end - original_start).total_seconds())
+    )
+    return MeasuredInterval(
+        interval.source_id, left, right, interval.kwh * fraction, estimated=True
+    )
+
+
 def allocate_interval(
     interval: MeasuredInterval,
     rates: tuple[EnergyRate, ...],

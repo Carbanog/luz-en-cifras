@@ -19,7 +19,7 @@ Consumo, potencia e impuestos en Home Assistant, con cálculo local y desglose v
 </div>
 
 > [!WARNING]
-> **En validación · 0.2.0.dev2 · Instalar primero en un HA de pruebas.**
+> **En validación · 0.2.0.dev3 · Instalar primero en un HA de pruebas.**
 > La fase final todavía no se ha lanzado. Los importes son estimaciones y necesitan
 > contraste con facturas reales; no sustituyen la factura de tu comercializadora.
 
@@ -140,8 +140,17 @@ existentes conservan sus campos, consumos e identificadores.
 
 Puedes añadir, editar o eliminar grupos desde las opciones. Encontrarás el
 dispositivo del contrato y los sensores por grupo en **Ajustes → Dispositivos y
-servicios**. Renombrar conserva sus identificadores únicos. Cambiar las fuentes
-archiva el segmento anterior antes de comenzar otro seguimiento parcial.
+servicios**. Renombrar conserva sus identificadores únicos. Puedes cambiar sensores,
+grupos y modalidades durante el ciclo: se conserva lo acumulado, cada tramo mantiene
+sus fuentes y precios y los cargos fijos se calculan una sola vez para la factura.
+Los cambios se aplican al guardar; no permiten indicar fechas retroactivas.
+
+Un contador nuevo espera una lectura real como referencia y después acumula sus
+incrementos; su valor anterior en HA no se interpreta como consumo desde el cambio.
+Mientras faltan mediciones se muestra la parte conocida con una advertencia; un grupo
+sin mediciones queda desconocido, no a cero. Si una lectura cruza una frontera y no
+permite un reparto exacto, se requiere autorizar la estimación temporal en Avanzado.
+Consulta [actualización y compatibilidad](docs/migracion.md).
 
 ### Tres periodos y PVPC
 

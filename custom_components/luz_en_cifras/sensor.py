@@ -311,11 +311,13 @@ class LuzGroupSensor(LuzBaseSensor):
         result = self.coordinator.data.result
         if not result:
             return None
-        lines = (
+        lines = [
             line
             for line in result.lines
             if line.category == "energy" and line.metadata.get("group_id") == self.group_id
-        )
+        ]
+        if not lines:
+            return None
         return sum(
             (
                 (line.quantity or Decimal()) if self.metric == "energy" else line.amount
