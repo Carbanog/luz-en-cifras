@@ -220,12 +220,12 @@ class BillingEngine:
                 )
             total_kwh += group_total
             for (rate_id, tariff_period), (quantity, amount) in sorted(buckets.items()):
-                if quantity == 0:
-                    continue
-                unit_price = amount / quantity
                 applied_rate = next(
                     rate for rate in invoice.energy_rates if rate.rate_id == rate_id
                 )
+                # A measured zero is meaningful; keep it distinct from a group
+                # with no measurements, which has no energy line at all.
+                unit_price = amount / quantity if quantity else applied_rate.eur_per_kwh
                 if applied_rate.discount_rate:
                     lines.append(
                         InvoiceLine(

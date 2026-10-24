@@ -38,7 +38,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload after an options change so subscriptions match the new config."""
-    await entry.runtime_data.async_persist()
+    await entry.runtime_data.async_prepare_reload()
     await hass.config_entries.async_reload(entry.entry_id)
 
 

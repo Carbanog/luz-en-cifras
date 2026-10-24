@@ -42,6 +42,11 @@ que nunca se recogió ni importa automáticamente lecturas de Recorder.
 
 ## Revisión y recuperación
 
+Los cambios de sensores o tarifas no cierran el ciclo ni crean facturas adicionales.
+Al cierre se guarda un único snapshot con las mediciones y todas las revisiones del
+contrato; el recálculo conserva los precios y las fuentes de cada tramo. También se
+conservan los consumos anteriores de un grupo que después se eliminó.
+
 Una revisión no borra el resultado previo. Puedes mantener su fecha de devengo o
 indicar la real. También puedes solicitar expresamente aplicar el perfil fiscal
 actual a esa fecha; los precios históricos se conservan. El resultado nuevo contiene

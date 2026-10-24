@@ -53,7 +53,16 @@ el día de edición utiliza los nuevos valores. El servicio por factura se aplic
 sola vez con el valor configurado al calcularla. No se admiten todavía modificaciones
 retroactivas arbitrarias de cláusulas comerciales.
 
-Cambiar la topología de fuentes archiva los datos anteriores y comienza un segmento
-parcial, conservando la identidad del contrato y sus históricos. Los contadores que
-se reinician o se corrigen establecen una nueva línea base: el intervalo dudoso no
-se convierte en consumo inventado.
+Cambiar sensores, grupos o modalidad conserva una sola factura y sus mediciones.
+Cada revisión usa sus fuentes, precios y descuentos desde el instante de edición;
+el consumo anterior no se vuelve a valorar con la tarifa nueva. Los cargos diarios
+y la potencia se prorratean por sus fechas y el servicio por factura se cobra una
+sola vez. Renombrar un grupo o editar cargos diarios no introduce por sí mismo una
+frontera de reparto energético.
+
+Un contador recién seleccionado espera una lectura real de referencia. Si se retira
+y luego se vuelve a seleccionar, no suma el consumo ocurrido mientras estaba fuera
+del contrato. Una lectura acumulada que cruza una revisión requiere reparto temporal
+autorizado o deja el cálculo indisponible; no se atribuye entera al precio nuevo.
+Los contadores que se reinician o se corrigen también establecen una nueva línea
+base: el intervalo dudoso no se convierte en consumo inventado.
