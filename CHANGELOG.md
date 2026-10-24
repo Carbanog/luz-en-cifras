@@ -2,6 +2,13 @@
 
 ## Sin publicar
 
+### 0.2.0.dev1 — sensores de potencia directos
+
+- Añade sensores directos W/kW junto a Wh/kWh, grupos mixtos y detección de unidad.
+- Integra potencia con regla izquierda, caducidad configurable y persistencia sin
+  extrapolar paradas; valida filas de casa y coche con tarifas independientes.
+- Mantiene intervalos estimados identificados al cerrar y restaurar históricos.
+
 ### 0.2.0.dev0 — experimental
 
 - Conecta tarifas fijas, tres periodos 2.0TD y entidades dinámicas/PVPC a HA.

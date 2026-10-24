@@ -1,6 +1,6 @@
 # Matriz de cobertura
 
-Versión experimental 0.2.0.dev0. Contemplar un caso no significa implementarlo.
+Versión experimental 0.2.0.dev1. Contemplar un caso no significa implementarlo.
 
 | Módulo | Disponible y verificable | Límite actual |
 | --- | --- | --- |
@@ -16,7 +16,7 @@ Versión experimental 0.2.0.dev0. Contemplar un caso no significa implementarlo.
 | Fiscalidad | Reglas automáticas acotadas, condiciones de potencia y perfil manual documentado | Sin perfiles territoriales/exenciones automáticos |
 | Periodos | Mes desplazado/bimestral y cierre manual con fechas reales | Las lecturas en límites pueden requerir aproximación explícita |
 | Históricos | Snapshots, exportación, comparación y revisión conservando el original | Sin importación de Recorder/Datadis/CSV |
-| Medición | Wh/kWh, huecos, correcciones y compacción conservadora | W requiere un ayudante Integral nativo de HA |
+| Medición | W/kW y Wh/kWh directos, grupos mixtos, huecos, correcciones y persistencia | Potencia estimada, caducidad configurable; no reconstruye paradas ni infiere circuitos duplicados |
 | Configuración | Edición de grupos y fuentes, IDs estables, copia anterior | Cambiar fuentes abre un segmento parcial |
 | Privacidad | Sin cuentas ni telemetría propias, diagnóstico sin lecturas/nombres | Exportar históricos sí contiene configuración y entidades |
 

@@ -19,6 +19,7 @@ class MeasuredInterval:
     start: datetime
     end: datetime
     kwh: Decimal
+    estimated: bool = False
 
     def __post_init__(self) -> None:
         for value in (self.start, self.end):
@@ -74,7 +75,7 @@ def allocate_interval(
             raise IncompleteDataError("Missing or overlapping prices in measured interval")
         segments.append((left, right, matches[0]))
     estimated = len(segments) > 1
-    if estimated and not allow_uniform_estimate:
+    if estimated and not (allow_uniform_estimate or interval.estimated):
         raise IncompleteDataError("Measured delta crosses prices without interval consumption")
     duration = Decimal(str((end - start).total_seconds()))
     allocated = Decimal()
@@ -92,7 +93,7 @@ def allocate_interval(
                 left,
                 energy,
                 rate.tariff_period or "flat",
-                complete=not estimated,
+                complete=not (estimated or interval.estimated),
             )
         )
     return tuple(samples)

@@ -48,7 +48,7 @@ def select(options: list[tuple[str, str]]) -> SelectSelector:
     )
 
 
-ENERGY = EntitySelector(EntitySelectorConfig(domain="sensor", device_class="energy", multiple=True))
+ENERGY = EntitySelector(EntitySelectorConfig(domain="sensor", multiple=True))
 SENSOR = EntitySelector(EntitySelectorConfig(domain="sensor"))
 
 
@@ -71,6 +71,9 @@ def contract_schema(current: dict[str, Any]) -> vol.Schema:
         vol.Required(
             "show_secondary_entities", default=current.get("show_secondary_entities", True)
         ): BooleanSelector(),
+        vol.Required(
+            "power_max_age_minutes", default=float(current.get("power_max_age_minutes", 5))
+        ): number(1, 1440, 1),
     }
     for key in (
         "power_p1_kw",
@@ -200,7 +203,7 @@ class ContractForms:
                 errors["base"] = "source_overlap"
             elif any(
                 (state := self.hass.states.get(source)) is None
-                or state.attributes.get("unit_of_measurement") not in {"Wh", "kWh"}
+                or state.attributes.get("unit_of_measurement") not in {"Wh", "kWh", "W", "kW"}
                 for source in (*additions, *subtractions)
             ):
                 errors["base"] = "invalid_units"
@@ -317,7 +320,7 @@ class ContractForms:
             state = self.hass.states.get(source) if source else None
             if (
                 not state
-                or state.attributes.get("unit_of_measurement") not in {"Wh", "kWh"}
+                or state.attributes.get("unit_of_measurement") not in {"Wh", "kWh", "W", "kW"}
                 or source in coefficients
                 or int(self._config.get("billing_months", 1)) != 1
             ):

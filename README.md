@@ -19,7 +19,7 @@ Consumo, potencia e impuestos en Home Assistant, con cálculo local y desglose v
 </div>
 
 > [!WARNING]
-> **Experimental · 0.2.0.dev0 · Instalar primero en un HA de pruebas.**
+> **Experimental · 0.2.0.dev1 · Instalar primero en un HA de pruebas.**
 > La fase final todavía no se ha lanzado. Los importes son estimaciones y necesitan
 > contraste con facturas reales; no sustituyen la factura de tu comercializadora.
 
@@ -59,9 +59,11 @@ utiliza exclusivamente para ejecutar pruebas de desarrollo con HA real.
 ## Instalación
 
 **Referencia de compatibilidad: Home Assistant 2026.10.2**, Python 3.14.2 o posterior.
-Otras versiones de HA requieren validación. Necesitas un sensor de energía
-acumulada con clase `energy` y unidad **Wh o kWh**. Un sensor en W mide potencia
-y no sirve directamente como contador.
+Otras versiones de HA requieren validación. Puedes elegir directamente sensores de
+potencia **W/kW** o contadores acumulados **Wh/kWh**, incluso varios y mezclados en
+un grupo. La unidad se detecta automáticamente. No necesitas ayudantes Integral.
+La energía calculada desde potencia es una estimación marcada como parcial.
+[Selección de sensores, precisión y caducidad](docs/sensores.md).
 
 ### Con HACS · repositorio personalizado
 
@@ -114,6 +116,7 @@ Ten a mano tu contrato o factura e introduce **precios sin impuestos**.
 | Precio P1/P2 | Precio según la unidad **€/kW/día** o **€/kW/año** elegida |
 | Alquiler | Importe diario del contador, sin IVA |
 | Grupos | Contadores que suman o restan y precio en **€/kWh** |
+| Caducidad de potencia | Tiempo sin reportes antes de detener la integración de W/kW; 5 minutos por defecto |
 
 Puedes añadir, editar o eliminar grupos desde las opciones. Encontrarás el
 dispositivo del contrato y los sensores por grupo en **Ajustes → Dispositivos y
@@ -140,7 +143,11 @@ consumo. [Cómo usar los históricos](docs/historicos.md).
 
 ### Ejemplo: vivienda y vehículo eléctrico
 
-Si el contador principal ya incluye el cargador:
+Puedes sumar tus dos filas de automáticos en **Casa** y seleccionar el sensor del
+cargador en **Coche**, cada grupo con sus precios. Si las filas ya incluyen el coche,
+réstalo de Casa para no duplicarlo. No selecciones a la vez W y kWh del mismo circuito.
+
+Si utilizas un contador principal que ya incluye el cargador:
 
 | Grupo | Consumo | Precio ilustrativo |
 | --- | --- | --- |
@@ -195,7 +202,7 @@ contrato. No se anuncian como terminados los supuestos sin pruebas.
 <summary><strong>Resolución de problemas</strong></summary>
 
 - **No aparece:** comprueba la ruta de `manifest.json`, reinicia HA y revisa el registro.
-- **No puedes elegir un contador:** debe medir energía acumulada en Wh o kWh.
+- **No puedes guardar un sensor:** comprueba que su unidad sea W, kW, Wh o kWh.
 - **El consumo no cambia:** espera nuevos cambios; no se reconstruye el pasado.
 - **Importe indisponible:** consulta el sensor de calidad y atributos `error` y `warnings`.
 - **No coincide con la factura:** revisa cobertura, unidades y precios sin impuestos.
