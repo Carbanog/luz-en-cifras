@@ -1,6 +1,15 @@
 # Changelog
 
-## Sin publicar
+## 0.2.0 — 24 de octubre de 2026
+
+Primera release versionada para actualizar mediante HACS. Incluye las mejoras de
+desarrollo detalladas a continuación. Sigue en validación: la aceptación con sensores
+y facturas reales está pendiente. Requiere Home Assistant 2026.10.2 o posterior;
+se han probado 2026.10.2 y 2026.10.3.
+
+- Unifica manifiesto, paquete y diagnósticos en 0.2.0.
+- Documenta cómo pasar de `main` a releases, actualizar y recuperar una versión.
+- No introduce cambios funcionales respecto a 0.2.0.dev3 ni cambia datos al publicar.
 
 ### 0.2.0.dev3 — continuidad al cambiar sensores y tarifas
 

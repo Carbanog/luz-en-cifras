@@ -1,6 +1,6 @@
 # Plan de desarrollo y estado verificable
 
-Corte: 24 de octubre de 2026. Versión en validación 0.2.0.dev3.
+Corte: 24 de octubre de 2026. Versión en validación 0.2.0.
 
 ## A — Investigación
 
@@ -59,9 +59,10 @@ presentan como una revisión visual. No hay tarjeta propia obligatoria.
 ## F — Distribución
 
 Repositorio público y CI disponibles, con validación HACS/Hassfest y marca local.
-Sin release estable, etiqueta de publicación ni inclusión en HACS predeterminado.
-La versión en validación se distribuye desde main; toda actualización debe conservar una copia
-de seguridad y poder revertirse junto con sus datos.
+La primera release, 0.2.0, permite instalar y actualizar por versión desde HACS.
+Sigue en validación y no está incluida en el catálogo predeterminado de HACS.
+Las releases posteriores conservan las anteriores; toda actualización debe disponer
+de un respaldo para poder recuperar código y datos. `main` queda para desarrollo.
 
 ## Criterio para la fase final
 
