@@ -5,6 +5,12 @@ Dos configuraciones completas, con el mismo contenido y dos pestañas:
 Las tarjetas leen las entidades de Luz en Cifras; no crean sensores ni cambian
 el contrato. No requieren automatizaciones, temas, card-mod ni servicios externos.
 
+El resumen combina una factura destacada, consumo diario en barras y reparto
+Casa/Coche. La cabecera verde utiliza un SVG incluido dentro del YAML y tres
+valores vivos de HA: importe, consumo y días. **No hay que descargar imágenes ni
+copiarlas a `/local`**. Su [fuente SVG](images/invoice-card.svg) se incluye para
+mantenimiento; el importe y las mediciones no forman parte de la imagen.
+
 | Variante | Descargar YAML | Requisitos comprobados |
 | --- | --- | --- |
 | Nativa | [dashboard.yaml](../examples/dashboard.yaml) | HA 2026.10.3; ninguna tarjeta adicional |
@@ -90,13 +96,15 @@ mantener un dashboard independiente.
 
 ## 3. Ajusta solo lo que necesitas
 
-**Un único grupo.** En Resumen elimina las tarjetas de Coche y la fila Coche en
-Coste de la energía (nativo). En Mushroom basta con eliminar la tarjeta de Coche.
-Puedes renombrar Casa como Consumo. El total del contrato sigue siendo el mismo.
+**Un único grupo.** En Resumen elimina la fila Coche de Energía (nativo) o la tarjeta
+Coche (Mushroom). Elimina también Coche de las listas `entities` de las tarjetas
+`statistics-graph` y `distribution`. Puedes renombrar Casa como Consumo y quitar
+la tarjeta de reparto cuando solo quede un grupo. El total no cambia.
 
-**Más grupos.** Duplica una tarjeta de grupo y cambia nombre e IDs. En la variante
-nativa añade también su fila de coste; en Mushroom sustituye ambos IDs y la lista
-`entity_id`. No sumes importes en el dashboard: el total ya lo calcula la integración.
+**Más grupos.** Añade su fila de coste (nativo) o duplica una tarjeta de grupo
+(Mushroom), cambiando nombre, ambos IDs y la lista `entity_id`. Añade su entidad de
+energía en `statistics-graph` y `distribution`, con el mismo color en ambas.
+No sumes importes en el dashboard: el total ya lo calcula la integración.
 
 **Varios contratos.** Crea un dashboard por contrato o duplica las dos vistas con
 rutas distintas y reemplaza sus IDs. Los grupos mostrados deben pertenecer al mismo
@@ -138,6 +146,13 @@ Toca una tarjeta de consumo para ver su entidad e historial. En Mushroom tambié
 puedes tocar el aviso de calidad; en ambas variantes lo encontrarás en Desglose.
 Sus atributos incluyen los avisos, periodo y regla fiscal aplicada.
 
+Las barras de **Tu consumo, día a día** muestran cambios diarios de los sensores
+de energía mediante estadísticas de HA, no sus valores acumulados. Requieren que
+Recorder guarde las entidades y tiempo para generar estadísticas. Al principio
+puede haber solo una o dos barras; la plantilla no inventa una semana de datos.
+El día actual está en curso. **Reparto del consumo registrado** compara los kWh
+acumulados del ciclo por grupo; sus segmentos permiten abrir la entidad.
+
 ![Desglose de energía, potencia, cargos e impuestos y evolución del total](images/dashboard-breakdown.png)
 
 La gráfica requiere historial de HA. Muestra el **total acumulado**, que se
@@ -146,7 +161,8 @@ los días anteriores a la instalación.
 
 ## En el móvil
 
-Las secciones pasan de dos columnas a una, conservando el total primero.
+En escritorio la factura ocupa una columna y los gráficos dos. En el móvil se
+apilan conservando el total y la calidad de datos primero.
 No necesitas otra plantilla ni cambiar el tema.
 
 | Nativo · 390 px | Mushroom · 390 px |
@@ -171,9 +187,11 @@ datos de la integración.
 
 ## Criterio de diseño y validación
 
-El importe del ciclo es el punto de entrada; el reparto por usos lo explica y el
-desglose queda en una segunda pestaña. Ámbar identifica atención y turquesa/azul
-distinguen usos sin depender exclusivamente del color. Se respeta el tema de HA.
+La composición se inspira en una factura: un bloque verde con importe destacado
+abre la lectura; a su lado, las barras explican el consumo y la proporción de usos.
+El desglose queda en la segunda pestaña. Verde salvia identifica Casa y dorado
+identifica Coche, acompañados por nombres y cifras. Se conserva el tema de HA para
+el resto de tarjetas; el bloque de factura tiene colores propios con alto contraste.
 
 Comprobado en HA 2026.10.3 y Mushroom 5.2.3, a 390 y 1440 px: carga de ambas
 plantillas, entidades, apertura de más información y pestaña de desglose.
@@ -182,5 +200,7 @@ oscuro mostrado; no constituye una auditoría completa WCAG ni prueba de todos
 los temas de terceros. No se modifica el motor de cálculo.
 
 Referencias: [secciones de HA](https://www.home-assistant.io/dashboards/sections/),
-[tarjetas Tile](https://www.home-assistant.io/dashboards/tile/),
+[Picture elements](https://www.home-assistant.io/dashboards/picture-elements/),
+[estadísticas diarias](https://www.home-assistant.io/dashboards/statistics-graph/),
+[reparto nativo](https://www.home-assistant.io/dashboards/distribution/),
 [Template de Mushroom](https://github.com/piitaya/lovelace-mushroom/blob/v5.2.3/docs/cards/template.md).

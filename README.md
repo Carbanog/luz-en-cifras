@@ -241,6 +241,8 @@ el consumo del vehículo. La integración no deduce relaciones por nombres.
 Elige una de las dos plantillas completas. Ambas tienen **Resumen** (factura,
 consumo y grupos) y **Desglose** (conceptos e historial). Se adaptan al móvil y
 mantienen visibles los avisos de calidad.
+El resumen destaca el importe del ciclo y añade barras diarias y reparto por usos.
+La cabecera está incluida en el YAML: no hay imágenes externas que instalar.
 
 | Nativo | Mushroom |
 | --- | --- |

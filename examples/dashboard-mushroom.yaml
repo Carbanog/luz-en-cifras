@@ -1,50 +1,81 @@
-# Dashboard completo. Requiere Mushroom 5.x; no necesita card-mod ni temas.
-# Sustituye TODAS las entidades sensor.mi_contrato_* por las reales.
-# Guía: docs/dashboards.md
+# Dashboard completo. Cambia TODAS las entidades sensor.mi_contrato_* por las reales.
+# Guía: docs/dashboards.md. El SVG de cabecera está incluido; no hay que copiar imágenes a HA.
+# Requiere Mushroom 5.x; no necesita card-mod ni un tema adicional.
 title: Luz en Cifras
 views:
 - title: Resumen
   path: resumen
   icon: mdi:lightning-bolt
   type: sections
-  max_columns: 2
+  max_columns: 3
   header:
+    layout: start
     card:
       type: markdown
       text_only: true
       content: |-
-        # Tu electricidad, en claro
-        Lo que llevas de factura y dónde se consume.
+        # Electricidad
+        Tu ciclo actual, de un vistazo.
   sections:
   - type: grid
     cards:
-    - type: markdown
-      content: |-
-        ## Factura estimada
-        {% set importe = states('sensor.mi_contrato_factura_actual_estimada') %}
-        {% if is_number(importe) %}
-        # {{ '{:.2f}'.format(importe | float) | replace('.', ',') }} €
-        {% else %}
-        # Pendiente de datos
-        {% endif %}
-        Del ciclo actual · incluye los impuestos configurados.
+    - type: picture-elements
+      image: data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20720%20440%22%3E%0A%20%20%3Ctitle%3EFactura%20estimada%20del%20ciclo%3C%2Ftitle%3E%0A%20%20%3Crect%20width%3D%22720%22%20height%3D%22440%22%20fill%3D%22%23163c38%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M48%20292H672%22%20stroke%3D%22%2342625a%22%20stroke-width%3D%221%22%2F%3E%0A%20%20%3Cg%20font-family%3D%22sans-serif%22%20fill%3D%22%23c4d8cf%22%3E%0A%20%20%20%20%3Ctext%20x%3D%2248%22%20y%3D%2262%22%20font-size%3D%2226%22%20letter-spacing%3D%222%22%3EFACTURA%20ESTIMADA%3C%2Ftext%3E%0A%20%20%20%20%3Ctext%20x%3D%2248%22%20y%3D%22252%22%20font-size%3D%2224%22%3EImpuestos%20configurados%20incluidos%3C%2Ftext%3E%0A%20%20%20%20%3Ctext%20x%3D%2248%22%20y%3D%22340%22%20font-size%3D%2224%22%20letter-spacing%3D%221%22%3ECONSUMO%3C%2Ftext%3E%0A%20%20%20%20%3Ctext%20x%3D%22482%22%20y%3D%22340%22%20font-size%3D%2224%22%20letter-spacing%3D%221%22%3ED%C3%8DAS%20DEL%20CICLO%3C%2Ftext%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Cpath%20d%3D%22M651%2037L633%2066H650L642%2091L671%2057H654L664%2037Z%22%20fill%3D%22%23e6cf79%22%2F%3E%0A%3C%2Fsvg%3E%0A
+      elements:
+      - type: state-label
+        entity: sensor.mi_contrato_factura_actual_estimada
+        title: Factura estimada · abrir detalle
+        tap_action:
+          action: more-info
+        style:
+          left: 6.7%
+          top: 39%
+          transform: translate(0, -50%)
+          color: '#f5f2df'
+          font-size: clamp(28px, 4vw, 48px)
+          font-weight: 600
+          line-height: 1.1
+          max-width: 84%
+          text-overflow: ellipsis
+          overflow: hidden
+          white-space: nowrap
+      - type: state-label
+        entity: sensor.mi_contrato_energia_del_periodo
+        title: Consumo registrado · abrir detalle
+        tap_action:
+          action: more-info
+        style:
+          left: 6.7%
+          top: 86%
+          transform: translate(0, -50%)
+          color: '#f5f2df'
+          font-size: clamp(18px, 2vw, 24px)
+          font-weight: 600
+          line-height: 1.1
+          max-width: 84%
+          text-overflow: ellipsis
+          overflow: hidden
+          white-space: nowrap
+      - type: state-label
+        entity: sensor.mi_contrato_dias_del_periodo
+        title: Días calculados · abrir detalle
+        tap_action:
+          action: more-info
+        style:
+          left: 67%
+          top: 86%
+          transform: translate(0, -50%)
+          color: '#f5f2df'
+          font-size: clamp(18px, 2vw, 24px)
+          font-weight: 600
+          line-height: 1.1
+          max-width: 84%
+          text-overflow: ellipsis
+          overflow: hidden
+          white-space: nowrap
       grid_options:
-        columns: 12
+        columns: full
         rows: auto
-    - type: custom:mushroom-entity-card
-      entity: sensor.mi_contrato_energia_del_periodo
-      name: Consumo
-      icon: mdi:lightning-bolt
-      tap_action:
-        action: more-info
-      icon_color: teal
-    - type: custom:mushroom-entity-card
-      entity: sensor.mi_contrato_dias_del_periodo
-      name: Días calculados
-      icon: mdi:calendar-range
-      tap_action:
-        action: more-info
-      icon_color: grey
     - type: custom:mushroom-template-card
       entity: sensor.mi_contrato_calidad_de_los_datos
       primary: |-
@@ -72,12 +103,6 @@ views:
       grid_options:
         columns: 12
         rows: auto
-  - type: grid
-    cards:
-    - type: heading
-      heading: Dónde se consume
-      heading_style: title
-      icon: mdi:home-lightning-bolt-outline
     - type: custom:mushroom-template-card
       entity: sensor.mi_contrato_casa_energia
       primary: Casa
@@ -95,7 +120,7 @@ views:
       tap_action:
         action: more-info
       grid_options:
-        columns: 12
+        columns: full
         rows: auto
     - type: custom:mushroom-template-card
       entity: sensor.mi_contrato_coche_energia
@@ -109,17 +134,60 @@ views:
       - sensor.mi_contrato_coche_energia
       - sensor.mi_contrato_coche_coste_de_energia
       icon: mdi:car-electric-outline
-      color: blue
+      color: amber
       multiline_secondary: true
       tap_action:
         action: more-info
       grid_options:
-        columns: 12
+        columns: full
         rows: auto
     - type: markdown
       text_only: true
-      content: Los importes de cada grupo corresponden solo a energía, sin impuestos. En **Desglose**
-        puedes consultar el resto de la factura.
+      content: Estimación del ciclo. Potencia y alquiler hasta hoy incluido. **Parcial** indica cobertura
+        incompleta o energía estimada desde W/kW.
+      grid_options:
+        columns: full
+        rows: auto
+  - type: grid
+    column_span: 2
+    cards:
+    - type: statistics-graph
+      title: Tu consumo, día a día
+      chart_type: bar-stack
+      period: day
+      days_to_show: 7
+      stat_types:
+      - change
+      hide_legend: false
+      entities:
+      - entity: sensor.mi_contrato_casa_energia
+        name: Casa
+        color: '#69b7a4'
+      - entity: sensor.mi_contrato_coche_energia
+        name: Coche
+        color: '#e6bf6e'
+      grid_options:
+        columns: full
+        rows: 5
+    - type: distribution
+      title: Reparto del consumo registrado
+      entities:
+      - entity: sensor.mi_contrato_casa_energia
+        name: Casa
+        color: '#69b7a4'
+      - entity: sensor.mi_contrato_coche_energia
+        name: Coche
+        color: '#e6bf6e'
+      grid_options:
+        columns: full
+        rows: auto
+    - type: markdown
+      text_only: true
+      content: Últimos 7 días · solo lecturas registradas. Los días anteriores a la instalación quedan
+        sin datos.
+      grid_options:
+        columns: full
+        rows: auto
 - title: Desglose
   path: desglose
   icon: mdi:receipt-text-outline
@@ -132,6 +200,7 @@ views:
       content: |-
         # De qué está hecha la factura
         Potencia y cargos diarios calculados hasta hoy incluido.
+    layout: start
   sections:
   - type: grid
     cards:
