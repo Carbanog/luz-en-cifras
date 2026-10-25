@@ -1,42 +1,153 @@
-# Vista de ejemplo. Cambia TODAS las entidades sensor.mi_contrato_* por las reales.
-# Pega este contenido como una vista en un dashboard YAML.
-title: Electricidad
-path: electricidad
-icon: mdi:lightning-bolt
-cards:
-  - type: markdown
-    content: >-
-      ## Luz en Cifras · Pruebas
-
-      Estimación experimental. Consulta la calidad de datos antes de comparar
-      importes con tu factura. Potencia y alquiler se acumulan hasta hoy incluido.
-  - type: entities
-    title: Contrato eléctrico
-    show_header_toggle: false
-    entities:
-      - entity: sensor.mi_contrato_factura_actual_estimada
-        name: Factura estimada
-      - entity: sensor.mi_contrato_calidad_de_los_datos
-        name: Calidad de los datos
-      - entity: sensor.mi_contrato_energia_del_periodo
-        name: Consumo registrado
-      - entity: sensor.mi_contrato_dias_del_periodo
-        name: Días calculados
-  - type: entities
-    title: Desglose de costes
-    show_header_toggle: false
-    entities:
-      - entity: sensor.mi_contrato_coste_de_energia
-      - entity: sensor.mi_contrato_coste_de_potencia
-      - entity: sensor.mi_contrato_impuesto_electrico
-      - entity: sensor.mi_contrato_iva
-      - entity: sensor.mi_contrato_otros_cargos
-      - entity: sensor.mi_contrato_descuentos
-      - entity: sensor.mi_contrato_compensacion_de_excedentes
-      - entity: sensor.mi_contrato_precio_medio_efectivo
-  - type: history-graph
-    title: Evolución de la estimación
-    hours_to_show: 168
-    entities:
-      - entity: sensor.mi_contrato_factura_actual_estimada
-        name: Estimación
+# Dashboard completo; pegar en el editor en bruto de un dashboard NUEVO.
+# Sustituye TODAS las entidades sensor.mi_contrato_* por las reales.
+# Guía y tabla de entidades: docs/dashboards.md
+title: Luz en Cifras
+views:
+  - title: Resumen
+    path: resumen
+    icon: mdi:lightning-bolt
+    type: sections
+    max_columns: 2
+    header:
+      card:
+        type: markdown
+        text_only: true
+        content: |-
+          # Tu electricidad, en claro
+          Lo que llevas de factura y dónde se consume.
+    sections:
+      - type: grid
+        cards:
+          - type: markdown
+            content: |-
+              ## Factura estimada
+              {% set importe = states('sensor.mi_contrato_factura_actual_estimada') %}
+              {% if is_number(importe) %}
+              # {{ '{:.2f}'.format(importe | float) | replace('.', ',') }} €
+              {% else %}
+              # Pendiente de datos
+              {% endif %}
+              Del ciclo actual · incluye los impuestos configurados.
+            grid_options:
+              columns: 12
+              rows: auto
+          - type: tile
+            entity: sensor.mi_contrato_energia_del_periodo
+            name: Consumo
+            icon: mdi:lightning-bolt
+            color: teal
+            tap_action:
+              action: more-info
+          - type: tile
+            entity: sensor.mi_contrato_dias_del_periodo
+            name: Días calculados
+            icon: mdi:calendar-range
+            color: grey
+            tap_action:
+              action: more-info
+          - type: markdown
+            content: |-
+              {% set calidad = states('sensor.mi_contrato_calidad_de_los_datos') %}
+              {% if calidad == 'complete' %}
+              **Datos completos para el tramo registrado.** El importe sigue siendo una estimación.
+              {% elif calidad == 'partial' %}
+              **Medición parcial.** Puede faltar consumo o estar estimado desde W/kW. No equivale a una factura completa.
+              {% else %}
+              **Revisa la medición.** {{ state_attr('sensor.mi_contrato_calidad_de_los_datos', 'error') or 'Esperando datos válidos. Consulta el sensor de calidad.' }}
+              {% endif %}
+            grid_options:
+              columns: 12
+              rows: auto
+      - type: grid
+        cards:
+          - type: heading
+            heading: Dónde se consume
+            heading_style: title
+            icon: mdi:home-lightning-bolt-outline
+          - type: tile
+            entity: sensor.mi_contrato_casa_energia
+            name: Casa
+            icon: mdi:home-outline
+            color: teal
+            tap_action:
+              action: more-info
+          - type: tile
+            entity: sensor.mi_contrato_coche_energia
+            name: Coche
+            icon: mdi:car-electric-outline
+            color: blue
+            tap_action:
+              action: more-info
+          - type: entities
+            title: Coste de la energía
+            show_header_toggle: false
+            entities:
+              - entity: sensor.mi_contrato_casa_coste_de_energia
+                name: Casa
+                icon: mdi:home-outline
+              - entity: sensor.mi_contrato_coche_coste_de_energia
+                name: Coche
+                icon: mdi:car-electric-outline
+            grid_options:
+              columns: 12
+              rows: auto
+          - type: markdown
+            text_only: true
+            content: >-
+              Los importes de cada grupo corresponden solo a energía, sin impuestos.
+              En **Desglose** puedes consultar el resto de la factura.
+  - title: Desglose
+    path: desglose
+    icon: mdi:receipt-text-outline
+    type: sections
+    max_columns: 2
+    header:
+      card:
+        type: markdown
+        text_only: true
+        content: |-
+          # De qué está hecha la factura
+          Potencia y cargos diarios calculados hasta hoy incluido.
+    sections:
+      - type: grid
+        cards:
+          - type: entities
+            title: Conceptos del contrato
+            show_header_toggle: false
+            entities:
+              - entity: sensor.mi_contrato_coste_de_energia
+                name: Energía sin impuestos
+              - entity: sensor.mi_contrato_coste_de_potencia
+                name: Potencia contratada
+              - entity: sensor.mi_contrato_otros_cargos
+                name: Alquiler y otros cargos
+              - entity: sensor.mi_contrato_descuentos
+                name: Descuentos
+              - entity: sensor.mi_contrato_compensacion_de_excedentes
+                name: Compensación de excedentes
+              - entity: sensor.mi_contrato_impuesto_electrico
+                name: Impuesto eléctrico
+              - entity: sensor.mi_contrato_iva
+                name: IVA
+              - entity: sensor.mi_contrato_factura_actual_estimada
+                name: Total estimado
+          - type: entities
+            title: Estado de la medición
+            show_header_toggle: false
+            entities:
+              - entity: sensor.mi_contrato_calidad_de_los_datos
+                name: Calidad · toca para ver los avisos
+      - type: grid
+        cards:
+          - type: history-graph
+            title: Evolución del total estimado · 7 días
+            hours_to_show: 168
+            entities:
+              - entity: sensor.mi_contrato_factura_actual_estimada
+                name: Factura estimada
+          - type: markdown
+            text_only: true
+            content: >-
+              El total se reinicia al cambiar de ciclo. Esta gráfica muestra la
+              estimación acumulada, no el gasto diario. Los primeros días solo
+              contienen datos desde que empezaste a medir.

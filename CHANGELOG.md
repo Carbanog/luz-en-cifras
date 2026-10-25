@@ -1,5 +1,15 @@
 # Changelog
 
+## Sin publicar como nueva versión
+
+- Sustituye la antigua vista de ejemplo por dos dashboards completos: nativo y
+  Mushroom, con Resumen y Desglose, avisos de calidad y estados sin datos explícitos.
+- Añade capturas del HA de pruebas en escritorio y móvil, guía de instalación y
+  adaptación de entidades, y explicaciones visuales de modalidad y potencia P1/P2.
+- Explica la fiscalidad automática sin ampliar la vigencia de las reglas incluidas.
+- Clasifica la integración como Energía en sus metadatos. No cambia cálculos ni datos.
+- Las plantillas se copian por separado; no requieren actualizar o reiniciar la integración.
+
 ## 0.3.0 — 24 de octubre de 2026
 
 - Añade PVPC directo desde REE/ESIOS, sin otra integración de HA ni sensor externo,

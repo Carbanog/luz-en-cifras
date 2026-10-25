@@ -29,6 +29,11 @@ La integración convierte sensores W/kW y Wh/kWh en una estimación de factura
 eléctrica española. El cálculo es local. PVPC directo consulta precios públicos de
 Red Eléctrica, sin cuentas ni credenciales; las otras modalidades leen datos locales.
 
+![Dashboard nativo de Luz en Cifras con resumen del ciclo y reparto casa/coche](docs/images/dashboard-native.png)
+
+*Captura real de HA con consumos simulados identificados como PRUEBA.
+[Elige dashboard nativo o Mushroom y adáptalo a tu contrato](docs/dashboards.md).*
+
 | Función | Disponible hoy |
 | --- | --- |
 | Contratos | Varias configuraciones independientes |
@@ -119,7 +124,7 @@ Evita copiar el repositorio completo en `custom_components` o duplicar la carpet
 Ten a mano tu contrato o factura e introduce **precios sin impuestos**.
 
 El alta comienza por **la modalidad de energía**: precio fijo, tres precios
-punta/llano/valle o precio variable desde una entidad (PVPC/indexada). Mercado libre
+punta/llano/valle, PVPC directo o precio variable desde una entidad. Mercado libre
 no significa necesariamente precio fijo. Después se piden el periodo, los sensores
 y los precios del grupo; finalmente, la potencia contratada y el alquiler.
 
@@ -129,6 +134,23 @@ precios de energía. Si tu factura indica 4,6 kW en ambos periodos, introduce 4,
 ambos campos. Primero se elige si su precio está en €/kW/día o €/kW/año. Cada campo
 incluye ayuda. Si HA muestra cero inicialmente, sustitúyelo por el dato de tu factura:
 solo es válido cuando realmente no se contrata o cobra ese concepto.
+
+<details>
+<summary><strong>Ver el asistente: modalidad y potencia P1/P2</strong></summary>
+
+**1. Elige cómo te cobran la energía.** Cada grupo puede tener después una modalidad
+y precio propios. Para sumar dos sensores de Casa basta con elegir ambos como
+fuentes de ese grupo; Coche puede ser otro grupo con otro precio.
+
+![Asistente con precio fijo, tres periodos, PVPC directo y precio desde sensor](docs/images/setup-tariff.png)
+
+**2. Copia la potencia contratada y su precio unitario.** P1/P2 se solicitan también
+con precio fijo o PVPC. La captura usa valores ficticios de pruebas: no los copies.
+Busca los tuyos en el contrato o factura y respeta la unidad elegida antes.
+
+![Campos de potencia contratada P1/P2 con explicaciones; valores ficticios de pruebas](docs/images/setup-power.png)
+
+</details>
 
 El mes de referencia solo se pide en ciclos bimestrales. Caducidad, reparto temporal
 y visibilidad del desglose están en **Ajustes avanzados de medición**. Los contratos
@@ -174,6 +196,19 @@ Si una lectura acumulada atraviesa varios precios, el reparto exacto es desconoc
 Puedes activar el reparto uniforme temporal, marcado como parcial. Un precio ausente
 o caducado no se convierte en cero. [Guía de tarifas y precisión](docs/tarifas.md).
 
+### Qué significa «fiscalidad automática»
+
+Es la selección de los tipos de **impuesto eléctrico e IVA** según la fecha de
+devengo y el perfil fiscal admitido. Se aplica a los conceptos que corresponden
+para obtener el total estimado; es independiente de tu tarifa fija, 2.0TD o PVPC.
+Por eso los precios de energía y potencia se introducen **sin impuestos**.
+
+Las reglas tienen una vigencia comprobada. Si no existe una para la fecha calculada,
+la integración muestra un error de calidad y deja el importe sin calcular, en vez de
+prolongar un porcentaje sin verificar. La 0.3.0 incluye reglas hasta el **31/10/2026**;
+desde noviembre requiere una actualización con la regla resuelta o un perfil manual
+verificado. [Explicación, fuentes y límites](docs/reglas-fiscales.md).
+
 ### Históricos y factura real
 
 El cierre de ciclo conserva los datos y el desglose. Desde las acciones nativas de
@@ -203,16 +238,28 @@ el consumo del vehículo. La integración no deduce relaciones por nombres.
 
 ## Dashboard
 
-La [plantilla de dashboard](examples/dashboard.yaml) utiliza **tarjetas nativas**:
-resumen del contrato, calidad de datos, desglose y evolución del importe.
-No requiere tarjetas adicionales de HACS.
+Elige una de las dos plantillas completas. Ambas tienen **Resumen** (factura,
+consumo y grupos) y **Desglose** (conceptos e historial). Se adaptan al móvil y
+mantienen visibles los avisos de calidad.
 
-1. Copia los identificadores de las entidades desde el dispositivo del contrato.
-2. Sustituye **todas** las entidades `sensor.mi_contrato_*` de la plantilla.
-3. Incorpora la vista al dashboard YAML, dentro de su lista `views:`.
+| Nativo | Mushroom |
+| --- | --- |
+| [Descargar YAML](examples/dashboard.yaml) | [Descargar YAML](examples/dashboard-mushroom.yaml) |
+| Sin tarjetas adicionales | Requiere Mushroom 5.x desde HACS |
+| Consumo y coste por grupo separados | Consumo y coste juntos en cada grupo |
 
-Los identificadores dependen del contrato y del registro de entidades de HA.
-La plantilla requiere esa adaptación; **no se pega en `configuration.yaml`**.
+![Variante Mushroom con resumen y grupos de consumo](docs/images/dashboard-mushroom.png)
+
+*Consumos simulados, no una factura real. Mushroom es opcional.*
+
+1. Activa **Mostrar entidades de desglose y grupos** si lo habías desactivado.
+2. Sustituye **todas** las entidades `sensor.mi_contrato_*` por las de tu dispositivo.
+3. Crea un dashboard **nuevo** y pega el archivo completo en su
+   **Editor de configuración en bruto**. No se pega en `configuration.yaml`.
+
+La [guía con capturas, tabla de entidades e instalación paso a paso](docs/dashboards.md)
+explica cómo dejar solo un grupo, añadir más, mostrar el PVPC y resolver errores.
+Los dashboards se copian por separado; HACS no modifica tus paneles existentes.
 
 ## Limitaciones
 

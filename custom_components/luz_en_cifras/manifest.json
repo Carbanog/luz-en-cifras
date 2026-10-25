@@ -1,6 +1,7 @@
 {
   "domain": "luz_en_cifras",
   "name": "Luz en Cifras",
+  "categories": ["energy"],
   "codeowners": ["@Carbanog"],
   "config_flow": true,
   "documentation": "https://github.com/Carbanog/luz-en-cifras",
