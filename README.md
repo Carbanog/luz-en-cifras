@@ -127,6 +127,11 @@ punta/llano/valle, PVPC directo o precio variable desde una entidad. Mercado lib
 no significa necesariamente precio fijo. Después se piden el periodo, los sensores
 y los precios del grupo; finalmente, la potencia contratada, el alquiler y los impuestos.
 
+**¿Tienes varios sensores y precios distintos?** El precio se configura por grupo,
+no por sensor. Los sensores del mismo grupo se suman y comparten su tarifa; para
+precios distintos, crea grupos distintos dentro del mismo contrato.
+[Ver ejemplos y pasos para Casa y Coche](#varios-sensores-y-precios-distintos-casa-y-coche).
+
 **Potencia contratada no es consumo:** P1 y P2 son los kW que figuran en tu contrato
 para punta y valle. No se copian los W instantáneos de los sensores ni los tres
 precios de energía. Si tu factura indica 4,6 kW en ambos periodos, introduce 4,6 en
@@ -219,21 +224,49 @@ HA puedes exportarlos, cerrar fechas reales, comparar con una factura y crear un
 revisión conservando el original. El devengo se indica por separado del periodo de
 consumo. [Cómo usar los históricos](docs/historicos.md).
 
-### Ejemplo: vivienda y vehículo eléctrico
+### Varios sensores y precios distintos: Casa y Coche
 
-Puedes sumar tus dos filas de automáticos en **Casa** y seleccionar el sensor del
-cargador en **Coche**, cada grupo con sus precios. Si las filas ya incluyen el coche,
-réstalo de Casa para no duplicarlo. No selecciones a la vez W y kWh del mismo circuito.
+Un **contrato** reúne el periodo de factura, la potencia, el alquiler y los impuestos.
+Dentro del contrato, cada **grupo de consumo** reúne sensores y tiene su propio
+precio o modalidad de tarifa. No hace falta crear otro contrato para dar al coche
+un precio diferente: así los cargos fijos se calculan una sola vez.
 
-Si utilizas un contador principal que ya incluye el cargador:
+| Lo que quieres medir | Cómo configurarlo |
+| --- | --- |
+| Dos sensores al mismo precio | Un grupo con ambos en **Sensores que suman** |
+| Dos sensores a precios distintos | Dos grupos, cada uno con su sensor y su precio |
+| Dos filas de Casa y un cargador con otro precio | Grupo **Casa** con las dos filas y grupo **Coche** con el cargador |
 
-| Grupo | Consumo | Precio ilustrativo |
+Por ejemplo, si las filas de Casa **no incluyen** el consumo del coche:
+
+| Grupo | Sensores que suman | Precio fijo sin impuestos, solo de ejemplo |
 | --- | --- | --- |
-| Vivienda | Principal − cargador | 0,119 €/kWh |
-| Vehículo | Cargador | 0,075 €/kWh |
+| Casa | Fila 1 + Fila 2 | 0,120 €/kWh |
+| Coche | Cargador | 0,075 €/kWh |
 
-Sustituye esos precios por los de tu contrato. Este reparto evita cobrar dos veces
-el consumo del vehículo. La integración no deduce relaciones por nombres.
+**Cómo hacerlo en un contrato existente:**
+
+1. Abre **Ajustes → Dispositivos y servicios → Luz en Cifras → Configurar**
+   en el contrato correspondiente.
+2. En **Editar o eliminar un grupo**, elige el grupo actual. Deja en
+   **Sensores que suman** únicamente los sensores que deben compartir su tarifa.
+   Revisa su **Modalidad de tarifa** y, en el paso de precios, introduce su precio.
+3. Vuelve al menú y pulsa **Añadir grupo de consumo**. Ponle un nombre como
+   **Coche**, selecciona su sensor y modalidad y configura su precio.
+4. Repite si necesitas más grupos y termina con **Revisar validación y guardar**.
+
+Si ya seleccionaste dos sensores juntos y querías precios diferentes, quita el
+segundo del primer grupo y selecciónalo en el grupo nuevo. No lo dejes sumando en
+ambos. Los cambios se aplican desde que guardas; no reasignan el consumo anterior.
+
+**Si el contador de Casa ya incluye el coche**, selecciona el cargador en
+**Subcontadores incluidos que se restan** del grupo Casa y también como sensor que
+suma en el grupo Coche. El resultado será Casa = principal − cargador, y
+Coche = cargador. La integración no deduce estas relaciones por los nombres.
+
+Sustituye los precios de ejemplo por los de tu contrato, siempre sin impuestos.
+Cada grupo también puede usar tres periodos o precio dinámico. No selecciones a
+la vez W y kWh del mismo circuito: estarías contando dos veces la misma energía.
 
 > [!TIP]
 > La primera lectura establece el punto de partida. Espera nuevos cambios del
