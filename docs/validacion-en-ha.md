@@ -1,12 +1,11 @@
-# Validación antes del uso habitual
+# Comprobar tu instalación y contrastar la factura
 
-El objetivo es una versión estable con alcance definido, no dejar una versión de
-desarrollo indefinidamente. Durante la aceptación se congela el alcance: solo se
-corrigen defectos y documentación; nuevas modalidades se desarrollan por separado.
+Esta guía permite comprobar sensores, precios y continuidad de datos después de
+instalar la integración, y contrastar sus estimaciones con tu factura real.
 
 ## Antes de instalar
 
-1. Haz una copia de seguridad de tu HA de pruebas y conserva el commit instalado.
+1. Conserva una copia de seguridad de HA y anota la versión instalada.
 2. Anota versión de HA, unidades y frecuencia de actualización de cada sensor.
 3. Ten los precios sin impuestos y las fechas de tu contrato. Comprueba si los
    sensores de las filas incluyen ya al coche para no duplicar consumo.
@@ -98,16 +97,16 @@ Esto permite poner en marcha el estimador y validar sus resultados con datos rea
 no afirma que ya se haya contrastado la factura del usuario. No utilices su resultado
 para automatizaciones de control hasta dar por aceptadas las mediciones.
 
-## Criterio de promoción
+## Cuándo dar por comprobada tu configuración
 
-Una versión se considera apta para tu uso habitual después de:
+Comprueba estos puntos antes de confiar en tus estimaciones:
 
 - instalación y configuración verificadas en HA con interfaz real;
 - varios días sin pérdidas de datos, duplicidades ni errores de esta integración;
 - reinicio/recarga y recuperación comprobados con el respaldo disponible;
 - diferencias de cálculo explicadas y sin defectos pendientes que afecten a tu caso;
 - porcentajes manuales revisados con tu contrato o factura;
-- aprobación del resultado de las pruebas antes de publicar la versión estable.
+- comparación de un periodo medido completo con la factura correspondiente.
 
 Los tests automatizados son necesarios, pero no sustituyen estos pasos. Esta guía
 no declara que se hayan ejecutado. Las evidencias y su estado se registran en

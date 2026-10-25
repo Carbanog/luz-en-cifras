@@ -85,9 +85,8 @@ Se estudiaron tres direcciones:
 
 Se elige la primera para la vista principal por comprensión y accesibilidad. La
 línea temporal será secundaria y el tablero de grupos quedará para opciones
-avanzadas. Se evita una cuadrícula genérica de KPI. En el MVP se usan entidades y
-formularios nativos; una tarjeta propia solo se justificará tras validar límites
-reales de Lovelace.
+avanzadas. Se evita una cuadrícula genérica de KPI. Se usan entidades y formularios
+nativos y plantillas de dashboard; no se requiere una tarjeta propia.
 
 El asistente sigue el orden mental de leer una factura: modalidad de energía,
 periodo, sensores y precios del grupo, unidad y potencias contratadas. Cada pantalla

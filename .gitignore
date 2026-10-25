@@ -13,3 +13,12 @@ dist/
 build/
 *.egg-info/
 .lab-source.tar.gz
+.env
+.env.*
+!.env.example
+secrets.yaml
+.storage/
+home-assistant_v2.db*
+home-assistant.log*
+lab/config/
+*.bundle
