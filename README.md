@@ -10,7 +10,6 @@ Consumo, potencia e impuestos en Home Assistant, con cálculo local y desglose v
 
 [![CI](https://github.com/Carbanog/luz-en-cifras/actions/workflows/ci.yml/badge.svg)](https://github.com/Carbanog/luz-en-cifras/actions/workflows/ci.yml)
 [![HA y HACS](https://github.com/Carbanog/luz-en-cifras/actions/workflows/validate.yml/badge.svg)](https://github.com/Carbanog/luz-en-cifras/actions/workflows/validate.yml)
-![Estado: en validación](https://img.shields.io/badge/estado-en_validación-e9a23b)
 [![MIT](https://img.shields.io/badge/licencia-MIT-blue)](LICENSE)
 
 [Instalar](#instalación) · [Configurar](#configuración) · [Dashboard](#dashboard) · [Limitaciones](#limitaciones) · [Incidencias](https://github.com/Carbanog/luz-en-cifras/issues)
@@ -21,7 +20,7 @@ Consumo, potencia e impuestos en Home Assistant, con cálculo local y desglose v
 > Los importes son estimaciones y deben contrastarse con tu factura real.
 > No sustituyen la factura de tu comercializadora.
 
-## Qué puedes probar
+## Qué incluye
 
 La integración convierte sensores W/kW y Wh/kWh en una estimación de factura
 eléctrica española. El cálculo es local. PVPC directo consulta precios públicos de
@@ -50,7 +49,7 @@ Red Eléctrica, sin cuentas ni credenciales; las otras modalidades leen datos lo
 Consulta la [matriz de cobertura](docs/cobertura.md): distingue las modalidades
 disponibles de los casos que todavía requieren desarrollo y verificación.
 
-### Objetivo: cada contrato con sus módulos
+### Cada contrato con sus módulos
 
 Cada grupo tiene su modalidad de tarifa y sus fuentes. Solo configuras los conceptos
 adicionales que necesites. El asistente separa selección de contadores y precios,
@@ -356,8 +355,9 @@ Conserva el respaldo de HA para recuperar también los datos.
 
 Desarrollado **con ayuda de OpenAI Codex**, bajo la dirección de **Carbanog**.
 La asistencia de IA forma parte de la implementación y documentación. Las pruebas
-automatizadas verifican parte del comportamiento; la validación real con HA y
-facturas sigue siendo necesaria antes de considerar el producto estable.
+automatizadas cubren cálculos, configuración y persistencia; contrasta las
+estimaciones con tus sensores y facturas. Consulta la
+[cobertura y sus límites](docs/cobertura.md).
 
 El motor usa `Decimal` y está separado del adaptador HA. La CI comprueba formato,
 análisis estático, tipos y pruebas, e importa la integración contra HA de referencia.

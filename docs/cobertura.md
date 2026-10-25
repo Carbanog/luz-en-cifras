@@ -1,6 +1,6 @@
 # Matriz de cobertura
 
-Versión en validación 0.3.1. Contemplar un caso no significa implementarlo.
+Funciones disponibles y límites de la versión 0.3.1.
 
 | Módulo | Disponible y verificable | Límite actual |
 | --- | --- | --- |

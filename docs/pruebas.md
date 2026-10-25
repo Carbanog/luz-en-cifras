@@ -1,62 +1,29 @@
-# Pruebas reproducibles
+# Pruebas y desarrollo
 
-El producto se instala por HACS; **Docker solo se utiliza para desarrollo y pruebas**.
-Los datos sintéticos están en `tests/` y `tests_ha/`, fuera del componente distribuido.
+El producto se instala por HACS. Docker es una herramienta opcional de desarrollo;
+los fixtures de `tests/`, `tests_ha/` y `lab/` son sintéticos y no se instalan como
+sensores del usuario.
 
-## Impuestos manuales en 0.3.1
+## Comprobaciones de 0.3.1
 
-La suite incorpora confirmación inicial, migración desde modo automático,
-conservación de mediciones pendientes y cálculo manual sin caducidad en noviembre,
-diciembre y cambio de año. Se añade HA 2026.10.4 a la matriz de CI, con el paquete
-pytest-homeassistant-custom-component 0.13.375. Las pruebas de futuros periodos usan
-porcentajes sintéticos configurados por el test, no predicciones fiscales.
+La versión pasa **79 pruebas del motor** y **45 pruebas de integración en cada una**
+de las siguientes versiones de Home Assistant:
 
-El formulario nuevo se comprueba mediante los flujos reales de HA en CI; su revisión
-visual en la instalación del usuario queda pendiente de su actualización manual.
+| Home Assistant | pytest-homeassistant-custom-component |
+| --- | --- |
+| 2026.10.2 | 0.13.373 |
+| 2026.10.3 | 0.13.374 |
+| 2026.10.4 | 0.13.375 |
 
-## Comprobación anterior del desarrollo
+También pasan Ruff (formato y análisis), mypy sobre el dominio, validación JSON,
+importación del componente en HA, HACS y Hassfest. Los resultados se consultan por
+commit en [CI](https://github.com/Carbanog/luz-en-cifras/actions/workflows/ci.yml) y
+[validación HA/HACS](https://github.com/Carbanog/luz-en-cifras/actions/workflows/validate.yml).
+Esto no acredita compatibilidad con versiones de HA que no figuren en la matriz.
 
-El 24 de octubre de 2026, la revisión `0.3.0` pasó **118 pruebas
-en cada versión de HA 2026.10.2 y 2026.10.3**, con Python 3.14.2: 76 del motor y 42
-del adaptador HA. También se ejecutaron Ruff (formato y análisis), mypy sobre el dominio
-y sus pruebas, y `git diff --check`. Los trabajos de GitHub Actions proporcionan la
-evidencia por commit de las siguientes revisiones; esta nota no garantiza commits
-posteriores ni compatibilidad con otras versiones de HA.
+## Ejecutar el motor
 
-## Motor
-
-### Aceptación acelerada y PVPC directo
-
-Se ejecutaron 61 días sintéticos (septiembre/octubre de 2026) en instancias aisladas
-de HA: dos cierres mensuales o un cierre bimestral, con la hora adicional de otoño,
-recarga del colector y recálculo idéntico. Se verificaron **864 kWh en septiembre,
-894 kWh en octubre y 1758 kWh en el bimestre**, para potencias sintéticas constantes
-de 1 kW en Casa y 0,2 kW en Coche. Cada factura aplica una sola cuota por factura y
-sus días de alquiler. Esto no adelanta el reloj ni crea lecturas en el HA del usuario.
-
-Las pruebas PVPC incluyen caché al recargar sin red, fallo inicial con conservación
-de mediciones, recuperación, rechazo de calendario incompleto, cancelación de
-peticiones, cambio de modalidad sin solapamientos y día siguiente sin precios.
-También verifican que el modo fijo no instancia el cliente de red y que el precio
-actual aparece sin necesitar `pvpc_hourly_pricing`.
-
-Separadamente, el 24 de octubre el cliente nuevo consultó el recurso público real de
-REE: obtuvo **24 precios horarios del día**, normalizados a €/kWh y sin advertencia.
-La librería probada fue `esios-api==4.4.0`; los requisitos mínimos permiten seguir
-las actualizaciones compatibles de la dependencia usada por Home Assistant.
-
-La VM docker-lab no respondió por SSH en esta revisión (timeout de conexión). Las
-pruebas HA se ejecutaron en GitHub Actions para ambas versiones, sin desplegar en
-el HA del usuario. El asistente nuevo y el PVPC directo aún requieren comprobación
-visual en su instalación tras actualizar; los tests no se presentan como esa revisión.
-
-La revisión 0.3.0 comprobaba el fallo de su registro automático al llegar a noviembre.
-En 0.3.1 se comprueba que los porcentajes manuales continúan en el ciclo nuevo sin
-actualizaciones ni consultas fiscales. No sustituye el contraste con una factura real.
-
-### Ejecutar el dominio
-
-Con Python 3.14.2 o posterior:
+Con Python 3.14.2 o posterior, desde la raíz del repositorio:
 
 ```shell
 python -m pip install -e ".[dev]"
@@ -66,112 +33,68 @@ mypy
 pytest tests
 ```
 
-## Home Assistant real
+## Ejecutar las pruebas de Home Assistant
+
+Utiliza un entorno virtual separado del motor, porque los fixtures de HA fijan sus
+propias dependencias. Por ejemplo, para HA 2026.10.4:
 
 ```shell
-python -m pip install pytest-homeassistant-custom-component==0.13.373 esios-api==4.4.0
+python -m pip install pytest-homeassistant-custom-component==0.13.375 esios-api==4.4.0
 python -m pytest -c tests_ha/pytest.ini tests_ha -q
 ```
 
-El paquete fija HA 2026.10.2 y sus fixtures. Instálalo en un entorno separado del de
-herramientas del motor porque utiliza una versión propia de pytest.
+Para las otras versiones usa el paquete correspondiente de la tabla. La matriz
+exacta está en [ci.yml](../.github/workflows/ci.yml).
 
-Para HA 2026.10.3 utiliza `pytest-homeassistant-custom-component==0.13.374` en otro
-entorno. La CI mantiene ambas combinaciones. En `Dockerfile.test` se selecciona con
-`--build-arg HA_TEST_VERSION=0.13.374`; no se actualizan dependencias del HA del usuario.
+Como alternativa, [Dockerfile.test](../Dockerfile.test) permite seleccionar el
+paquete con `--build-arg HA_TEST_VERSION=0.13.375`. Monta el repositorio de solo
+lectura en `/workspace`; no necesita puertos, credenciales, datos del usuario ni
+contenedores privilegiados. El [laboratorio completo](../lab/README.md) es opcional
+para desarrollar o revisar la interfaz, no un requisito de instalación.
 
-Alternativamente construye `Dockerfile.test` y monta este repositorio de solo lectura
-en `/workspace`. Las pruebas no necesitan puertos, red, credenciales, volúmenes de
-datos de usuario ni contenedores privilegiados.
+## Cobertura funcional
 
-La prueba en `docker-lab` se limita al proyecto `luz-en-cifras`, con 1 CPU y 1500 MiB
-por ejecución. Conserva los registros en `results/`; no utiliza sudo ni modifica
-servicios de otros proyectos. La imagen de pruebas se puede reutilizar.
+- Precio fijo, tres periodos 2.0TD y precios dinámicos por intervalo.
+- W/kW y Wh/kWh, grupos sumados/restados, fuentes mixtas y precios independientes.
+- Reinicios, huecos, caducidad, correcciones y estados restaurados, sin inventar consumo.
+- Cambios de sensores, grupos y tarifas conservando el consumo y precio de cada tramo.
+- Potencia, cuotas, descuentos, impuestos manuales y compensación limitada de excedentes.
+- Configuración guiada, edición, migración, confirmación fiscal y aviso Repairs.
+- Cierres mensuales/bimestrales, exportación y revisiones que conservan el original.
+- Cambio de hora, fechas límite, redondeos y lecturas que requieren reparto estimado.
+- Persistencia y recálculo después de descargar y volver a cargar la integración.
 
-## Qué se comprueba
+### Simulación de periodos completos
 
-- Precio fijo, tres periodos, cambios de precio, descuentos y fiscalidad.
-- Dos horas repetidas de otoño y salto de primavera.
-- Contadores, precios ausentes, correcciones, unidades y compensación limitada.
-- Flujos nativos de configuración y opciones, eventos y persistencia real de HA.
-- Migración del Store antiguo, cierre, exportación, comparación y revisión auditable.
-- Consentimiento para repartir lecturas que cruzan fechas de factura y conservación
-  de las mediciones originales; los descuentos de potencia no reducen el límite
-  económico de la compensación de energía.
-- Renombrado y reordenación de grupos sin reiniciar consumos; sustitución y reselección
-  de contadores, grupos añadidos/eliminados y cambios fijo/tres periodos/dinámico.
-- Una factura conserva el consumo previo, cargos fijos sin duplicación, compensación
-  histórica, cierre y recálculo después de cambiar sensores y reiniciar el colector.
-- Un contador nuevo con estado antiguo espera un reporte real, incluso tras recargar;
-  no suma consumo mientras está retirado. Un grupo pendiente queda desconocido.
-- Un cambio de tarifa sin lectura en la frontera exige consentimiento para estimar;
-  activarlo después conserva los precios históricos. Renombrar o editar cuotas diarias
-  no exige repartir la energía por sí solo.
-- Aviso Repairs cuando falta una regla fiscal y resolución mediante un perfil explícito.
-- Detección W/kW/Wh/kWh, integración de potencia, grupos mixtos y casa/coche con
-  precios distintos; caducidad, huecos, reinicios y estados restaurados.
-- Ciclos mensuales/bimestrales, meses cortos, cambio de año y corte local de potencia.
-- Un mes de reportes por minuto conserva energía con almacenamiento acotado; la
-  potencia también respeta el tiempo real de la hora repetida de otoño.
-- Recorrido guiado desde modalidad, campos según tarifa, mes solo en bimestrales,
-  ayuda de unidad de potencia y edición que conserva consumos y opciones.
-- Guardado correcto de números enteros devueltos por los selectores, migración de
-  días antiguos con formato `1.0` y rechazo de días/meses fraccionarios sin truncarlos.
+`tests_ha/test_accelerated_acceptance.py` ejecuta 61 días sintéticos en un HA
+controlado por pytest: septiembre y octubre, la hora adicional de otoño, dos cierres
+mensuales o uno bimestral y recarga del colector. Contrasta resultados analíticos:
+864 kWh en septiembre, 894 kWh en octubre y 1758 kWh en el bimestre, con potencias
+sintéticas constantes de 1 kW y 0,2 kW. Potencia, alquiler y cuotas se cuentan una
+sola vez por factura según corresponda.
 
-## HA completo: preparación de la aceptación
+La suite también comprueba continuidad de impuestos manuales en noviembre,
+diciembre y cambio de año. Los porcentajes futuros son valores de prueba, no
+predicciones fiscales. No se modifica el reloj del HA del usuario.
 
-### Revisión de 0.2.0 instalada en el HA del usuario
+### PVPC directo
 
-Se confirmó HACS 2.0.5, Core 2026.10.3 y release descargada 0.2.0. El asistente abrió
-modalidad antes de periodo, pidió mes solo al elegir bimestral y mostró la ayuda de
-P1/P2. Tras autorización se crearon tres sensores Template **PRUEBA LEC … simulada**,
-con potencias sintéticas que cambian cada minuto, y un contrato identificado como
-simulado: dos filas a 0,20 €/kWh y coche a 0,10 €/kWh. Son fixtures de aceptación,
-no mediciones reales ni valores del contrato del usuario.
+`tests_ha/test_pvpc_direct.py` verifica precio horario, caché tras recarga sin red,
+fallo inicial conservando mediciones, recuperación, día siguiente sin precios,
+cambio a entidad y cancelación. El cliente valida calendarios de 23/24/25 horas;
+los contratos fijos no crean un cliente de red. Las respuestas de red de las
+pruebas son fixtures explícitos.
 
-La revisión encontró `Missing or overlapping prices in measured interval` tras el
-arranque. Dos regresiones con el reloj avanzando reprodujeron el error tanto con
-precio fijo como dinámico; las pruebas previas congelaban el reloj. La corrección
-0.2.1 se verifica en el laboratorio y CI, sin instalarla ni reiniciar el HA del usuario.
-La comprobación visual de los importes en esa instalación queda pendiente de que el
-usuario actualice y reinicie.
+Separadamente, el 24 de octubre de 2026 se verificó una descarga real de REE con
+24 precios horarios y `esios-api==4.4.0`. La integración mantiene su requisito mínimo
+compatible con el de HA. [Fuente y comportamiento sin conexión](tarifas.md).
 
-También se observó el logo relativo roto en HACS y se cambió a URL absoluta. Los
-selectores numéricos de HA muestran cero al abrir campos sin valor predeterminado:
-la ausencia de un default en el schema no garantiza un campo visual vacío. Sus ayudas
-indican copiar los valores de la factura; no debe darse por validado ese aspecto de UX.
+## Interfaz y comprobación con datos reales
 
-### Laboratorio completo anterior
+Las [capturas de escritorio y móvil](dashboards.md) proceden de un HA con consumos
+simulados identificados como PRUEBA. Las pruebas de flujos usan las APIs reales de
+HA, pero no sustituyen una revisión visual ni una comparación con facturas.
 
-El 24 de octubre se arrancó también la imagen oficial completa de HA 2026.10.2,
-fijada por digest, con usuario sin privilegios y datos sintéticos identificados.
-`check_config` terminó correctamente y `/onboarding.html` respondió HTTP 200.
-Configuración reproducible: [laboratorio](../lab/README.md).
-
-**Acceso LAN verificado:** tras autorización explícita, el 24 de octubre se enlazó
-el puerto exclusivamente a la dirección privada de la VM de pruebas. El navegador abrió la interfaz real
-y llegó a «Crear usuario». El enlace predeterminado del Compose sigue siendo local;
-el acceso LAN se utilizó solo para esta comprobación. No se han cambiado SSH, firewall,
-proxy ni router. El túnel SSH no está disponible y se cerró tras comprobarlo.
-
-**Instancia retirada:** por petición del usuario, se eliminó el contenedor, su red
-Compose y la imagen descargada para ese HA nuevo. Se verificó el cierre del puerto
-18123 y se conservó la configuración en una carpeta privada recuperable del proyecto.
-No se tocaron otros servicios ni el entorno de pruebas automatizadas.
-
-**Pendiente:** la revisión visual continuará en el HA de pruebas que ya tiene el
-usuario, tras instalar por HACS y acceder mediante su sesión. No se ha completado
-visualmente el asistente de la integración ni revisado los dashboards. No se crearon
-credenciales ni se desactivó la autenticación. La prueba de varios días sigue el
-[plan de aceptación](validacion-en-ha.md).
-
-El formulario anterior sí se inspeccionó en el HA del usuario con Core 2026.10.3:
-se confirmó su exceso de campos iniciales, las ayudas insuficientes y los ceros
-predeterminados. El usuario ha elegido actualizar y reiniciar personalmente. Por
-ello, el nuevo recorrido aún requiere comprobación visual tras esa actualización;
-los tests de flujo no se presentan como revisión visual del formulario nuevo.
-
-Las pruebas de flujos se hacen a través de las APIs reales de Home Assistant. Eso
-no equivale a una inspección visual de móvil/escritorio ni a contraste con una
-factura real de cada comercializadora. Esas validaciones se documentan por separado
-y no se dan por ejecutadas por pasar pytest.
+Para revisar tu instalación usa la [guía de comprobación](validacion-en-ha.md).
+No se afirma equivalencia universal con todas las comercializadoras. Las modalidades
+soportadas y sus límites se detallan en la [matriz de cobertura](cobertura.md).

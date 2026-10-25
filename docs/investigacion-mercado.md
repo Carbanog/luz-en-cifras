@@ -1,23 +1,6 @@
-# Investigación de mercado y nombre
+# Referencias y licencias
 
 Consulta realizada el 23 de octubre de 2026.
-
-## Nombre
-
-Se descarta **DesglosaLuz** como nombre principal por preferencia del propietario.
-La recomendación provisional es **Luz en Cifras**:
-
-- explica que convierte consumo y contrato en información cuantificada;
-- evita prometer una factura exacta u oficial;
-- se pronuncia y recuerda con facilidad en español;
-- permite el dominio estable `luz_en_cifras`.
-
-Las búsquedas exactas en web y repositorios de GitHub no devolvieron coincidencias
-relevantes para «Luz en Cifras», «DesglosaLuz» o «CuadraLuz». «CuentaLuz» sí aparece
-en otros contextos y se descarta. No aparecieron coincidencias indexadas en búsquedas
-dirigidas a OEPM, EUIPO, TMview o WIPO, pero eso **no demuestra disponibilidad
-registral**. Antes de publicar se debe hacer una búsqueda profesional por clases y
-signos similares, y reservar repositorio y dominio.
 
 ## Integraciones próximas
 

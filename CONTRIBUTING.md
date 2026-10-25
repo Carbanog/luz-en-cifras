@@ -4,6 +4,14 @@ Gracias por ayudar a mejorar Luz en Cifras. Antes de abrir un cambio, separa con
 claridad un error de cálculo, un problema de integración con Home Assistant y una
 petición de compatibilidad contractual.
 
+## Organización del repositorio
+
+`main` conserva los cambios integrados; las etiquetas y releases identifican las
+versiones instalables. Crea una rama temporal para cada PR: GitHub la elimina al
+fusionarla. No guardes copias de HA, credenciales ni datos personales en el
+repositorio. Antes de confirmar, revisa el diff y usa el correo privado de GitHub
+para la autoría de los commits.
+
 ## Entorno
 
 Se requiere Python 3.14.2 o posterior, igual que la versión de Home Assistant usada

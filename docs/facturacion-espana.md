@@ -1,7 +1,8 @@
 # Facturación eléctrica española
 
-Estado de la investigación: 23 de octubre de 2026. Este documento separa reglas
-confirmadas de trabajo pendiente.
+Conceptos que modela la integración. Consulta la [matriz de cobertura](cobertura.md)
+para conocer las modalidades disponibles y sus límites, y la
+[guía de impuestos manuales](reglas-fiscales.md) para configurar los de tu factura.
 
 ## Estructura comprobada
 
@@ -11,24 +12,25 @@ deben aparecer desglosados. La factura incluye además impuesto eléctrico, alqu
 del contador cuando corresponda e IVA. En mercado libre pueden existir cuotas,
 servicios, descuentos y fórmulas contractuales propias.
 
-El MVP representa:
+La integración representa:
 
 1. energía por grupo e intervalo;
-2. potencia P1/P2 en €/kW/día;
+2. potencia P1/P2 en €/kW/día o €/kW/año;
 3. cargos fijos diarios o por factura;
 4. descuentos antes de impuestos;
-5. impuesto eléctrico e IVA versionados.
+5. impuesto eléctrico e IVA manuales, conservados en las facturas cerradas.
 
-No supone que todos los precios publicados incluyan los mismos componentes. La UI
-debe evolucionar para declarar explícitamente qué incluye cada precio.
+Introduce precios contractuales completos sin impuestos. No vuelvas a sumar los
+peajes, cargos o márgenes que ya estén incluidos en esos precios.
 
 ## PVPC
 
 El [Real Decreto 446/2023](https://www.boe.es/eli/es/rd/2023/06/13/446) introdujo
 la cesta de productos a plazo en el PVPC. En 2026 el coste de producción combina
 mercados diario/intradiario, ajuste a plazo, servicios de ajuste y otros costes. No
-es correcto multiplicar el consumo mensual por el precio de la última hora. PVPC se
-mantiene fuera del MVP hasta implementar y probar la serie horaria completa.
+es correcto multiplicar el consumo mensual por el precio de la última hora.
+Luz en Cifras obtiene la serie horaria directamente de REE o utiliza una entidad de
+precio existente. [Fuente, caché y límites](tarifas.md).
 
 ## Autoconsumo
 
@@ -36,8 +38,8 @@ El artículo 14 del [Real Decreto 244/2019](https://boe.es/buscar/act.php?id=BOE
 define la compensación simplificada como saldo económico y limita el valor de los
 excedentes al valor económico de la energía consumida de red en el periodo. Las
 baterías virtuales son productos comerciales adicionales, no una regla legal
-general. Autoconsumo queda fuera del MVP hasta distinguir importación, exportación,
-precio de compensación y modalidad contractual.
+general. La compensación disponible utiliza un contador de exportación separado y
+un precio fijo acordado; no incluye batería virtual ni cálculo de TCUh.
 
 ## Medición y periodos
 
@@ -49,9 +51,9 @@ precio de compensación y modalidad contractual.
   no se tratará W como kWh.
 - Los datos purgados por Recorder no se prometerán reconstruibles.
 
-## Pendiente de investigación antes de ampliar
+## Casos que requieren configuración o desarrollo adicional
 
-- fórmula y fuentes operativas de PVPC/ESIOS;
+- fórmulas comerciales y compensación PVPC con TCUh;
 - bono social, financiación y límites vigentes;
 - peajes/cargos cuando el contrato no los incorpore al precio;
 - territorios con IGIC/IPSI y exenciones;
