@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 440">
+  <title>Factura estimada del ciclo</title>
+  <rect width="720" height="440" fill="#163c38"/>
+  <path d="M48 292H672" stroke="#42625a" stroke-width="1"/>
+  <g font-family="sans-serif" fill="#c4d8cf">
+    <text x="48" y="62" font-size="26" letter-spacing="2">FACTURA ESTIMADA</text>
+    <text x="48" y="252" font-size="24">Impuestos configurados incluidos</text>
+    <text x="48" y="340" font-size="24" letter-spacing="1">CONSUMO</text>
+    <text x="482" y="340" font-size="24" letter-spacing="1">DÍAS DEL CICLO</text>
+  </g>
+  <path d="M651 37L633 66H650L642 91L671 57H654L664 37Z" fill="#e6cf79"/>
+</svg>
