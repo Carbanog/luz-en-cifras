@@ -7,7 +7,7 @@
 - Añade capturas del HA de pruebas en escritorio y móvil, guía de instalación y
   adaptación de entidades, y explicaciones visuales de modalidad y potencia P1/P2.
 - Explica la fiscalidad automática sin ampliar la vigencia de las reglas incluidas.
-- Clasifica la integración como Energía en sus metadatos. No cambia cálculos ni datos.
+- Conserva metadatos compatibles con Hassfest; no cambia cálculos ni datos.
 - Las plantillas se copian por separado; no requieren actualizar o reiniciar la integración.
 
 ## 0.3.0 — 24 de octubre de 2026
