@@ -12,7 +12,6 @@ Consumo, potencia e impuestos en Home Assistant, con cálculo local y desglose v
 [![HA y HACS](https://github.com/Carbanog/luz-en-cifras/actions/workflows/validate.yml/badge.svg)](https://github.com/Carbanog/luz-en-cifras/actions/workflows/validate.yml)
 ![Estado: en validación](https://img.shields.io/badge/estado-en_validación-e9a23b)
 [![MIT](https://img.shields.io/badge/licencia-MIT-blue)](LICENSE)
-[![Invítame a un café](https://img.shields.io/badge/Buy_Me_a_Coffee-Carbanog-FFDD00?logo=buymeacoffee&logoColor=000000)](https://buymeacoffee.com/Carbanog)
 
 [Instalar](#instalación) · [Configurar](#configuración) · [Dashboard](#dashboard) · [Limitaciones](#limitaciones) · [Incidencias](https://github.com/Carbanog/luz-en-cifras/issues)
 
@@ -381,13 +380,6 @@ pytest
 
 Sin CUPS, DNI, dirección, credenciales, telemetría ni servidor propio.
 Los datos se guardan en Home Assistant. [Más información](docs/privacidad.md).
-
-## Apoyar el proyecto
-
-Si te resulta útil, puedes apoyar su mantenimiento con un café. Es opcional;
-todas las funciones están disponibles sin aportaciones.
-
-[☕ Invítame a un café en Buy Me a Coffee](https://buymeacoffee.com/Carbanog)
 
 ---
 
