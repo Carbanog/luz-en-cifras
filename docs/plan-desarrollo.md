@@ -1,6 +1,10 @@
 # Plan de desarrollo y estado verificable
 
-Corte: 24 de octubre de 2026. Versión en validación 0.3.0.
+Corte: 25 de octubre de 2026. Versión en validación 0.3.1.
+
+Decisión vigente: impuestos manuales por contrato, sin consultas fiscales ni
+caducidad mensual. La selección automática antigua se conserva solo para cálculos
+históricos; los contratos automáticos activos piden confirmación manual al migrar.
 
 ## A — Investigación
 

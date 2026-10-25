@@ -26,7 +26,7 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN, STORAGE_VERSION
 from .domain import BillingPeriod, DataQuality, InvoiceResult
 from .domain.billing import calculate_contract
-from .domain.errors import BillingError, MissingFiscalRuleError
+from .domain.errors import BillingError, MissingFiscalRuleError, UnconfirmedTaxesError
 from .domain.history import reconcile, snapshot
 from .domain.intervals import MeasuredInterval, normalize_price
 from .domain.ledger import MeasurementLedger
@@ -415,14 +415,16 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
                 revisions=self.revisions,
             )
         except (BillingError, ValueError, KeyError, InvalidOperation) as err:
-            if isinstance(err, MissingFiscalRuleError):
+            if isinstance(err, (MissingFiscalRuleError, UnconfirmedTaxesError)):
                 ir.async_create_issue(
                     self.hass,
                     DOMAIN,
                     f"fiscal_{self.entry.entry_id}",
                     is_fixable=False,
                     severity=ir.IssueSeverity.WARNING,
-                    translation_key="missing_fiscal_rule",
+                    translation_key="manual_taxes_required"
+                    if isinstance(err, UnconfirmedTaxesError)
+                    else "missing_fiscal_rule",
                 )
             return CoordinatorData(None, str(err), tuple(sorted(self.ledger.warnings)))
         ir.async_delete_issue(self.hass, DOMAIN, f"fiscal_{self.entry.entry_id}")

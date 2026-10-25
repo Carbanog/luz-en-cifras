@@ -96,6 +96,11 @@ async def test_native_flow_creates_group(hass, contract):
         if key.startswith("power_") or key == "meter_rental_daily"
     }
     result = await hass.config_entries.flow.async_configure(result["flow_id"], values)
+    assert result["step_id"] == "fiscal"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {key: value for key, value in contract.items() if key.startswith("tax_")},
+    )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": "finish"}
     )
@@ -223,33 +228,37 @@ async def test_v1_storage_migration_retains_original_payload(hass, contract, fre
     assert await hass.config_entries.async_setup(entry.entry_id)
     assert entry.runtime_data._legacy == original
     assert entry.runtime_data.data.result.total_kwh == Decimal(2)
-    assert entry.minor_version == 3
+    assert entry.minor_version == 4
 
 
-async def test_unverified_fiscal_period_creates_repair_and_manual_profile_can_resolve(
+async def test_automatic_contract_requires_manual_confirmation_and_keeps_collected_energy(
     hass, contract, freezer
 ):
     freezer.move_to("2026-11-03 12:00:00+00:00")
+    for key in list(contract):
+        if key.startswith("tax_") or key == "fiscal_mode":
+            contract.pop(key)
     attributes = {"unit_of_measurement": "kWh", "device_class": "energy"}
     hass.states.async_set("sensor.test_energy", "100", attributes)
-    entry = MockConfigEntry(domain=DOMAIN, data=contract, title="Casa", version=1)
+    entry = MockConfigEntry(domain=DOMAIN, data=contract, title="Casa", version=1, minor_version=3)
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     assert entry.runtime_data.data.result is None
+    assert entry.runtime_data.config["fiscal_mode"] == "contract"
+    assert entry.runtime_data.config["tax_rules_confirmed"] is False
     assert ir.async_get(hass).async_get_issue(DOMAIN, f"fiscal_{entry.entry_id}") is not None
+    freezer.tick(timedelta(minutes=1))
+    hass.states.async_set("sensor.test_energy", "101", attributes)
+    await hass.async_block_till_done()
+    assert entry.runtime_data.ledger.intervals
     result = await hass.config_entries.options.async_init(entry.entry_id)
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"next_step_id": "fiscal"}
     )
     profile = {
-        "fiscal_mode": "manual",
-        "tax_name": "Impuesto de prueba",
-        "tax_valid_from": "2026-11-01",
-        "tax_valid_to": "2026-12-01",
         "tax_electricity_percent": 5,
         "tax_indirect_percent": 21,
         "tax_minimum_eur_mwh": 1,
-        "tax_source": "https://www.boe.es/",
         "tax_rules_confirmed": True,
     }
     result = await hass.config_entries.options.async_configure(result["flow_id"], profile)
@@ -259,9 +268,36 @@ async def test_unverified_fiscal_period_creates_repair_and_manual_profile_can_re
     )
     await hass.async_block_till_done()
     freezer.tick(timedelta(minutes=1))
-    hass.states.async_set("sensor.test_energy", "101", attributes)
+    hass.states.async_set("sensor.test_energy", "102", attributes)
     await hass.async_block_till_done()
-    assert entry.runtime_data.data.result.fiscal_rule_id.startswith("user-reviewed:")
+    assert entry.runtime_data.data.result.fiscal_rule_id.startswith("manual-contract:")
+    assert entry.runtime_data.data.result.total_kwh == 2
+    assert ir.async_get(hass).async_get_issue(DOMAIN, f"fiscal_{entry.entry_id}") is None
+
+
+@pytest.mark.parametrize("instant", ["2026-12-15 12:00:00+00:00", "2027-01-10 12:00:00+00:00"])
+async def test_manual_taxes_work_offline_after_month_or_year_changes_and_reload(
+    hass, contract, freezer, instant
+):
+    freezer.move_to(instant)
+    attributes = {"unit_of_measurement": "kWh", "device_class": "energy"}
+    hass.states.async_set("sensor.test_energy", "100", attributes)
+    entry = MockConfigEntry(domain=DOMAIN, data=contract, title="Casa", version=1)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    freezer.tick(timedelta(minutes=1))
+    hass.states.async_set("sensor.test_energy", "200", attributes)
+    await hass.async_block_till_done()
+    before = entry.runtime_data.data.result
+    assert before is not None
+    assert before.total_kwh == 100
+    assert before.total == Decimal("25.44")
+    assert before.fiscal_rule_id.startswith("manual-contract:")
+    assert entry.runtime_data._pvpc is None
+    await hass.config_entries.async_unload(entry.entry_id)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.runtime_data.data.result.total == before.total
+    assert entry.runtime_data.data.result.total_kwh == before.total_kwh
     assert ir.async_get(hass).async_get_issue(DOMAIN, f"fiscal_{entry.entry_id}") is None
 
 

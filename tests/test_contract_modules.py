@@ -236,3 +236,44 @@ def test_manual_fiscal_profile_requires_source_and_confirmation() -> None:
     assert configured_rule(config, date(2026, 11, 2)).electricity_tax_rate == D("0.05")
     with pytest.raises(IncompleteDataError):
         configured_rule(config, date(2026, 12, 1))
+
+
+def test_manual_contract_percentages_do_not_expire_at_a_month_boundary() -> None:
+    config: dict[str, Any] = {
+        "fiscal_mode": "contract",
+        "tax_electricity_percent": "5.11269632",
+        "tax_indirect_percent": "21",
+        "tax_minimum_eur_mwh": "1",
+        "tax_rules_confirmed": True,
+    }
+    for tax_point in (date(2026, 11, 1), date(2027, 1, 1), date(2030, 6, 15)):
+        rule = configured_rule(config, tax_point)
+        assert rule.electricity_tax_rate == D("0.0511269632")
+        assert rule.vat_rate == D("0.21")
+        assert rule.valid_to is None
+        assert rule.source_urls == ("manual:contract",)
+        assert rule.rule_id.startswith("manual-contract:")
+
+
+def test_manual_contract_rejects_invalid_tax_values() -> None:
+    config: dict[str, Any] = {
+        "fiscal_mode": "contract",
+        "tax_electricity_percent": "5",
+        "tax_indirect_percent": "21",
+        "tax_minimum_eur_mwh": "1",
+        "tax_rules_confirmed": True,
+    }
+    for field, value in (
+        ("tax_electricity_percent", "-1"),
+        ("tax_electricity_percent", "101"),
+        ("tax_indirect_percent", "NaN"),
+        ("tax_indirect_percent", "Infinity"),
+        ("tax_minimum_eur_mwh", "-1"),
+    ):
+        with pytest.raises(ValueError):
+            configured_rule({**config, field: value}, date(2027, 1, 1))
+
+
+def test_manual_contract_requires_explicit_confirmation() -> None:
+    with pytest.raises(IncompleteDataError, match="confirm"):
+        configured_rule({"fiscal_mode": "contract"}, date(2026, 10, 25))

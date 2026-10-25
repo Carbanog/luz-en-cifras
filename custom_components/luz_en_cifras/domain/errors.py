@@ -15,3 +15,7 @@ class IncompleteDataError(BillingError):
 
 class MissingFiscalRuleError(IncompleteDataError):
     """No verified rule covers the invoice tax point."""
+
+
+class UnconfirmedTaxesError(IncompleteDataError):
+    """The user must confirm the contract's manual tax settings."""

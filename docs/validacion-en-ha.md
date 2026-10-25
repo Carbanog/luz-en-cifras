@@ -10,8 +10,8 @@ corrigen defectos y documentación; nuevas modalidades se desarrollan por separa
 2. Anota versión de HA, unidades y frecuencia de actualización de cada sensor.
 3. Ten los precios sin impuestos y las fechas de tu contrato. Comprueba si los
    sensores de las filas incluyen ya al coche para no duplicar consumo.
-4. Verifica la cobertura fiscal para las fechas de devengo de tus pruebas. No
-   extrapoles una regla caducada ni introduzcas porcentajes sin fuente.
+4. Revisa los porcentajes y el mínimo de impuestos con tu factura. Confírmalos
+   en el formulario; se conservan hasta que tú los cambies.
 
 ## Configuración representativa
 
@@ -67,7 +67,7 @@ python -m pytest -c tests_ha/pytest.ini tests_ha/test_accelerated_acceptance.py 
 
 Esto acelera las transiciones del software; no convierte una prueba sintética en
 una factura real ni resuelve normas fiscales pendientes. La simulación verifica
-también que noviembre sin perfil fiscal resuelto sigue fallando explícitamente.
+también la continuidad de noviembre con los impuestos manuales confirmados.
 
 ## Contraste con una factura real
 
@@ -77,6 +77,27 @@ redondeos. El primer ciclo sin histórico anterior no equivale a una factura com
 Para investigar diferencias comparte solo lecturas/condiciones anonimizadas, sin
 CUPS, dirección, DNI, datos bancarios ni respuestas completas del histórico.
 
+## Empezar con sensores reales en el HA habitual
+
+La validación con consumos reales puede comenzar al instalar la versión comprobada,
+con copia de seguridad previa. No hace falta esperar una factura completa para
+empezar a medir: el contraste se realiza después de instalar y configurar.
+
+1. Comprueba la versión de HA y conserva una copia anterior a la instalación.
+2. Configura fuentes reales, precios sin impuestos e impuestos manuales confirmados.
+3. Anota lecturas y hora de inicio; contrasta un intervalo de horas o días.
+4. Revisa errores y calidad. La energía anterior a la instalación no se reconstruye.
+5. Compara la primera factura que cubra un periodo medido completo cuando llegue.
+
+En una tarifa fija, el primer contraste es `ΔkWh × €/kWh = Δcoste de energía`, antes
+de impuestos y cargos fijos. Si usas W, el resultado es una estimación y su precisión
+depende de la frecuencia y los huecos de tus sensores. Usa el contador de kWh del
+mismo circuito como referencia cuando esté disponible, sin facturar ambos a la vez.
+
+Esto permite poner en marcha el estimador y validar sus resultados con datos reales;
+no afirma que ya se haya contrastado la factura del usuario. No utilices su resultado
+para automatizaciones de control hasta dar por aceptadas las mediciones.
+
 ## Criterio de promoción
 
 Una versión se considera apta para tu uso habitual después de:
@@ -85,7 +106,7 @@ Una versión se considera apta para tu uso habitual después de:
 - varios días sin pérdidas de datos, duplicidades ni errores de esta integración;
 - reinicio/recarga y recuperación comprobados con el respaldo disponible;
 - diferencias de cálculo explicadas y sin defectos pendientes que afecten a tu caso;
-- reglas fiscales vigentes verificadas para el periodo de uso;
+- porcentajes manuales revisados con tu contrato o factura;
 - aprobación del resultado de las pruebas antes de publicar la versión estable.
 
 Los tests automatizados son necesarios, pero no sustituyen estos pasos. Esta guía

@@ -1,4 +1,25 @@
-# Actualización y recuperación
+# Actualización y compatibilidad
+
+## Impuestos manuales en 0.3.1
+
+La configuración pasa de minor 3 a **minor 4**. El almacenamiento de mediciones
+sigue en **schema 3**: no se borran lecturas, grupos, revisiones ni facturas cerradas.
+Los contratos automáticos se convierten a porcentajes manuales pendientes de una
+confirmación única en Configurar → Impuestos de la factura. Mientras tanto sigue
+recogiendo mediciones, pero no muestra un total fiscal confirmado.
+
+Los contratos que ya utilizaban el perfil manual avanzado conservan sus valores y
+vigencia. El formulario nuevo permite convertirlos a impuestos sin caducidad al
+guardar. Los nuevos contratos piden impuestos después de potencia y alquiler.
+
+Haz una copia de HA **antes** de actualizar. La 0.3.0 solo admite configuración
+hasta minor 3: para volver atrás debes restaurar también esa copia de configuración
+y almacenamiento, además del código 0.3.0. No elimines el contrato para actualizar.
+
+No se incorporan consultas fiscales ni dependencias del INE. El PVPC continúa con
+su fuente de precios existente.
+
+## Versiones anteriores
 
 ## PVPC directo en 0.3.0
 

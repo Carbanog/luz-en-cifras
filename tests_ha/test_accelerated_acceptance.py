@@ -69,7 +69,15 @@ async def test_sixty_one_days_close_and_restore_monthly_or_bimonthly_without_dup
         revised = await entry.runtime_data.async_recalculate(record["id"], "Synthetic audit", False)
         assert revised["result"]["total"] == record["result"]["total"]
         assert revised["result"]["total_kwh"] == record["result"]["total_kwh"]
-    # November remains explicitly unsupported in automatic fiscal mode. Accelerating
-    # the test is not permission to invent a tax rule or report acceptance there.
-    assert entry.runtime_data.data.result is None
-    assert entry.runtime_data.data.error
+    # Manual taxes continue into the new month without a software/rule update.
+    instant = finish + timedelta(hours=6)
+    freezer.move_to(instant)
+    for source, value in readings.items():
+        hass.states.async_set(source, value, {"unit_of_measurement": "W"})
+    entry.runtime_data._tick(instant)
+    result = entry.runtime_data.data.result
+    assert result is not None
+    assert result.total_kwh == Decimal("7.200")
+    assert result.amount_for("energy") == Decimal("1.32")
+    assert result.fiscal_rule_id.startswith("manual-contract:")
+    assert entry.runtime_data.data.error is None
