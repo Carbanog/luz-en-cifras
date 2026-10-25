@@ -3,7 +3,18 @@
 El producto se instala por HACS; **Docker solo se utiliza para desarrollo y pruebas**.
 Los datos sintéticos están en `tests/` y `tests_ha/`, fuera del componente distribuido.
 
-## Última comprobación del desarrollo
+## Impuestos manuales en 0.3.1
+
+La suite incorpora confirmación inicial, migración desde modo automático,
+conservación de mediciones pendientes y cálculo manual sin caducidad en noviembre,
+diciembre y cambio de año. Se añade HA 2026.10.4 a la matriz de CI, con el paquete
+pytest-homeassistant-custom-component 0.13.375. Las pruebas de futuros periodos usan
+porcentajes sintéticos configurados por el test, no predicciones fiscales.
+
+El formulario nuevo se comprueba mediante los flujos reales de HA en CI; su revisión
+visual en la instalación del usuario queda pendiente de su actualización manual.
+
+## Comprobación anterior del desarrollo
 
 El 24 de octubre de 2026, la revisión `0.3.0` pasó **118 pruebas
 en cada versión de HA 2026.10.2 y 2026.10.3**, con Python 3.14.2: 76 del motor y 42
@@ -39,8 +50,9 @@ pruebas HA se ejecutaron en GitHub Actions para ambas versiones, sin desplegar e
 el HA del usuario. El asistente nuevo y el PVPC directo aún requieren comprobación
 visual en su instalación tras actualizar; los tests no se presentan como esa revisión.
 
-La simulación conserva el fallo explícito al llegar a noviembre sin perfil fiscal
-verificado. No resuelve normativa pendiente ni sustituye una factura real.
+La revisión 0.3.0 comprobaba el fallo de su registro automático al llegar a noviembre.
+En 0.3.1 se comprueba que los porcentajes manuales continúan en el ciclo nuevo sin
+actualizaciones ni consultas fiscales. No sustituye el contraste con una factura real.
 
 ### Ejecutar el dominio
 

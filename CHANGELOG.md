@@ -1,6 +1,17 @@
 # Changelog
 
-## Sin publicar como nueva versión
+## 0.3.1 — 25 de octubre de 2026
+
+- Configura impuestos manuales por contrato, sin consultas al INE ni vencimientos
+  mensuales: impuesto eléctrico, IVA/impuesto indirecto y mínimo por energía.
+- Pide confirmación al crear el contrato. Los contratos automáticos anteriores se
+  migran a configuración minor 4, pendiente de confirmar; se conservan mediciones,
+  revisiones, IDs, histórico y Store 3. Los perfiles manuales avanzados se conservan.
+- Muestra un aviso Repairs mientras faltan impuestos confirmados y sigue recogiendo
+  mediciones. Cambiar los impuestos recalcula la factura abierta, no borra cierres.
+- Añade HA 2026.10.4 a CI y regresiones de configuración, migración, confirmación,
+  persistencia y continuidad de impuestos en noviembre/diciembre/cambio de año.
+- Volver a 0.3.0 requiere restaurar también el respaldo de configuración anterior.
 
 - Sustituye la antigua vista de ejemplo por dos dashboards completos: nativo y
   Mushroom, con Resumen y Desglose, avisos de calidad y estados sin datos explícitos.

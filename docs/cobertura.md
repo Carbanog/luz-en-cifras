@@ -1,6 +1,6 @@
 # Matriz de cobertura
 
-Versión en validación 0.3.0. Contemplar un caso no significa implementarlo.
+Versión en validación 0.3.1. Contemplar un caso no significa implementarlo.
 
 | Módulo | Disponible y verificable | Límite actual |
 | --- | --- | --- |
@@ -13,7 +13,7 @@ Versión en validación 0.3.0. Contemplar un caso no significa implementarlo.
 | Cargos | Alquiler, cuota diaria y servicio por factura | Sin un catálogo ilimitado de conceptos con bases distintas |
 | Descuento | Porcentaje energético con vigencia en el precio | Sin elegibilidad/consumo protegido de bono social |
 | Autoconsumo | Contador exportación, precio fijo acordado, límite a energía | No calcula TCUh ni fórmulas PVPC de compensación, sin batería virtual |
-| Fiscalidad | Reglas automáticas acotadas, condiciones de potencia y perfil manual documentado | Sin perfiles territoriales/exenciones automáticos |
+| Fiscalidad | Porcentajes manuales por contrato, mínimo eléctrico y confirmación; sin caducidad mensual | Sin perfiles territoriales/exenciones automáticos |
 | Periodos | Mes desplazado/bimestral y cierre manual con fechas reales | Las lecturas en límites pueden requerir aproximación explícita |
 | Históricos | Snapshots, exportación, comparación y revisión conservando el original | Sin importación de Recorder/Datadis/CSV |
 | Medición | W/kW y Wh/kWh directos, grupos mixtos, huecos, correcciones y persistencia | Potencia estimada, caducidad configurable; no reconstruye paradas ni infiere circuitos duplicados |

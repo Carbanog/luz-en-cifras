@@ -9,6 +9,56 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.luz_en_cifras.const import DOMAIN
 
 
+async def test_new_contract_requires_simple_confirmed_manual_taxes(hass):
+    hass.states.async_set("sensor.energy", "100", {"unit_of_measurement": "kWh"})
+    flow = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
+    for values in [
+        {"default_tariff_mode": "fixed"},
+        {"contract_name": "Casa", "billing_day": 1, "billing_months": "1"},
+        {
+            "group_name": "Casa",
+            "add_sources": ["sensor.energy"],
+            "subtract_sources": [],
+            "tariff_mode": "fixed",
+        },
+        {"eur_per_kwh": 0.2},
+        {"power_price_unit": "day"},
+        {
+            "power_p1_kw": 0,
+            "power_p2_kw": 0,
+            "power_p1_eur_per_kw_day": 0,
+            "power_p2_eur_per_kw_day": 0,
+            "meter_rental_daily": 0,
+        },
+    ]:
+        flow = await hass.config_entries.flow.async_configure(flow["flow_id"], values)
+    assert flow["step_id"] == "fiscal"
+    assert {str(key) for key in flow["data_schema"].schema} == {
+        "tax_electricity_percent",
+        "tax_indirect_percent",
+        "tax_minimum_eur_mwh",
+        "tax_rules_confirmed",
+    }
+    taxes = {
+        "tax_electricity_percent": 5.11269632,
+        "tax_indirect_percent": 21,
+        "tax_minimum_eur_mwh": 1,
+        "tax_rules_confirmed": False,
+    }
+    flow = await hass.config_entries.flow.async_configure(flow["flow_id"], taxes)
+    assert flow["errors"]["base"] == "invalid_tax_profile"
+    flow = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {**taxes, "tax_rules_confirmed": True}
+    )
+    assert flow["step_id"] == "menu"
+    flow = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {"next_step_id": "finish"}
+    )
+    assert flow["type"] == "create_entry"
+    assert flow["data"]["fiscal_mode"] == "contract"
+    assert flow["data"]["tax_rules_confirmed"] is True
+
+
 async def test_old_decimal_day_values_are_migrated_without_truncation(hass, contract):
     contract.update(billing_day="1.0", billing_anchor_month="1.0")
     hass.states.async_set("sensor.test_energy", "100", {"unit_of_measurement": "kWh"})
@@ -22,7 +72,7 @@ async def test_old_decimal_day_values_are_migrated_without_truncation(hass, cont
     )
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.minor_version == 3
+    assert entry.minor_version == 4
     assert entry.data["billing_day"] == 1
     assert entry.options["billing_day"] == 1
     assert entry.runtime_data.config["contract_id"] == contract["contract_id"]

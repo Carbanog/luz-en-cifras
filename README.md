@@ -19,7 +19,7 @@ Consumo, potencia e impuestos en Home Assistant, con cálculo local y desglose v
 </div>
 
 > [!WARNING]
-> **En validación · 0.3.0 · Instalar primero en un HA de pruebas.**
+> **En validación · 0.3.1 · Instalar primero en un HA de pruebas.**
 > La fase final todavía no se ha lanzado. Los importes son estimaciones y necesitan
 > contraste con facturas reales; no sustituyen la factura de tu comercializadora.
 
@@ -41,7 +41,7 @@ Red Eléctrica, sin cuentas ni credenciales; las otras modalidades leen datos lo
 | Energía | Precio fijo, tres periodos 2.0TD o entidad dinámica/PVPC por grupo |
 | Potencia | P1/P2 en €/kW/día o €/kW/año, con revisiones fechadas |
 | Alquiler | Cargo diario configurable |
-| Impuestos | Reglas automáticas verificadas y perfil avanzado documentado |
+| Impuestos | Porcentajes manuales por contrato, editables y sin caducidad mensual |
 | Persistencia | Consumos guardados localmente entre reinicios |
 | Desglose | Sensores de energía, potencia, impuestos y calidad de datos |
 | Conceptos opcionales | Cuota diaria, servicio por factura y descuento energético |
@@ -64,7 +64,7 @@ utiliza exclusivamente para ejecutar pruebas de desarrollo con HA real.
 
 ## Instalación
 
-**Compatibilidad probada: Home Assistant 2026.10.2 y 2026.10.3**, Python 3.14.2 o posterior.
+**Compatibilidad probada: Home Assistant 2026.10.2, 2026.10.3 y 2026.10.4**, Python 3.14.2 o posterior.
 Otras versiones de HA requieren validación. Puedes elegir directamente sensores de
 potencia **W/kW** o contadores acumulados **Wh/kWh**, incluso varios y mezclados en
 un grupo. La unidad se detecta automáticamente. No necesitas ayudantes Integral.
@@ -126,7 +126,7 @@ Ten a mano tu contrato o factura e introduce **precios sin impuestos**.
 El alta comienza por **la modalidad de energía**: precio fijo, tres precios
 punta/llano/valle, PVPC directo o precio variable desde una entidad. Mercado libre
 no significa necesariamente precio fijo. Después se piden el periodo, los sensores
-y los precios del grupo; finalmente, la potencia contratada y el alquiler.
+y los precios del grupo; finalmente, la potencia contratada, el alquiler y los impuestos.
 
 **Potencia contratada no es consumo:** P1 y P2 son los kW que figuran en tu contrato
 para punta y valle. No se copian los W instantáneos de los sensores ni los tres
@@ -196,18 +196,22 @@ Si una lectura acumulada atraviesa varios precios, el reparto exacto es desconoc
 Puedes activar el reparto uniforme temporal, marcado como parcial. Un precio ausente
 o caducado no se convierte en cero. [Guía de tarifas y precisión](docs/tarifas.md).
 
-### Qué significa «fiscalidad automática»
+### Impuestos manuales, como en tu factura
 
-Es la selección de los tipos de **impuesto eléctrico e IVA** según la fecha de
-devengo y el perfil fiscal admitido. Se aplica a los conceptos que corresponden
-para obtener el total estimado; es independiente de tu tarifa fija, 2.0TD o PVPC.
-Por eso los precios de energía y potencia se introducen **sin impuestos**.
+Introduce el **impuesto eléctrico (%)**, el **IVA / impuesto indirecto (%)** y el
+**mínimo del impuesto eléctrico (€/MWh)**. Confirma que los has revisado con tu
+factura o contrato. Por ejemplo, 21 significa 21 %, no 0,21; los valores sugeridos
+se deben comprobar antes de guardar.
 
-Las reglas tienen una vigencia comprobada. Si no existe una para la fecha calculada,
-la integración muestra un error de calidad y deja el importe sin calcular, en vez de
-prolongar un porcentaje sin verificar. La 0.3.0 incluye reglas hasta el **31/10/2026**;
-desde noviembre requiere una actualización con la regla resuelta o un perfil manual
-verificado. [Explicación, fuentes y límites](docs/reglas-fiscales.md).
+Se mantienen hasta que tú los cambies: **sin Internet, consultas al INE, fecha de
+caducidad ni actualizaciones mensuales de la integración**. Se aplican también a
+precio fijo y tres periodos; el PVPC solo descarga el precio de la energía.
+Por eso energía, potencia y alquiler se introducen sin impuestos.
+
+Desde **Configurar → Impuestos de la factura** puedes modificarlos. Cambiar impuestos
+recalcula la factura abierta; las facturas cerradas conservan su desglose. Si pasas
+desde el antiguo modo automático, se pide una **confirmación única** y se conservan
+las mediciones mientras tanto. [Impuestos y actualización](docs/reglas-fiscales.md).
 
 ### Históricos y factura real
 
@@ -270,7 +274,7 @@ Los dashboards se copian por separado; HACS no modifica tus paneles existentes.
 | Primer periodo | Parcial; sin consumo anterior a la instalación |
 | Potencia y alquiler | Se acumulan hasta hoy incluido; todavía no hay prorrateo intradía |
 | Editar precios | Conserva el pasado; cambios desde la revisión guardada |
-| Fiscalidad desde noviembre de 2026 | Sin regla automática resuelta: requiere actualización o perfil manual verificado |
+| Cambios de impuestos | Debes editar los porcentajes si cambia tu factura; no se detectan automáticamente |
 | Cierre automático | Devengo provisional al último día del consumo, revisable con la fecha real |
 | Contratos indexados | Aportar una entidad de precio completo; no genera fórmulas comerciales arbitrarias |
 | Compensación de excedentes | Básica con precio fijo acordado, ciclo mensual y contador separado |
@@ -279,13 +283,10 @@ Los dashboards se copian por separado; HACS no modifica tus paneles existentes.
 | Histórico anterior a la instalación | Sin importación de Recorder/Datadis ni reconstrucción automática |
 | Cuotas planas y promociones complejas | Sin regularización específica automática |
 
-Las reglas fiscales incluidas llegan **hasta el 31 de octubre de 2026**.
-[Fuentes y criterios fiscales](docs/reglas-fiscales.md).
-
 El calendario 2.0TD verificado incluido cubre 2026 en Península y Baleares. El perfil
-fiscal avanzado exige fuente, confirmación y vigencia; no determina por sí solo la
-elegibilidad para exenciones ni convierte esta versión en compatible con cualquier
-contrato. No se anuncian como terminados los supuestos sin pruebas.
+manual no calcula elegibilidad para exenciones ni todas las bases de otros territorios.
+Los impuestos introducidos no caducan al cambiar de mes o año. No se anuncian como
+terminados los supuestos sin pruebas. [Criterios y límites](docs/reglas-fiscales.md).
 
 <details>
 <summary><strong>Resolución de problemas</strong></summary>
@@ -307,6 +308,11 @@ anonimizados. Evita facturas completas o datos personales.
 Haz una copia de seguridad de HA antes de actualizar. Con HACS, descarga la
 actualización y reinicia; manualmente, reemplaza la carpeta de la integración.
 Conserva la versión anterior y el respaldo de datos para restaurarlos si es necesario.
+
+**Desde 0.3.0 a 0.3.1:** los contratos automáticos requieren revisar y confirmar sus
+impuestos una sola vez. La configuración pasa a minor 4, conservando Store 3 e
+históricos. Para volver a 0.3.0 restaura también la copia de configuración de HA;
+no basta con volver a descargar el código antiguo. [Detalles](docs/migracion.md).
 
 **Si actualizas desde 0.1**, consulta la [guía de migración](docs/migracion.md). Se
 conserva una copia del payload antiguo, pero volver a 0.1 requiere restaurar también

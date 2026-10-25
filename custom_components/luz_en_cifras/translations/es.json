@@ -70,7 +70,7 @@
           "select_group": "Editar o eliminar un grupo",
           "extras": "Descuentos, servicios y excedentes",
           "finish": "Revisar validación y guardar",
-          "fiscal": "Perfil fiscal"
+          "fiscal": "Impuestos de la factura"
         }
       },
       "select_group": {
@@ -128,18 +128,19 @@
         }
       },
       "fiscal": {
-        "title": "Perfil fiscal",
-        "description": "El modo automático cubre el uso doméstico general en territorio IVA en las fechas verificadas. El modo manual exige una fuente pública y confirmación de sus condiciones, porcentajes, bases y vigencia. No determina elegibilidad ni exenciones automáticamente. El final de vigencia es exclusivo.",
+        "title": "Impuestos de tu factura",
+        "description": "Introduce los porcentajes de tu factura, no sus importes en euros. Son valores manuales: permanecen hasta que tú los cambies y no necesitan Internet. Los valores sugeridos deben revisarse; no se actualizan automáticamente. Al guardar, se aplican al total de la factura abierta. Las facturas cerradas conservan su desglose.",
         "data": {
-          "fiscal_mode": "Modo",
-          "tax_name": "Nombre del impuesto indirecto",
-          "tax_valid_from": "Vigencia desde (incluida)",
-          "tax_valid_to": "Vigencia hasta (excluida)",
-          "tax_source": "Fuente pública HTTPS sin credenciales ni datos personales",
-          "tax_rules_confirmed": "He comprobado las condiciones y bases aplicables al contrato",
           "tax_electricity_percent": "Impuesto eléctrico (%)",
-          "tax_indirect_percent": "Impuesto indirecto (%)",
-          "tax_minimum_eur_mwh": "Mínimo de impuesto eléctrico (€/MWh)"
+          "tax_indirect_percent": "IVA / impuesto indirecto (%)",
+          "tax_minimum_eur_mwh": "Mínimo de impuesto eléctrico (€/MWh)",
+          "tax_rules_confirmed": "He revisado estos valores con mi factura o contrato"
+        },
+        "data_description": {
+          "tax_electricity_percent": "Porcentaje de la línea Impuesto sobre la Electricidad. Por ejemplo, 5,11269632, no el importe cobrado.",
+          "tax_indirect_percent": "Porcentaje de IVA de tu factura. Por ejemplo, 21 significa 21 %, no 0,21. Se añade a los precios sin impuestos.",
+          "tax_minimum_eur_mwh": "Se aplica el mayor entre el porcentaje y este mínimo por energía. 1 €/MWh equivale a 0,001 €/kWh. Revisa el mínimo aplicable; cero solo si corresponde.",
+          "tax_rules_confirmed": "Los porcentajes y el mínimo son responsabilidad de la configuración manual; podrás cambiarlos después."
         }
       }
     },
@@ -154,7 +155,7 @@
       "missing_groups": "Añade al menos un grupo antes de guardar.",
       "duplicate_sources": "Los grupos facturarían el mismo consumo más de una vez. Revisa las sumas y restas.",
       "invalid_surplus": "La compensación requiere ciclo mensual y un sensor de exportación W/kW o Wh/kWh distinto de los de consumo.",
-      "invalid_tax_profile": "El perfil requiere fuente HTTPS pública, confirmación, fechas coherentes y porcentajes válidos."
+      "invalid_tax_profile": "Revisa y confirma los impuestos. Los porcentajes deben estar entre 0 y 100 y el mínimo no puede ser negativo."
     },
     "abort": {
       "already_configured": "Este contrato ya existe."
@@ -230,7 +231,7 @@
           "select_group": "Editar o eliminar un grupo",
           "extras": "Descuentos, servicios y excedentes",
           "finish": "Revisar validación y guardar",
-          "fiscal": "Perfil fiscal"
+          "fiscal": "Impuestos de la factura"
         }
       },
       "select_group": {
@@ -288,18 +289,19 @@
         }
       },
       "fiscal": {
-        "title": "Perfil fiscal",
-        "description": "El modo automático cubre el uso doméstico general en territorio IVA en las fechas verificadas. El modo manual exige una fuente pública y confirmación de sus condiciones, porcentajes, bases y vigencia. No determina elegibilidad ni exenciones automáticamente. El final de vigencia es exclusivo.",
+        "title": "Impuestos de tu factura",
+        "description": "Introduce los porcentajes de tu factura, no sus importes en euros. Son valores manuales: permanecen hasta que tú los cambies y no necesitan Internet. Los valores sugeridos deben revisarse; no se actualizan automáticamente. Al guardar, se aplican al total de la factura abierta. Las facturas cerradas conservan su desglose.",
         "data": {
-          "fiscal_mode": "Modo",
-          "tax_name": "Nombre del impuesto indirecto",
-          "tax_valid_from": "Vigencia desde (incluida)",
-          "tax_valid_to": "Vigencia hasta (excluida)",
-          "tax_source": "Fuente pública HTTPS sin credenciales ni datos personales",
-          "tax_rules_confirmed": "He comprobado las condiciones y bases aplicables al contrato",
           "tax_electricity_percent": "Impuesto eléctrico (%)",
-          "tax_indirect_percent": "Impuesto indirecto (%)",
-          "tax_minimum_eur_mwh": "Mínimo de impuesto eléctrico (€/MWh)"
+          "tax_indirect_percent": "IVA / impuesto indirecto (%)",
+          "tax_minimum_eur_mwh": "Mínimo de impuesto eléctrico (€/MWh)",
+          "tax_rules_confirmed": "He revisado estos valores con mi factura o contrato"
+        },
+        "data_description": {
+          "tax_electricity_percent": "Porcentaje de la línea Impuesto sobre la Electricidad. Por ejemplo, 5,11269632, no el importe cobrado.",
+          "tax_indirect_percent": "Porcentaje de IVA de tu factura. Por ejemplo, 21 significa 21 %, no 0,21. Se añade a los precios sin impuestos.",
+          "tax_minimum_eur_mwh": "Se aplica el mayor entre el porcentaje y este mínimo por energía. 1 €/MWh equivale a 0,001 €/kWh. Revisa el mínimo aplicable; cero solo si corresponde.",
+          "tax_rules_confirmed": "Los porcentajes y el mínimo son responsabilidad de la configuración manual; podrás cambiarlos después."
         }
       }
     },
@@ -314,7 +316,7 @@
       "missing_groups": "Añade al menos un grupo antes de guardar.",
       "duplicate_sources": "Los grupos facturarían el mismo consumo más de una vez. Revisa las sumas y restas.",
       "invalid_surplus": "La compensación requiere ciclo mensual y un sensor de exportación W/kW o Wh/kWh distinto de los de consumo.",
-      "invalid_tax_profile": "El perfil requiere fuente HTTPS pública, confirmación, fechas coherentes y porcentajes válidos."
+      "invalid_tax_profile": "Revisa y confirma los impuestos. Los porcentajes deben estar entre 0 y 100 y el mínimo no puede ser negativo."
     }
   },
   "entity": {
@@ -366,6 +368,10 @@
     "missing_fiscal_rule": {
       "title": "Falta una regla fiscal verificada",
       "description": "La estimación del contrato está indisponible porque su fecha de devengo no tiene una regla fiscal verificada. Actualiza la integración o configura un perfil manual documentado desde las opciones del contrato. No introduzcas porcentajes basándote en una medida condicionada aún sin resolver."
+    },
+    "manual_taxes_required": {
+      "title": "Confirma los impuestos de tu contrato",
+      "description": "Se conservan las mediciones y las facturas cerradas. Para calcular el total con impuestos manuales, abre Luz en Cifras → Configurar → Impuestos de la factura, revisa los porcentajes y el mínimo, marca la confirmación y guarda el contrato. Solo se requiere esta confirmación al convertir el antiguo modo automático; después los valores se mantienen hasta que los cambies."
     }
   }
 }

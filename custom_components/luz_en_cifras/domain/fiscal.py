@@ -13,7 +13,7 @@ from decimal import Decimal
 from typing import Any
 from urllib.parse import urlparse
 
-from .errors import IncompleteDataError, MissingFiscalRuleError
+from .errors import IncompleteDataError, MissingFiscalRuleError, UnconfirmedTaxesError
 from .models import FiscalRule
 
 AEAT_ELECTRICITY_TAX = (
@@ -88,6 +88,23 @@ def household_rule(tax_point: date, maximum_power_kw: Decimal) -> FiscalRule:
 
 def configured_rule(config: dict[str, Any], tax_point: date) -> FiscalRule:
     """Explicit user-reviewed rules cover documented cases outside automatic presets."""
+    if config.get("fiscal_mode") == "contract":
+        if not config.get("tax_rules_confirmed"):
+            raise UnconfirmedTaxesError("Review and confirm the contract's manual tax percentages")
+        electricity = Decimal(str(config["tax_electricity_percent"])) / 100
+        indirect = Decimal(str(config["tax_indirect_percent"])) / 100
+        minimum = Decimal(str(config.get("tax_minimum_eur_mwh", 1)))
+        return FiscalRule(
+            rule_id=f"manual-contract:{electricity}:{indirect}:{minimum}",
+            valid_from=date.min,
+            valid_to=None,
+            electricity_tax_rate=electricity,
+            vat_rate=indirect,
+            minimum_electricity_eur_per_mwh=minimum,
+            # This is user-supplied configuration, not a claim of official verification.
+            source_urls=("manual:contract",),
+            indirect_tax_name=str(config.get("tax_name", "IVA")),
+        )
     if config.get("fiscal_mode", "automatic") == "automatic":
         return household_rule(
             tax_point,
