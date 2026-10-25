@@ -149,7 +149,7 @@ fijada por digest, con usuario sin privilegios y datos sintéticos identificados
 Configuración reproducible: [laboratorio](../lab/README.md).
 
 **Acceso LAN verificado:** tras autorización explícita, el 24 de octubre se enlazó
-el puerto exclusivamente a `IP_PRIVADA_LAB:18123`. El navegador abrió la interfaz real
+el puerto exclusivamente a la dirección privada de la VM de pruebas. El navegador abrió la interfaz real
 y llegó a «Crear usuario». El enlace predeterminado del Compose sigue siendo local;
 el acceso LAN se utilizó solo para esta comprobación. No se han cambiado SSH, firewall,
 proxy ni router. El túnel SSH no está disponible y se cerró tras comprobarlo.
