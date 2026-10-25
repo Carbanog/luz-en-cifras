@@ -12,7 +12,6 @@ import probatio as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.helpers.selector import (
     BooleanSelector,
-    DateSelector,
     EntitySelector,
     EntitySelectorConfig,
     NumberSelector,
@@ -243,7 +242,10 @@ class ContractForms:
     async def async_step_power(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         if user_input is not None:
             self._config.update(cleaned(user_input))
+            initial = self._initial_setup
             self._initial_setup = False
+            if initial:
+                return await self.async_step_fiscal()
             return await self.async_step_menu()
         return self.async_show_form(
             step_id="power",
@@ -425,6 +427,11 @@ class ContractForms:
     async def async_step_finish(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         if user_input is not None:
             return await self.async_step_menu()
+        if self._config.get("fiscal_mode") == "contract":
+            try:
+                configured_rule(self._config, date.today())
+            except BillingError, ValueError, KeyError:
+                return await self.async_step_fiscal()
         groups = self._config.get("groups", [])
         coefficients: dict[str, int] = {}
         for group in groups:
@@ -458,38 +465,28 @@ class ContractForms:
     async def async_step_fiscal(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
-            candidate = {**self._config, **cleaned(user_input)}
+            candidate = {**self._config, **cleaned(user_input), "fiscal_mode": "contract"}
             try:
-                if candidate["fiscal_mode"] == "manual":
-                    configured_rule(candidate, date.fromisoformat(candidate["tax_valid_from"]))
+                configured_rule(candidate, date.today())
             except BillingError, ValueError, KeyError:
                 errors["base"] = "invalid_tax_profile"
             else:
                 self._config = candidate
                 return await self.async_step_menu()
-        fields: dict[Any, Any] = {
-            vol.Required(
-                "fiscal_mode", default=self._config.get("fiscal_mode", "automatic")
-            ): select(
-                [
-                    ("automatic", "Automático: territorio IVA, uso doméstico general"),
-                    ("manual", "Avanzado: regla documentada por el usuario"),
-                ]
-            ),
-            vol.Required("tax_name", default=self._config.get("tax_name", "IVA")): TextSelector(),
-            vol.Required(
-                "tax_valid_from", default=self._config.get("tax_valid_from", "2026-01-01")
-            ): DateSelector(),
-            vol.Required(
-                "tax_valid_to", default=self._config.get("tax_valid_to", "2026-11-01")
-            ): DateSelector(),
-            vol.Required("tax_source", default=self._config.get("tax_source", "")): TextSelector(),
+        fields: dict[Any, Any] = {}
+        for key, suggested in (
+            ("tax_electricity_percent", 5.11269632),
+            ("tax_indirect_percent", 21),
+            ("tax_minimum_eur_mwh", 1),
+        ):
+            fields[vol.Required(key, default=float(self._config.get(key, suggested)))] = number(
+                0, 100
+            )
+        fields[
             vol.Required(
                 "tax_rules_confirmed", default=self._config.get("tax_rules_confirmed", False)
-            ): BooleanSelector(),
-        }
-        for key in ("tax_electricity_percent", "tax_indirect_percent", "tax_minimum_eur_mwh"):
-            fields[vol.Required(key, default=float(self._config.get(key, 0)))] = number(0, 100)
+            )
+        ] = BooleanSelector()
         return self.async_show_form(step_id="fiscal", data_schema=vol.Schema(fields), errors=errors)
 
 
@@ -497,10 +494,15 @@ class LuzEnCifrasConfigFlow(ContractForms, ConfigFlow, domain=DOMAIN):
     """Create an independently identified electricity contract."""
 
     VERSION = 1
-    MINOR_VERSION = 3
+    MINOR_VERSION = 4
 
     def __init__(self) -> None:
-        self._config = {"contract_id": uuid4().hex, "groups": [], "billing_months": "1"}
+        self._config = {
+            "contract_id": uuid4().hex,
+            "groups": [],
+            "billing_months": "1",
+            "fiscal_mode": "contract",
+        }
         self._initial_setup = True
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:

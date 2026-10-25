@@ -23,6 +23,9 @@ dirección IP de salida; no se envían consumos, nombres, entidades ni datos del
 contrato. No se requiere token ni cuenta. Los precios descargados se guardan con
 las mediciones para conservar su trazabilidad y las horas de validez.
 
+Los impuestos son manuales y se guardan localmente. No se consulta el INE, AEAT
+ni otros servicios fiscales para calcularlos. No se actualizan por Internet.
+
 Las entidades externas que elijas siguen siendo gestionadas por sus integraciones.
 El enlace opcional de apoyo abre una web externa únicamente cuando lo pulsas; no
 incorpora widgets. La instalación inicial puede descargar dependencias de Python

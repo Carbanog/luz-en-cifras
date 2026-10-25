@@ -56,7 +56,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Upgrade configuration additively; the coordinator retains the original v1 store."""
-    if entry.version != 1 or entry.minor_version > 3:
+    if entry.version != 1 or entry.minor_version > 4:
         return False
     data = {
         "billing_months": "1",
@@ -65,6 +65,32 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         **entry.data,
     }
     options = dict(entry.options)
+    effective = {**data, **options}
+    if effective.get("fiscal_mode", "automatic") == "automatic":
+        from datetime import date
+
+        from .domain.fiscal import configured_rule
+
+        # Carry forward the currently applicable values as suggestions, never as
+        # a user confirmation. Retain the original Store and closed invoices.
+        suggested = ("5.11269632", "21", "1")
+        try:
+            rule = configured_rule(effective, date.today())
+            suggested = (
+                str(rule.electricity_tax_rate * 100),
+                str(rule.vat_rate * 100),
+                str(rule.minimum_electricity_eur_per_mwh),
+            )
+        except ValueError:
+            pass  # Explicit confirmation is required even when no old rule is available.
+        target = options if options else data
+        target.update(
+            fiscal_mode="contract",
+            tax_electricity_percent=suggested[0],
+            tax_indirect_percent=suggested[1],
+            tax_minimum_eur_mwh=suggested[2],
+            tax_rules_confirmed=False,
+        )
     # Older numeric selectors stored whole days as strings like "1.0".
     # Normalize only exact whole values; never truncate an invalid billing date.
     for values in (data, options):
@@ -79,6 +105,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             except InvalidOperation:
                 return False
     hass.config_entries.async_update_entry(
-        entry, data=data, options=options, version=1, minor_version=3
+        entry, data=data, options=options, version=1, minor_version=4
     )
     return True
