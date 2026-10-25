@@ -18,10 +18,9 @@ Consumo, potencia e impuestos en Home Assistant, con cálculo local y desglose v
 
 </div>
 
-> [!WARNING]
-> **En validación · 0.3.1 · Instalar primero en un HA de pruebas.**
-> La fase final todavía no se ha lanzado. Los importes son estimaciones y necesitan
-> contraste con facturas reales; no sustituyen la factura de tu comercializadora.
+> [!NOTE]
+> Los importes son estimaciones y deben contrastarse con tu factura real.
+> No sustituyen la factura de tu comercializadora.
 
 ## Qué puedes probar
 
