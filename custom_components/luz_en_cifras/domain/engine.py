@@ -18,6 +18,7 @@ from .models import (
     InvoiceResult,
     PowerCharge,
 )
+from .prices import PriceIndex
 
 CENT = Decimal("0.01")
 DISPLAY_ENERGY = Decimal("0.001")
@@ -196,6 +197,8 @@ class BillingEngine:
         lines: list[InvoiceLine] = []
         total_kwh = Decimal()
         incomplete_sources: set[str] = set()
+        price_index = PriceIndex(invoice.energy_rates)
+        rates_by_id = {rate.rate_id: rate for rate in invoice.energy_rates}
 
         for group in invoice.groups:
             buckets: dict[tuple[str, str], tuple[Decimal, Decimal]] = {}
@@ -205,7 +208,9 @@ class BillingEngine:
                 )
                 if coefficient == 0:
                     continue
-                rate = self._find_rate(invoice.energy_rates, group.group_id, sample)
+                rate = self._find_rate(
+                    price_index.instant(group.group_id, sample.timestamp), group.group_id, sample
+                )
                 key = (rate.rate_id, sample.tariff_period)
                 quantity, amount = buckets.get(key, (Decimal(), Decimal()))
                 signed_kwh = sample.kwh * coefficient
@@ -220,9 +225,7 @@ class BillingEngine:
                 )
             total_kwh += group_total
             for (rate_id, tariff_period), (quantity, amount) in sorted(buckets.items()):
-                applied_rate = next(
-                    rate for rate in invoice.energy_rates if rate.rate_id == rate_id
-                )
+                applied_rate = rates_by_id[rate_id]
                 # A measured zero is meaningful; keep it distinct from a group
                 # with no measurements, which has no energy line at all.
                 unit_price = amount / quantity if quantity else applied_rate.eur_per_kwh

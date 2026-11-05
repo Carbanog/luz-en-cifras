@@ -63,7 +63,7 @@ def test_movable_easter_holiday_is_not_valley() -> None:
 
 def test_calendar_does_not_assume_unknown_year() -> None:
     with pytest.raises(ConfigurationError):
-        period_20td(datetime(2027, 1, 1, tzinfo=ZONE))
+        period_20td(datetime(2028, 1, 1, tzinfo=ZONE))
 
 
 def test_autumn_day_has_25_hourly_rates() -> None:

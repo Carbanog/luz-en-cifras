@@ -1,5 +1,16 @@
 # Changelog
 
+## Pendiente de publicación
+
+- Conservación de referencias Wh/kWh y lecturas pendientes entre ciclos, con
+  revisiones de cierres automáticos que mantienen sus originales.
+- Los cambios de calendario se aplican al terminar el ciclo abierto, sin cargos futuros.
+- Frescura de precios desde el último reporte real, aunque su valor sea idéntico.
+- Cobertura común para restas de subcontadores y avisos de consumo pendiente.
+- Calendario 2.0TD de 2027 y etiquetas P1/P2/P3 en el desglose.
+- Índice temporal de precios y traducción inglesa del asistente.
+- Regresiones de dominio y HA para transiciones, calidad, recarga y cotizaciones.
+
 ## 0.3.1 — 25 de octubre de 2026
 
 - Configura impuestos manuales por contrato, sin consultas al INE ni vencimientos

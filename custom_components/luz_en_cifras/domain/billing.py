@@ -59,6 +59,8 @@ def _window_energy(
     suffix: str,
     *,
     approximate: bool,
+    billing_start: datetime,
+    billing_end: datetime,
 ) -> tuple[
     tuple[ConsumptionGroup, ...],
     tuple[EnergySample, ...],
@@ -68,6 +70,7 @@ def _window_energy(
 ]:
     """Price only the source expression effective in one revision, with unique aliases."""
     working = MeasurementLedger()
+    pending: set[str] = set()
     source_ids = {
         source
         for group in config["groups"]
@@ -75,6 +78,19 @@ def _window_energy(
     }
     for interval in ledger.intervals:
         if interval.source_id in source_ids:
+            if interval.end.astimezone(UTC) <= start.astimezone(UTC) or interval.start.astimezone(
+                UTC
+            ) >= end.astimezone(UTC):
+                continue
+            if not (approximate or interval.estimated) and (
+                interval.start.astimezone(UTC) < billing_start.astimezone(UTC)
+                or interval.end.astimezone(UTC) > billing_end.astimezone(UTC)
+            ):
+                pending.add(
+                    f"{interval.source_id}: {interval.kwh} kWh cruzan el límite del ciclo; "
+                    "lectura conservada pendiente de reparto, sin estimar"
+                )
+                continue
             clipped = clip_interval(interval, start, end, approximate=approximate)
             if clipped is not None:
                 working.intervals.append(clipped)
@@ -89,7 +105,7 @@ def _window_energy(
         raise ConfigurationError("Duplicate billed source in configuration revision")
     groups = []
     identities = {}
-    warnings = set()
+    warnings = set(pending)
     measured = {interval.source_id for interval in working.intervals}
     discount = Decimal(str(config.get("energy_discount_percent", 0))) / 100
     for item in config["groups"]:
@@ -158,6 +174,7 @@ def _window_energy(
                         )
                     )
     aliases, samples, rates = working.billing_data(tuple(groups), approximate=approximate)
+    warnings.update(working.warnings)
     return aliases, samples, rates, identities, warnings
 
 
@@ -217,6 +234,8 @@ def calculate_contract(
             end,
             f"{index}:{start.isoformat()}",
             approximate=approximate,
+            billing_start=begin,
+            billing_end=finish,
         )
         aliases.extend(window_groups)
         samples.extend(window_samples)

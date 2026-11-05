@@ -52,7 +52,7 @@
       },
       "contract": {
         "title": "Nombre y periodo de factura",
-        "description": "Elige un nombre y el periodo que aparece en tu factura. El día de inicio corresponde al comienzo del consumo, no al día de pago. Si tu comercializadora varía las fechas, después podrás cerrar un rango real manualmente. Los precios y la potencia contratada se configuran en pasos separados.",
+        "description": "Elige un nombre y el periodo que aparece en tu factura. El día de inicio corresponde al comienzo del consumo, no al día de pago. Si tu comercializadora varía las fechas, después podrás cerrar un rango real manualmente. Los precios y la potencia contratada se configuran en pasos separados. Los cambios del calendario de facturación se aplican al terminar el ciclo abierto.",
         "data": {
           "contract_name": "Nombre del contrato",
           "billing_day": "Día de inicio del ciclo",
@@ -213,7 +213,7 @@
       },
       "contract": {
         "title": "Nombre y periodo de factura",
-        "description": "Elige un nombre y el periodo que aparece en tu factura. El día de inicio corresponde al comienzo del consumo, no al día de pago. Si tu comercializadora varía las fechas, después podrás cerrar un rango real manualmente. Los precios y la potencia contratada se configuran en pasos separados.",
+        "description": "Elige un nombre y el periodo que aparece en tu factura. El día de inicio corresponde al comienzo del consumo, no al día de pago. Si tu comercializadora varía las fechas, después podrás cerrar un rango real manualmente. Los precios y la potencia contratada se configuran en pasos separados. Los cambios del calendario de facturación se aplican al terminar el ciclo abierto.",
         "data": {
           "contract_name": "Nombre del contrato",
           "billing_day": "Día de inicio del ciclo",

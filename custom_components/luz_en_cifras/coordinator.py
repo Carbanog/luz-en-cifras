@@ -124,7 +124,7 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
                         if (
                             state
                             and state.last_updated <= saved_at
-                            and (now - state.last_updated).total_seconds()
+                            and (now - state.last_reported).total_seconds()
                             <= 60 * float(group.get("price_max_age_minutes", 65))
                         ):
                             continue
@@ -285,7 +285,7 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
                 value = Decimal(str(group["eur_per_kwh"]))
             elif mode == "entity":
                 state = self.hass.states.get(group.get("price_entity", ""))
-                age = (when - state.last_updated).total_seconds() if state else float("inf")
+                age = (when - state.last_reported).total_seconds() if state else float("inf")
                 max_age = 60 * float(group.get("price_max_age_minutes", 65))
                 if state and state.state not in {"unknown", "unavailable"} and age <= max_age:
                     try:
@@ -345,6 +345,77 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
             reported_at=state.last_reported if state else when,
             max_age_seconds=int(float(self.config.get("power_max_age_minutes", 5)) * 60),
         )
+        if self._period and self.ledger.intervals:
+            interval = self.ledger.last_interval(source)
+            if interval is not None:
+                boundary = datetime.combine(
+                    self._period.start, datetime.min.time(), ZoneInfo("Europe/Madrid")
+                )
+                if (
+                    interval.start.astimezone(UTC)
+                    < boundary.astimezone(UTC)
+                    <= interval.end.astimezone(UTC)
+                ):
+                    self._record_late_interval(interval)
+
+    def _record_late_interval(self, interval: MeasuredInterval) -> None:
+        """Add a revision for late boundary readings, leaving closed originals intact."""
+        periods: set[tuple[str, str]] = set()
+        for original in reversed(tuple(self.history)):
+            if original.get("reason") not in {"cycle_closed", "late_meter_reading"}:
+                continue
+            values = original.get("period")
+            if not values or not original.get("raw"):
+                continue
+            key = (values["start"], values["end"])
+            if key in periods:
+                continue
+            periods.add(key)
+            period = BillingPeriod(date.fromisoformat(key[0]), date.fromisoformat(key[1]))
+            start = datetime.combine(period.start, datetime.min.time(), ZoneInfo("Europe/Madrid"))
+            end = datetime.combine(period.end, datetime.min.time(), ZoneInfo("Europe/Madrid"))
+            if interval.start.astimezone(UTC) >= end.astimezone(UTC) or interval.end.astimezone(
+                UTC
+            ) <= start.astimezone(UTC):
+                continue
+            ledger = MeasurementLedger.restore(original["raw"])
+            if interval in ledger.intervals:
+                continue
+            ledger.intervals.append(interval)
+            calculation_warnings: tuple[str, ...] = ()
+            try:
+                result = calculate_contract(
+                    original["config"],
+                    ledger,
+                    period,
+                    period.end - timedelta(days=1),
+                    revisions=original.get("revisions"),
+                )
+                result = replace(
+                    result,
+                    quality=DataQuality.PARTIAL,
+                    warnings=(*result.warnings, *sorted(ledger.warnings)),
+                )
+                calculation_warnings = result.warnings
+                record = snapshot(result, original["config"])
+            except BillingError as err:
+                record = {
+                    "schema_version": 1,
+                    "result": None,
+                    "error": str(err),
+                    "config": deepcopy(original["config"]),
+                }
+            record.update(
+                id=f"{self.config['contract_id']}:late:{uuid4().hex}",
+                supersedes=original["id"],
+                reason="late_meter_reading",
+                closed_at=_now().isoformat(),
+                period=deepcopy(values),
+                raw=ledger.serialize(),
+                revisions=deepcopy(original.get("revisions", [])),
+                warnings=sorted(set(ledger.warnings) | set(calculation_warnings)),
+            )
+            self.history.append(record)
 
     def _collect_power(self, when: datetime) -> None:
         for source in self.source_ids:
@@ -361,7 +432,7 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
             int(self.config.get("billing_months", 1)),
             int(self.config.get("billing_anchor_month", 1)),
         )
-        if self._period == period:
+        if self._period and today < self._period.end:
             return
         if self._period:
             boundary = datetime.combine(
@@ -371,8 +442,16 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
                 self.ledger.advance_power(
                     source, boundary, int(float(self.config.get("power_max_age_minutes", 5)) * 60)
                 )
+            for source in tuple(self.ledger.baselines):
+                state = self.hass.states.get(source)
+                if state and state.last_reported.astimezone(UTC) <= boundary.astimezone(UTC):
+                    self._collect_source(source, boundary, state)
             self._archive("cycle_closed")
-            self.ledger = MeasurementLedger()
+            self.ledger = self.ledger.next_cycle(boundary)
+            # A calendar edit is effective after the open cycle. A shortened
+            # transition period must not overlap days already invoiced.
+            if period.start < self._period.end < period.end:
+                period = BillingPeriod(self._period.end, period.end)
         self._period = period
         # One event instant must govern both prices and measurement cursors.
         # Reading the clock again here used to leave startup microsecond gaps.
