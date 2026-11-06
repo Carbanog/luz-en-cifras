@@ -9,8 +9,9 @@ from typing import Any
 
 from .errors import ConfigurationError
 from .history import json_safe
-from .intervals import MeasuredInterval, allocate_interval
+from .intervals import MeasuredInterval, allocate_interval, clip_interval, common_coverage
 from .models import ConsumptionGroup, EnergyRate, EnergySample
+from .prices import PriceIndex
 
 
 class MeasurementLedger:
@@ -186,6 +187,7 @@ class MeasurementLedger:
         if any(value > 1 for value in coefficients.values()):
             raise ConfigurationError("Duplicate billed source")
         rates = (*self.rates, *extra_rates)
+        price_index = PriceIndex(rates)
         samples: list[EnergySample] = []
         aliases: list[ConsumptionGroup] = []
         for group in groups:
@@ -193,6 +195,52 @@ class MeasurementLedger:
             def alias(source: str, group_id: str = group.group_id) -> str:
                 return f"{group_id}|{source}"
 
+            selected = [
+                interval
+                for interval in self.intervals
+                if interval.source_id in (*group.add_sources, *group.subtract_sources)
+            ]
+            if group.subtract_sources:
+                sources = (*group.add_sources, *group.subtract_sources)
+                selected.sort(key=lambda item: (item.source_id, item.start.astimezone(UTC)))
+                original = selected
+                while True:
+                    coverage = {
+                        source: [item for item in selected if item.source_id == source]
+                        for source in sources
+                    }
+                    if any(not intervals for intervals in coverage.values()):
+                        selected = []
+                        break
+                    aligned = []
+                    for left, right in common_coverage(coverage):
+                        for interval in selected:
+                            if (
+                                interval.end.astimezone(UTC) <= left
+                                or interval.start.astimezone(UTC) >= right
+                            ):
+                                continue
+                            if not (approximate or interval.estimated) and (
+                                interval.start.astimezone(UTC) < left
+                                or interval.end.astimezone(UTC) > right
+                            ):
+                                continue
+                            clipped = clip_interval(interval, left, right, approximate=approximate)
+                            if clipped is not None:
+                                aligned.append(clipped)
+                    aligned.sort(key=lambda item: (item.source_id, item.start.astimezone(UTC)))
+                    if aligned == selected:
+                        break
+                    # Dropping an unsplittable tail can move the common horizon
+                    # again. Recheck every source before comparing residuals.
+                    selected = aligned
+                if not selected:
+                    self.warnings.add(f"{group.name}: esperando cobertura común de contadores")
+                    continue
+                if selected != original:
+                    self.warnings.add(
+                        f"{group.name}: consumos fuera de la cobertura común pendientes"
+                    )
             aliases.append(
                 ConsumptionGroup(
                     group.group_id,
@@ -201,18 +249,37 @@ class MeasurementLedger:
                     tuple(alias(source) for source in group.subtract_sources),
                 )
             )
-            for interval in self.intervals:
-                if interval.source_id not in (*group.add_sources, *group.subtract_sources):
-                    continue
+            for interval in selected:
                 samples.extend(
                     allocate_interval(
                         replace(interval, source_id=alias(interval.source_id)),
-                        rates,
+                        price_index.window(group.group_id, interval.start, interval.end),
                         group.group_id,
                         allow_uniform_estimate=approximate,
                     )
                 )
         return tuple(aliases), tuple(samples), tuple(rates)
+
+    def next_cycle(self, boundary: datetime) -> MeasurementLedger:
+        """Carry real meter cursors over a cycle; never reset an unread delta."""
+        following = MeasurementLedger()
+        following.baselines = dict(self.baselines)
+        following.input_kinds = dict(self.input_kinds)
+        following.power_samples = dict(self.power_samples)
+        following.pending_energy_sources = dict(self.pending_energy_sources)
+        following.rates = [
+            rate
+            for rate in self.rates
+            if rate.valid_to is None or rate.valid_to.astimezone(UTC) > boundary.astimezone(UTC)
+        ]
+        for interval in self.intervals:
+            if interval.end.astimezone(UTC) > boundary.astimezone(UTC):
+                following._append_interval(interval)
+        return following
+
+    def last_interval(self, source: str) -> MeasuredInterval | None:
+        index = self._last_interval.get(source)
+        return self.intervals[index] if index is not None else None
 
     def serialize(self) -> dict[str, Any]:
         return {

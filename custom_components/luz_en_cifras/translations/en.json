@@ -3,362 +3,362 @@
   "config": {
     "step": {
       "modality": {
-        "title": "1. ¿Cómo te cobran la energía?",
-        "description": "Mira el apartado Energía consumida de tu factura. Precio fijo: pagas el mismo €/kWh a cualquier hora. Tres precios: tu contrato indica importes distintos para punta, llano y valle. Precio variable: el precio cambia por horas u otros intervalos, como en PVPC o una tarifa indexada. Mercado libre no significa necesariamente precio fijo: también puede tener tres precios o ser indexado. Cada grupo (por ejemplo Casa y Coche) podrá tener su propia modalidad y precios. PVPC directo consulta Red Eléctrica sin otra integración de HA; la opción de sensor permite seguir usando una entidad existente.",
+        "title": "1. How is your electricity priced?",
+        "description": "Check the energy section of your bill. Fixed price: the same price per kWh at any time. Three prices: different peak, shoulder and off-peak prices. Variable: prices change hourly or at other intervals, as in PVPC or indexed contracts. A free-market contract is not necessarily fixed-price. Each group, such as Home and Car, can have its own tariff and prices. Direct PVPC queries Red Electrica without another HA integration; the sensor option uses an existing price entity.",
         "data": {
-          "default_tariff_mode": "Modalidad de la energía de tu contrato"
+          "default_tariff_mode": "Energy tariff in your contract"
         }
       },
       "cycle_anchor": {
-        "title": "¿En qué mes comienza tu ciclo de dos meses?",
-        "description": "Solo para facturación bimestral. Mira el inicio de un periodo en tu factura e introduce su mes: enero = 1, febrero = 2, etc. Por ejemplo, si empieza el 15 de febrero y termina el 15 de abril, el mes de referencia es 2. No es el mes de emisión de la factura.",
+        "title": "Which month starts your two-month billing cycle?",
+        "description": "Only for billing every two months. Enter the month in which a consumption period starts: January = 1, February = 2, etc. For a period from 15 February to 15 April, enter 2. This is not the invoice issue month.",
         "data": {
-          "billing_anchor_month": "Mes en que empieza un periodo de consumo de tu factura (1–12)"
+          "billing_anchor_month": "Month in which a consumption period starts (1–12)"
         }
       },
       "power_unit": {
-        "title": "Potencia contratada: localiza la unidad en tu factura",
-        "description": "La energía (kWh) es lo que consumes; la potencia contratada (kW) es la capacidad que tienes contratada y genera un coste fijo. En 2.0TD se indican dos potencias: P1 punta y P2 valle, aunque la energía tenga tres precios o sea PVPC. Mira Datos del contrato o Término de potencia y elige la unidad del precio. No uses los W de tus sensores ni el total en euros de la línea.",
+        "title": "Contracted power: find the unit on your bill",
+        "description": "Energy (kWh) measures consumption; contracted power (kW) is the capacity you pay a fixed charge for. 2.0TD has two contracted power periods: P1 peak and P2 off-peak, even if energy has three prices or uses PVPC. Find the power section and select the price unit. Do not use sensor readings in W or the total line amount.",
         "data": {
-          "power_price_unit": "¿Cómo aparece el precio de potencia en tu factura o contrato?"
+          "power_price_unit": "How is the power price expressed in your bill or contract?"
         }
       },
       "power": {
-        "title": "Potencias y costes fijos de tu factura",
-        "description": "Copia los datos de tu factura, no los valores de los sensores. P1 es la potencia contratada para punta y llano; P2, para valle. Puedes tener, por ejemplo, 4,6 kW en ambas: si tu factura indica la misma cifra, repítela. No son los tres precios de energía. Los precios de potencia de este paso están en {power_price_unit}, sin impuestos. Se acumulan hasta hoy incluido. No pongas cero por desconocer un dato: reduciría indebidamente la estimación.",
+        "title": "Contracted power and fixed charges",
+        "description": "Copy the bill values, not sensor readings. P1 is contracted power for peak and shoulder hours; P2 is for off-peak hours. Both may be 4.6 kW: repeat the value if your contract says so. These are not the three energy prices. Power prices in this step use {power_price_unit}, before tax. Charges accrue through today inclusive. Do not enter zero for an unknown value, as this would underestimate costs.",
         "data": {
-          "power_p1_kw": "Potencia CONTRATADA punta P1 (kW)",
-          "power_p2_kw": "Potencia CONTRATADA valle P2 (kW)",
-          "power_p1_eur_per_kw_day": "Precio de potencia P1 sin impuestos (unidad elegida antes)",
-          "power_p2_eur_per_kw_day": "Precio de potencia P2 sin impuestos (unidad elegida antes)",
-          "meter_rental_daily": "Alquiler del contador sin impuestos (€/día)"
+          "power_p1_kw": "CONTRACTED peak power P1 (kW)",
+          "power_p2_kw": "CONTRACTED off-peak power P2 (kW)",
+          "power_p1_eur_per_kw_day": "Power price P1 before tax (previously selected unit)",
+          "power_p2_eur_per_kw_day": "Power price P2 before tax (previously selected unit)",
+          "meter_rental_daily": "Meter rental before tax (€/day)"
         },
         "data_description": {
-          "power_p1_kw": "En Datos del contrato o Potencia contratada. Ejemplo: 4,6 kW. No es el consumo en kWh ni la lectura instantánea en W.",
-          "power_p2_kw": "Copia la potencia del periodo valle. Puede ser igual o distinta de P1; no se deduce de tus sensores.",
-          "power_p1_eur_per_kw_day": "Precio unitario de P1, no el importe total. Respeta la unidad seleccionada en el paso anterior.",
-          "power_p2_eur_per_kw_day": "Precio unitario de P2. No copies aquí el precio de la energía en €/kWh.",
-          "meter_rental_daily": "Si solo figura un importe de alquiler por periodo, divídelo por los días facturados. Cero solo si realmente no te lo cobran."
+          "power_p1_kw": "Find Contract details or Contracted power. Example: 4.6 kW. This is neither consumption in kWh nor instantaneous power in W.",
+          "power_p2_kw": "Copy the off-peak contracted power. It can differ from P1; it cannot be inferred from sensors.",
+          "power_p1_eur_per_kw_day": "Unit price for P1, not its total amount. Use the unit selected in the previous step.",
+          "power_p2_eur_per_kw_day": "Unit price for P2. Do not enter the energy price in €/kWh here.",
+          "meter_rental_daily": "If the bill only gives the rental total, divide it by the billed days. Use zero only if rental is genuinely free."
         }
       },
       "advanced": {
-        "title": "Ajustes avanzados de medición",
-        "description": "Puedes conservar los valores predeterminados si no necesitas cambiarlos. El reparto temporal solo estima cuándo se consumió un incremento Wh/kWh que cruza precios. La caducidad de W/kW debe ajustarse a la frecuencia real de reporte del dispositivo. No cambia la potencia contratada ni la modalidad de tarifa.",
+        "title": "Advanced measurement settings",
+        "description": "Keep the defaults unless you need to change them. Time allocation estimates when a Wh/kWh increment crossing prices was consumed. Set the W/kW timeout to match the device reporting frequency. This does not change contracted power or tariff type.",
         "data": {
-          "approximate_intervals": "Permitir reparto temporal estimado cuando un contador cruza precios",
-          "show_secondary_entities": "Mostrar sensores de desglose y grupos",
-          "power_max_age_minutes": "Detener la integración de W/kW tras este tiempo sin reportes (minutos)"
+          "approximate_intervals": "Allow estimated time allocation when a counter crosses prices",
+          "show_secondary_entities": "Show breakdown and group sensors",
+          "power_max_age_minutes": "Stop integrating W/kW after this time without reports (minutes)"
         }
       },
       "contract": {
-        "title": "Nombre y periodo de factura",
-        "description": "Elige un nombre y el periodo que aparece en tu factura. El día de inicio corresponde al comienzo del consumo, no al día de pago. Si tu comercializadora varía las fechas, después podrás cerrar un rango real manualmente. Los precios y la potencia contratada se configuran en pasos separados.",
+        "title": "Contract name and billing period",
+        "description": "Choose a name and the consumption period on your bill. The start day is the consumption start, not the payment day. If your supplier varies dates, you can later close an actual date range manually. Prices and contracted power are configured separately. Changes to the billing calendar take effect after the current cycle ends.",
         "data": {
-          "contract_name": "Nombre del contrato",
-          "billing_day": "Día de inicio del ciclo",
-          "billing_months": "¿Te facturan cada mes o cada dos meses?"
+          "contract_name": "Contract name",
+          "billing_day": "Billing cycle start day",
+          "billing_months": "Are you billed monthly or every two months?"
         }
       },
       "menu": {
-        "title": "Configurar contrato",
-        "description": "Elige los módulos que necesitas. Puedes volver a estas opciones después de guardar.",
+        "title": "Configure contract",
+        "description": "Choose the modules you need. You can return to these options after saving.",
         "menu_options": {
-          "contract": "Nombre y periodo de factura",
-          "power_unit": "Potencia contratada y alquiler (datos de la factura)",
-          "advanced": "Ajustes avanzados de medición",
-          "add_group": "Añadir grupo de consumo",
-          "select_group": "Editar o eliminar un grupo",
-          "extras": "Descuentos, servicios y excedentes",
-          "finish": "Revisar validación y guardar",
-          "fiscal": "Impuestos de la factura"
+          "contract": "Contract name and billing period",
+          "power_unit": "Contracted power and rental (from your bill)",
+          "advanced": "Advanced measurement settings",
+          "add_group": "Add consumption group",
+          "select_group": "Edit or remove a group",
+          "extras": "Discounts, services and exported energy",
+          "finish": "Validate and save",
+          "fiscal": "Invoice taxes"
         }
       },
       "select_group": {
-        "title": "Elegir grupo",
+        "title": "Select group",
         "data": {
-          "group_id": "Grupo que quieres editar"
+          "group_id": "Group to edit"
         }
       },
       "group": {
-        "title": "Consumo y tarifa del grupo",
-        "description": "Selecciona uno o varios sensores W/kW o Wh/kWh: se detectan por su unidad y puedes combinarlos. W/kW se convierte en energía estimada con la última potencia conocida, hasta su caducidad; no requiere ayudantes. No selecciones a la vez un sensor de potencia y su contador derivado: duplicaría consumo. Cada grupo tiene su tarifa. Puedes cambiar sensores o tarifas conservando lo acumulado en la misma factura. Un contador nuevo espera un reporte real de referencia; un grupo sin mediciones queda desconocido.",
+        "title": "Group consumption and tariff",
+        "description": "Select one or more W/kW or Wh/kWh sensors. Units are detected automatically and may be combined. W/kW is converted to estimated energy using the last known power until its timeout; no helper is required. Do not select both power and a derived energy counter for the same circuit. Each group has its own tariff. Changing sensors or tariffs preserves accrued consumption in the same invoice. A new counter waits for a genuine baseline report; groups without measurements remain unknown.",
         "data": {
-          "group_name": "Nombre",
-          "add_sources": "Sensores que suman (W/kW o Wh/kWh)",
-          "subtract_sources": "Subcontadores incluidos que se restan",
-          "tariff_mode": "Modalidad de tarifa",
-          "eur_per_kwh": "Precio fijo sin impuestos (€/kWh)",
-          "p1_price": "Precio punta P1 (€/kWh)",
-          "p2_price": "Precio llano P2 (€/kWh)",
-          "p3_price": "Precio valle P3 (€/kWh)",
-          "price_entity": "Entidad de precio sin impuestos (€/kWh o €/MWh)",
-          "price_markup": "Margen adicional para precio dinámico (€/kWh)",
-          "delete_group": "Eliminar este grupo al guardar"
+          "group_name": "Name",
+          "add_sources": "Sensors to add (W/kW or Wh/kWh)",
+          "subtract_sources": "Included submeters to subtract",
+          "tariff_mode": "Tariff type",
+          "eur_per_kwh": "Fixed price before tax (€/kWh)",
+          "p1_price": "Peak price P1 (€/kWh)",
+          "p2_price": "Shoulder price P2 (€/kWh)",
+          "p3_price": "Off-peak price P3 (€/kWh)",
+          "price_entity": "Price entity before tax (€/kWh or €/MWh)",
+          "price_markup": "Additional variable-price markup (€/kWh)",
+          "delete_group": "Remove this group when saving"
         }
       },
       "extras": {
-        "title": "Conceptos opcionales",
-        "description": "Deja cero los módulos que no necesites. El impuesto de servicios se configura aparte del de energía. La compensación requiere un contador de exportación independiente y ciclo mensual; usa el precio acordado y queda limitada al valor de energía importada. No activa batería virtual ni bono social.",
+        "title": "Optional charges",
+        "description": "Leave unused modules at zero. Service tax is configured separately from energy tax. Export compensation requires a separate export counter and a monthly cycle; use the agreed price, capped at the value of imported energy. This does not enable virtual batteries or social tariff eligibility.",
         "data": {
-          "daily_fee": "Cuota adicional sin impuestos (€/día)",
-          "invoice_fee": "Servicio sin IVA (€/factura)",
-          "energy_discount_percent": "Descuento sobre energía (%)",
-          "daily_fee_electricity_taxable": "La cuota diaria tributa por impuesto eléctrico",
-          "enable_surplus": "Activar compensación simplificada de excedentes",
-          "export_source": "Sensor independiente de exportación (W/kW o Wh/kWh)",
-          "surplus_price": "Precio de compensación acordado (€/kWh)",
-          "fees_tax_percent": "Impuesto indirecto sobre los servicios adicionales (%)"
+          "daily_fee": "Additional charge before tax (€/day)",
+          "invoice_fee": "Service before VAT (€/invoice)",
+          "energy_discount_percent": "Energy discount (%)",
+          "daily_fee_electricity_taxable": "The daily charge is subject to electricity tax",
+          "enable_surplus": "Enable simplified export compensation",
+          "export_source": "Separate export sensor (W/kW or Wh/kWh)",
+          "surplus_price": "Agreed compensation price (€/kWh)",
+          "fees_tax_percent": "Indirect tax on additional services (%)"
         }
       },
       "finish": {
-        "title": "Revisar configuración",
-        "description": "Corrige el problema indicado. Pulsa continuar para volver al menú sin perder los cambios."
+        "title": "Review configuration",
+        "description": "Correct the indicated problem. Continue to return to the menu without losing changes."
       },
       "tariff": {
-        "title": "Precios del grupo",
-        "description": "PVPC directo descarga el precio horario FEU sin impuestos de Red Eléctrica para Península/Baleares: no necesitas otra integración, un sensor de precio ni introducir importes. Requiere Internet; guarda las horas publicadas y no extrapola las ausentes. En las otras modalidades introduce precios sin impuestos o selecciona la entidad contractual completa, no OMIE. Los cruces de lecturas acumuladas entre precios requieren autorizar el reparto temporal parcial.",
+        "title": "Group prices",
+        "description": "Direct PVPC downloads Red Electrica hourly FEU prices before tax for mainland Spain/Balearic Islands, without another integration or a price sensor. Internet is required; published hours are cached and missing hours are never extrapolated. For other modes, enter pre-tax prices or select a complete contractual price entity, not OMIE alone. Counter readings crossing different prices require consent to partial time allocation.",
         "data": {
-          "eur_per_kwh": "Precio fijo sin impuestos (€/kWh)",
-          "p1_price": "Punta P1 (€/kWh)",
-          "p2_price": "Llano P2 (€/kWh)",
-          "p3_price": "Valle P3 (€/kWh)",
-          "price_entity": "Entidad de precio sin impuestos (€/kWh o €/MWh)",
-          "price_markup": "Margen adicional (€/kWh)",
-          "price_max_age_minutes": "Caducidad de una cotización sin actualizar (minutos)"
+          "eur_per_kwh": "Fixed price before tax (€/kWh)",
+          "p1_price": "Peak P1 (€/kWh)",
+          "p2_price": "Shoulder P2 (€/kWh)",
+          "p3_price": "Off-peak P3 (€/kWh)",
+          "price_entity": "Price entity before tax (€/kWh or €/MWh)",
+          "price_markup": "Additional markup (€/kWh)",
+          "price_max_age_minutes": "Quote expiry without reports (minutes)"
         }
       },
       "fiscal": {
-        "title": "Impuestos de tu factura",
-        "description": "Introduce los porcentajes de tu factura, no sus importes en euros. Son valores manuales: permanecen hasta que tú los cambies y no necesitan Internet. Los valores sugeridos deben revisarse; no se actualizan automáticamente. Al guardar, se aplican al total de la factura abierta. Las facturas cerradas conservan su desglose.",
+        "title": "Taxes on your invoice",
+        "description": "Enter tax percentages, not euro amounts. Values are manual, remain until you change them and need no Internet. Review suggested values; they are not updated automatically. Saving applies them to the open invoice. Closed invoices retain their breakdown.",
         "data": {
-          "tax_electricity_percent": "Impuesto eléctrico (%)",
-          "tax_indirect_percent": "IVA / impuesto indirecto (%)",
-          "tax_minimum_eur_mwh": "Mínimo de impuesto eléctrico (€/MWh)",
-          "tax_rules_confirmed": "He revisado estos valores con mi factura o contrato"
+          "tax_electricity_percent": "Electricity tax (%)",
+          "tax_indirect_percent": "VAT / indirect tax (%)",
+          "tax_minimum_eur_mwh": "Minimum electricity tax (€/MWh)",
+          "tax_rules_confirmed": "I checked these values against my bill or contract"
         },
         "data_description": {
-          "tax_electricity_percent": "Porcentaje de la línea Impuesto sobre la Electricidad. Por ejemplo, 5,11269632, no el importe cobrado.",
-          "tax_indirect_percent": "Porcentaje de IVA de tu factura. Por ejemplo, 21 significa 21 %, no 0,21. Se añade a los precios sin impuestos.",
-          "tax_minimum_eur_mwh": "Se aplica el mayor entre el porcentaje y este mínimo por energía. 1 €/MWh equivale a 0,001 €/kWh. Revisa el mínimo aplicable; cero solo si corresponde.",
-          "tax_rules_confirmed": "Los porcentajes y el mínimo son responsabilidad de la configuración manual; podrás cambiarlos después."
+          "tax_electricity_percent": "Percentage on the electricity tax line, for example 5.11269632, not the amount charged.",
+          "tax_indirect_percent": "VAT percentage on your bill. For example, 21 means 21%, not 0.21. It is added to pre-tax prices.",
+          "tax_minimum_eur_mwh": "The larger of the percentage calculation and this energy minimum applies. 1 €/MWh equals 0.001 €/kWh. Check the applicable minimum; use zero only if appropriate.",
+          "tax_rules_confirmed": "You are responsible for these manually configured percentages and minimum. They can be edited later."
         }
       }
     },
     "error": {
-      "whole_number": "Introduce un número entero dentro del rango indicado; no admite decimales.",
-      "empty_name": "Introduce un nombre.",
-      "empty_group": "El grupo requiere nombre y al menos un contador.",
-      "source_overlap": "No puedes sumar y restar el mismo sensor dentro de un grupo.",
-      "invalid_units": "Selecciona sensores existentes con unidad W, kW, Wh o kWh. No se deduce la unidad por el nombre.",
-      "missing_price_entity": "Selecciona una entidad de precio para la tarifa dinámica.",
-      "invalid_price_units": "La entidad debe indicar €/kWh, EUR/kWh, €/MWh o EUR/MWh.",
-      "missing_groups": "Añade al menos un grupo antes de guardar.",
-      "duplicate_sources": "Los grupos facturarían el mismo consumo más de una vez. Revisa las sumas y restas.",
-      "invalid_surplus": "La compensación requiere ciclo mensual y un sensor de exportación W/kW o Wh/kWh distinto de los de consumo.",
-      "invalid_tax_profile": "Revisa y confirma los impuestos. Los porcentajes deben estar entre 0 y 100 y el mínimo no puede ser negativo."
+      "whole_number": "Enter a whole number within the indicated range; decimals are not accepted.",
+      "empty_name": "Enter a name.",
+      "empty_group": "A group needs a name and at least one counter.",
+      "source_overlap": "The same sensor cannot be added and subtracted within one group.",
+      "invalid_units": "Select existing sensors with W, kW, Wh or kWh units. Units are not inferred from names.",
+      "missing_price_entity": "Select a price entity for the variable tariff.",
+      "invalid_price_units": "The entity must use €/kWh, EUR/kWh, €/MWh or EUR/MWh.",
+      "missing_groups": "Add at least one group before saving.",
+      "duplicate_sources": "Groups would bill the same energy more than once. Check additions and subtractions.",
+      "invalid_surplus": "Compensation requires a monthly cycle and a separate W/kW or Wh/kWh export sensor.",
+      "invalid_tax_profile": "Review and confirm taxes. Percentages must be between 0 and 100 and the minimum cannot be negative."
     },
     "abort": {
-      "already_configured": "Este contrato ya existe."
+      "already_configured": "This contract already exists."
     }
   },
   "options": {
     "step": {
       "modality": {
-        "title": "1. ¿Cómo te cobran la energía?",
-        "description": "Mira el apartado Energía consumida de tu factura. Precio fijo: pagas el mismo €/kWh a cualquier hora. Tres precios: tu contrato indica importes distintos para punta, llano y valle. Precio variable: el precio cambia por horas u otros intervalos, como en PVPC o una tarifa indexada. Mercado libre no significa necesariamente precio fijo: también puede tener tres precios o ser indexado. Cada grupo (por ejemplo Casa y Coche) podrá tener su propia modalidad y precios. PVPC directo consulta Red Eléctrica sin otra integración de HA; la opción de sensor permite seguir usando una entidad existente.",
+        "title": "1. How is your electricity priced?",
+        "description": "Check the energy section of your bill. Fixed price: the same price per kWh at any time. Three prices: different peak, shoulder and off-peak prices. Variable: prices change hourly or at other intervals, as in PVPC or indexed contracts. A free-market contract is not necessarily fixed-price. Each group, such as Home and Car, can have its own tariff and prices. Direct PVPC queries Red Electrica without another HA integration; the sensor option uses an existing price entity.",
         "data": {
-          "default_tariff_mode": "Modalidad de la energía de tu contrato"
+          "default_tariff_mode": "Energy tariff in your contract"
         }
       },
       "cycle_anchor": {
-        "title": "¿En qué mes comienza tu ciclo de dos meses?",
-        "description": "Solo para facturación bimestral. Mira el inicio de un periodo en tu factura e introduce su mes: enero = 1, febrero = 2, etc. Por ejemplo, si empieza el 15 de febrero y termina el 15 de abril, el mes de referencia es 2. No es el mes de emisión de la factura.",
+        "title": "Which month starts your two-month billing cycle?",
+        "description": "Only for billing every two months. Enter the month in which a consumption period starts: January = 1, February = 2, etc. For a period from 15 February to 15 April, enter 2. This is not the invoice issue month.",
         "data": {
-          "billing_anchor_month": "Mes en que empieza un periodo de consumo de tu factura (1–12)"
+          "billing_anchor_month": "Month in which a consumption period starts (1–12)"
         }
       },
       "power_unit": {
-        "title": "Potencia contratada: localiza la unidad en tu factura",
-        "description": "La energía (kWh) es lo que consumes; la potencia contratada (kW) es la capacidad que tienes contratada y genera un coste fijo. En 2.0TD se indican dos potencias: P1 punta y P2 valle, aunque la energía tenga tres precios o sea PVPC. Mira Datos del contrato o Término de potencia y elige la unidad del precio. No uses los W de tus sensores ni el total en euros de la línea.",
+        "title": "Contracted power: find the unit on your bill",
+        "description": "Energy (kWh) measures consumption; contracted power (kW) is the capacity you pay a fixed charge for. 2.0TD has two contracted power periods: P1 peak and P2 off-peak, even if energy has three prices or uses PVPC. Find the power section and select the price unit. Do not use sensor readings in W or the total line amount.",
         "data": {
-          "power_price_unit": "¿Cómo aparece el precio de potencia en tu factura o contrato?"
+          "power_price_unit": "How is the power price expressed in your bill or contract?"
         }
       },
       "power": {
-        "title": "Potencias y costes fijos de tu factura",
-        "description": "Copia los datos de tu factura, no los valores de los sensores. P1 es la potencia contratada para punta y llano; P2, para valle. Puedes tener, por ejemplo, 4,6 kW en ambas: si tu factura indica la misma cifra, repítela. No son los tres precios de energía. Los precios de potencia de este paso están en {power_price_unit}, sin impuestos. Se acumulan hasta hoy incluido. No pongas cero por desconocer un dato: reduciría indebidamente la estimación.",
+        "title": "Contracted power and fixed charges",
+        "description": "Copy the bill values, not sensor readings. P1 is contracted power for peak and shoulder hours; P2 is for off-peak hours. Both may be 4.6 kW: repeat the value if your contract says so. These are not the three energy prices. Power prices in this step use {power_price_unit}, before tax. Charges accrue through today inclusive. Do not enter zero for an unknown value, as this would underestimate costs.",
         "data": {
-          "power_p1_kw": "Potencia CONTRATADA punta P1 (kW)",
-          "power_p2_kw": "Potencia CONTRATADA valle P2 (kW)",
-          "power_p1_eur_per_kw_day": "Precio de potencia P1 sin impuestos (unidad elegida antes)",
-          "power_p2_eur_per_kw_day": "Precio de potencia P2 sin impuestos (unidad elegida antes)",
-          "meter_rental_daily": "Alquiler del contador sin impuestos (€/día)"
+          "power_p1_kw": "CONTRACTED peak power P1 (kW)",
+          "power_p2_kw": "CONTRACTED off-peak power P2 (kW)",
+          "power_p1_eur_per_kw_day": "Power price P1 before tax (previously selected unit)",
+          "power_p2_eur_per_kw_day": "Power price P2 before tax (previously selected unit)",
+          "meter_rental_daily": "Meter rental before tax (€/day)"
         },
         "data_description": {
-          "power_p1_kw": "En Datos del contrato o Potencia contratada. Ejemplo: 4,6 kW. No es el consumo en kWh ni la lectura instantánea en W.",
-          "power_p2_kw": "Copia la potencia del periodo valle. Puede ser igual o distinta de P1; no se deduce de tus sensores.",
-          "power_p1_eur_per_kw_day": "Precio unitario de P1, no el importe total. Respeta la unidad seleccionada en el paso anterior.",
-          "power_p2_eur_per_kw_day": "Precio unitario de P2. No copies aquí el precio de la energía en €/kWh.",
-          "meter_rental_daily": "Si solo figura un importe de alquiler por periodo, divídelo por los días facturados. Cero solo si realmente no te lo cobran."
+          "power_p1_kw": "Find Contract details or Contracted power. Example: 4.6 kW. This is neither consumption in kWh nor instantaneous power in W.",
+          "power_p2_kw": "Copy the off-peak contracted power. It can differ from P1; it cannot be inferred from sensors.",
+          "power_p1_eur_per_kw_day": "Unit price for P1, not its total amount. Use the unit selected in the previous step.",
+          "power_p2_eur_per_kw_day": "Unit price for P2. Do not enter the energy price in €/kWh here.",
+          "meter_rental_daily": "If the bill only gives the rental total, divide it by the billed days. Use zero only if rental is genuinely free."
         }
       },
       "advanced": {
-        "title": "Ajustes avanzados de medición",
-        "description": "Puedes conservar los valores predeterminados si no necesitas cambiarlos. El reparto temporal solo estima cuándo se consumió un incremento Wh/kWh que cruza precios. La caducidad de W/kW debe ajustarse a la frecuencia real de reporte del dispositivo. No cambia la potencia contratada ni la modalidad de tarifa.",
+        "title": "Advanced measurement settings",
+        "description": "Keep the defaults unless you need to change them. Time allocation estimates when a Wh/kWh increment crossing prices was consumed. Set the W/kW timeout to match the device reporting frequency. This does not change contracted power or tariff type.",
         "data": {
-          "approximate_intervals": "Permitir reparto temporal estimado cuando un contador cruza precios",
-          "show_secondary_entities": "Mostrar sensores de desglose y grupos",
-          "power_max_age_minutes": "Detener la integración de W/kW tras este tiempo sin reportes (minutos)"
+          "approximate_intervals": "Allow estimated time allocation when a counter crosses prices",
+          "show_secondary_entities": "Show breakdown and group sensors",
+          "power_max_age_minutes": "Stop integrating W/kW after this time without reports (minutes)"
         }
       },
       "contract": {
-        "title": "Nombre y periodo de factura",
-        "description": "Elige un nombre y el periodo que aparece en tu factura. El día de inicio corresponde al comienzo del consumo, no al día de pago. Si tu comercializadora varía las fechas, después podrás cerrar un rango real manualmente. Los precios y la potencia contratada se configuran en pasos separados.",
+        "title": "Contract name and billing period",
+        "description": "Choose a name and the consumption period on your bill. The start day is the consumption start, not the payment day. If your supplier varies dates, you can later close an actual date range manually. Prices and contracted power are configured separately. Changes to the billing calendar take effect after the current cycle ends.",
         "data": {
-          "contract_name": "Nombre del contrato",
-          "billing_day": "Día de inicio del ciclo",
-          "billing_months": "¿Te facturan cada mes o cada dos meses?"
+          "contract_name": "Contract name",
+          "billing_day": "Billing cycle start day",
+          "billing_months": "Are you billed monthly or every two months?"
         }
       },
       "menu": {
-        "title": "Configurar contrato",
-        "description": "Elige los módulos que necesitas. Puedes volver a estas opciones después de guardar.",
+        "title": "Configure contract",
+        "description": "Choose the modules you need. You can return to these options after saving.",
         "menu_options": {
-          "contract": "Nombre y periodo de factura",
-          "power_unit": "Potencia contratada y alquiler (datos de la factura)",
-          "advanced": "Ajustes avanzados de medición",
-          "add_group": "Añadir grupo de consumo",
-          "select_group": "Editar o eliminar un grupo",
-          "extras": "Descuentos, servicios y excedentes",
-          "finish": "Revisar validación y guardar",
-          "fiscal": "Impuestos de la factura"
+          "contract": "Contract name and billing period",
+          "power_unit": "Contracted power and rental (from your bill)",
+          "advanced": "Advanced measurement settings",
+          "add_group": "Add consumption group",
+          "select_group": "Edit or remove a group",
+          "extras": "Discounts, services and exported energy",
+          "finish": "Validate and save",
+          "fiscal": "Invoice taxes"
         }
       },
       "select_group": {
-        "title": "Elegir grupo",
+        "title": "Select group",
         "data": {
-          "group_id": "Grupo que quieres editar"
+          "group_id": "Group to edit"
         }
       },
       "group": {
-        "title": "Consumo y tarifa del grupo",
-        "description": "Selecciona uno o varios sensores W/kW o Wh/kWh: se detectan por su unidad y puedes combinarlos. W/kW se convierte en energía estimada con la última potencia conocida, hasta su caducidad; no requiere ayudantes. No selecciones a la vez un sensor de potencia y su contador derivado: duplicaría consumo. Cada grupo tiene su tarifa. Puedes cambiar sensores o tarifas conservando lo acumulado en la misma factura. Un contador nuevo espera un reporte real de referencia; un grupo sin mediciones queda desconocido.",
+        "title": "Group consumption and tariff",
+        "description": "Select one or more W/kW or Wh/kWh sensors. Units are detected automatically and may be combined. W/kW is converted to estimated energy using the last known power until its timeout; no helper is required. Do not select both power and a derived energy counter for the same circuit. Each group has its own tariff. Changing sensors or tariffs preserves accrued consumption in the same invoice. A new counter waits for a genuine baseline report; groups without measurements remain unknown.",
         "data": {
-          "group_name": "Nombre",
-          "add_sources": "Sensores que suman (W/kW o Wh/kWh)",
-          "subtract_sources": "Subcontadores incluidos que se restan",
-          "tariff_mode": "Modalidad de tarifa",
-          "eur_per_kwh": "Precio fijo sin impuestos (€/kWh)",
-          "p1_price": "Precio punta P1 (€/kWh)",
-          "p2_price": "Precio llano P2 (€/kWh)",
-          "p3_price": "Precio valle P3 (€/kWh)",
-          "price_entity": "Entidad de precio sin impuestos (€/kWh o €/MWh)",
-          "price_markup": "Margen adicional para precio dinámico (€/kWh)",
-          "delete_group": "Eliminar este grupo al guardar"
+          "group_name": "Name",
+          "add_sources": "Sensors to add (W/kW or Wh/kWh)",
+          "subtract_sources": "Included submeters to subtract",
+          "tariff_mode": "Tariff type",
+          "eur_per_kwh": "Fixed price before tax (€/kWh)",
+          "p1_price": "Peak price P1 (€/kWh)",
+          "p2_price": "Shoulder price P2 (€/kWh)",
+          "p3_price": "Off-peak price P3 (€/kWh)",
+          "price_entity": "Price entity before tax (€/kWh or €/MWh)",
+          "price_markup": "Additional variable-price markup (€/kWh)",
+          "delete_group": "Remove this group when saving"
         }
       },
       "extras": {
-        "title": "Conceptos opcionales",
-        "description": "Deja cero los módulos que no necesites. El impuesto de servicios se configura aparte del de energía. La compensación requiere un contador de exportación independiente y ciclo mensual; usa el precio acordado y queda limitada al valor de energía importada. No activa batería virtual ni bono social.",
+        "title": "Optional charges",
+        "description": "Leave unused modules at zero. Service tax is configured separately from energy tax. Export compensation requires a separate export counter and a monthly cycle; use the agreed price, capped at the value of imported energy. This does not enable virtual batteries or social tariff eligibility.",
         "data": {
-          "daily_fee": "Cuota adicional sin impuestos (€/día)",
-          "invoice_fee": "Servicio sin IVA (€/factura)",
-          "energy_discount_percent": "Descuento sobre energía (%)",
-          "daily_fee_electricity_taxable": "La cuota diaria tributa por impuesto eléctrico",
-          "enable_surplus": "Activar compensación simplificada de excedentes",
-          "export_source": "Sensor independiente de exportación (W/kW o Wh/kWh)",
-          "surplus_price": "Precio de compensación acordado (€/kWh)",
-          "fees_tax_percent": "Impuesto indirecto sobre los servicios adicionales (%)"
+          "daily_fee": "Additional charge before tax (€/day)",
+          "invoice_fee": "Service before VAT (€/invoice)",
+          "energy_discount_percent": "Energy discount (%)",
+          "daily_fee_electricity_taxable": "The daily charge is subject to electricity tax",
+          "enable_surplus": "Enable simplified export compensation",
+          "export_source": "Separate export sensor (W/kW or Wh/kWh)",
+          "surplus_price": "Agreed compensation price (€/kWh)",
+          "fees_tax_percent": "Indirect tax on additional services (%)"
         }
       },
       "finish": {
-        "title": "Revisar configuración",
-        "description": "Corrige el problema indicado. Pulsa continuar para volver al menú sin perder los cambios."
+        "title": "Review configuration",
+        "description": "Correct the indicated problem. Continue to return to the menu without losing changes."
       },
       "tariff": {
-        "title": "Precios del grupo",
-        "description": "PVPC directo descarga el precio horario FEU sin impuestos de Red Eléctrica para Península/Baleares: no necesitas otra integración, un sensor de precio ni introducir importes. Requiere Internet; guarda las horas publicadas y no extrapola las ausentes. En las otras modalidades introduce precios sin impuestos o selecciona la entidad contractual completa, no OMIE. Los cruces de lecturas acumuladas entre precios requieren autorizar el reparto temporal parcial.",
+        "title": "Group prices",
+        "description": "Direct PVPC downloads Red Electrica hourly FEU prices before tax for mainland Spain/Balearic Islands, without another integration or a price sensor. Internet is required; published hours are cached and missing hours are never extrapolated. For other modes, enter pre-tax prices or select a complete contractual price entity, not OMIE alone. Counter readings crossing different prices require consent to partial time allocation.",
         "data": {
-          "eur_per_kwh": "Precio fijo sin impuestos (€/kWh)",
-          "p1_price": "Punta P1 (€/kWh)",
-          "p2_price": "Llano P2 (€/kWh)",
-          "p3_price": "Valle P3 (€/kWh)",
-          "price_entity": "Entidad de precio sin impuestos (€/kWh o €/MWh)",
-          "price_markup": "Margen adicional (€/kWh)",
-          "price_max_age_minutes": "Caducidad de una cotización sin actualizar (minutos)"
+          "eur_per_kwh": "Fixed price before tax (€/kWh)",
+          "p1_price": "Peak P1 (€/kWh)",
+          "p2_price": "Shoulder P2 (€/kWh)",
+          "p3_price": "Off-peak P3 (€/kWh)",
+          "price_entity": "Price entity before tax (€/kWh or €/MWh)",
+          "price_markup": "Additional markup (€/kWh)",
+          "price_max_age_minutes": "Quote expiry without reports (minutes)"
         }
       },
       "fiscal": {
-        "title": "Impuestos de tu factura",
-        "description": "Introduce los porcentajes de tu factura, no sus importes en euros. Son valores manuales: permanecen hasta que tú los cambies y no necesitan Internet. Los valores sugeridos deben revisarse; no se actualizan automáticamente. Al guardar, se aplican al total de la factura abierta. Las facturas cerradas conservan su desglose.",
+        "title": "Taxes on your invoice",
+        "description": "Enter tax percentages, not euro amounts. Values are manual, remain until you change them and need no Internet. Review suggested values; they are not updated automatically. Saving applies them to the open invoice. Closed invoices retain their breakdown.",
         "data": {
-          "tax_electricity_percent": "Impuesto eléctrico (%)",
-          "tax_indirect_percent": "IVA / impuesto indirecto (%)",
-          "tax_minimum_eur_mwh": "Mínimo de impuesto eléctrico (€/MWh)",
-          "tax_rules_confirmed": "He revisado estos valores con mi factura o contrato"
+          "tax_electricity_percent": "Electricity tax (%)",
+          "tax_indirect_percent": "VAT / indirect tax (%)",
+          "tax_minimum_eur_mwh": "Minimum electricity tax (€/MWh)",
+          "tax_rules_confirmed": "I checked these values against my bill or contract"
         },
         "data_description": {
-          "tax_electricity_percent": "Porcentaje de la línea Impuesto sobre la Electricidad. Por ejemplo, 5,11269632, no el importe cobrado.",
-          "tax_indirect_percent": "Porcentaje de IVA de tu factura. Por ejemplo, 21 significa 21 %, no 0,21. Se añade a los precios sin impuestos.",
-          "tax_minimum_eur_mwh": "Se aplica el mayor entre el porcentaje y este mínimo por energía. 1 €/MWh equivale a 0,001 €/kWh. Revisa el mínimo aplicable; cero solo si corresponde.",
-          "tax_rules_confirmed": "Los porcentajes y el mínimo son responsabilidad de la configuración manual; podrás cambiarlos después."
+          "tax_electricity_percent": "Percentage on the electricity tax line, for example 5.11269632, not the amount charged.",
+          "tax_indirect_percent": "VAT percentage on your bill. For example, 21 means 21%, not 0.21. It is added to pre-tax prices.",
+          "tax_minimum_eur_mwh": "The larger of the percentage calculation and this energy minimum applies. 1 €/MWh equals 0.001 €/kWh. Check the applicable minimum; use zero only if appropriate.",
+          "tax_rules_confirmed": "You are responsible for these manually configured percentages and minimum. They can be edited later."
         }
       }
     },
     "error": {
-      "whole_number": "Introduce un número entero dentro del rango indicado; no admite decimales.",
-      "empty_name": "Introduce un nombre.",
-      "empty_group": "El grupo requiere nombre y al menos un contador.",
-      "source_overlap": "No puedes sumar y restar el mismo sensor dentro de un grupo.",
-      "invalid_units": "Selecciona sensores existentes con unidad W, kW, Wh o kWh. No se deduce la unidad por el nombre.",
-      "missing_price_entity": "Selecciona una entidad de precio para la tarifa dinámica.",
-      "invalid_price_units": "La entidad debe indicar €/kWh, EUR/kWh, €/MWh o EUR/MWh.",
-      "missing_groups": "Añade al menos un grupo antes de guardar.",
-      "duplicate_sources": "Los grupos facturarían el mismo consumo más de una vez. Revisa las sumas y restas.",
-      "invalid_surplus": "La compensación requiere ciclo mensual y un sensor de exportación W/kW o Wh/kWh distinto de los de consumo.",
-      "invalid_tax_profile": "Revisa y confirma los impuestos. Los porcentajes deben estar entre 0 y 100 y el mínimo no puede ser negativo."
+      "whole_number": "Enter a whole number within the indicated range; decimals are not accepted.",
+      "empty_name": "Enter a name.",
+      "empty_group": "A group needs a name and at least one counter.",
+      "source_overlap": "The same sensor cannot be added and subtracted within one group.",
+      "invalid_units": "Select existing sensors with W, kW, Wh or kWh units. Units are not inferred from names.",
+      "missing_price_entity": "Select a price entity for the variable tariff.",
+      "invalid_price_units": "The entity must use €/kWh, EUR/kWh, €/MWh or EUR/MWh.",
+      "missing_groups": "Add at least one group before saving.",
+      "duplicate_sources": "Groups would bill the same energy more than once. Check additions and subtractions.",
+      "invalid_surplus": "Compensation requires a monthly cycle and a separate W/kW or Wh/kWh export sensor.",
+      "invalid_tax_profile": "Review and confirm taxes. Percentages must be between 0 and 100 and the minimum cannot be negative."
     }
   },
   "entity": {
     "sensor": {
       "estimated_total": {
-        "name": "Factura actual estimada"
+        "name": "Estimated current invoice"
       },
       "energy_cost": {
-        "name": "Coste de energía"
+        "name": "Energy cost"
       },
       "power_cost": {
-        "name": "Coste de potencia"
+        "name": "Contracted power cost"
       },
       "electricity_tax": {
-        "name": "Impuesto eléctrico"
+        "name": "Electricity tax"
       },
       "vat": {
-        "name": "IVA"
+        "name": "VAT"
       },
       "other_charges": {
-        "name": "Otros cargos"
+        "name": "Other charges"
       },
       "discounts": {
-        "name": "Descuentos"
+        "name": "Discounts"
       },
       "period_energy": {
-        "name": "Energía del periodo"
+        "name": "Period energy"
       },
       "surplus_compensation": {
-        "name": "Compensación de excedentes"
+        "name": "Export compensation"
       },
       "billing_days": {
-        "name": "Días del periodo"
+        "name": "Billing days"
       },
       "effective_price": {
-        "name": "Precio medio efectivo"
+        "name": "Effective average price"
       },
       "data_quality": {
-        "name": "Calidad de los datos",
+        "name": "Data quality",
         "state": {
-          "complete": "Completa",
-          "partial": "Parcial",
+          "complete": "Complete",
+          "partial": "Partial",
           "error": "Error"
         }
       }
@@ -366,12 +366,12 @@
   },
   "issues": {
     "missing_fiscal_rule": {
-      "title": "Falta una regla fiscal verificada",
-      "description": "La estimación del contrato está indisponible porque su fecha de devengo no tiene una regla fiscal verificada. Actualiza la integración o configura un perfil manual documentado desde las opciones del contrato. No introduzcas porcentajes basándote en una medida condicionada aún sin resolver."
+      "title": "Verified tax rule missing",
+      "description": "The estimate is unavailable because no verified tax rule covers the invoice tax point. Update the integration or configure a documented manual profile in the contract options. Do not guess percentages based on an unresolved conditional measure."
     },
     "manual_taxes_required": {
-      "title": "Confirma los impuestos de tu contrato",
-      "description": "Se conservan las mediciones y las facturas cerradas. Para calcular el total con impuestos manuales, abre Luz en Cifras → Configurar → Impuestos de la factura, revisa los porcentajes y el mínimo, marca la confirmación y guarda el contrato. Solo se requiere esta confirmación al convertir el antiguo modo automático; después los valores se mantienen hasta que los cambies."
+      "title": "Confirm your contract taxes",
+      "description": "Measurements and closed invoices are preserved. Open Luz en Cifras → Configure → Invoice taxes, review percentages and minimum, confirm and save. This confirmation is needed once when converting the old automatic mode. Values then remain until you change them."
     }
   }
 }

@@ -15,9 +15,10 @@ factura indexada completa: debes aportar una entidad que incluya la fórmula pac
 
 El calendario eléctrico no equivale al laboral de cada comunidad. Aplica fines de
 semana, 6 de enero y festivos nacionales fijos no sustituibles, excluyendo los
-festivos móviles. La verificación incluida se limita a 2026. Fuentes:
+festivos móviles. La verificación incluida cubre 2026 y 2027. Fuentes:
 [Circular 3/2020, artículo 7](https://www.boe.es/buscar/act.php?id=BOE-A-2020-1066) y
-[calendario oficial 2026](https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-21667).
+[calendario oficial 2026](https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-21667) y
+[calendario oficial 2027](https://www.boe.es/eli/es/res/2026/10/08/(1)).
 
 La tarifa 2.0TD tiene tres periodos de energía y dos potencias. P1/P2 de potencia no
 deben confundirse con los tres precios de energía. Una potencia en €/kW/año se divide

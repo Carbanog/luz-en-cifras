@@ -174,6 +174,9 @@ servicios**. Renombrar conserva sus identificadores únicos. Puedes cambiar sens
 grupos y modalidades durante el ciclo: se conserva lo acumulado, cada tramo mantiene
 sus fuentes y precios y los cargos fijos se calculan una sola vez para la factura.
 Los cambios se aplican al guardar; no permiten indicar fechas retroactivas.
+Cambiar el día o la duración del ciclo conserva el periodo abierto hasta su fin.
+Después puede haber un periodo de transición más corto, sin solapar días facturados.
+[Lecturas pendientes y revisiones al cambiar de ciclo](docs/continuidad-de-ciclos.md).
 
 Un contador nuevo espera una lectura real como referencia y después acumula sus
 incrementos; su valor anterior en HA no se interpreta como consumo desde el cambio.
@@ -313,7 +316,7 @@ Los dashboards se copian por separado; HACS no modifica tus paneles existentes.
 | Histórico anterior a la instalación | Sin importación de Recorder/Datadis ni reconstrucción automática |
 | Cuotas planas y promociones complejas | Sin regularización específica automática |
 
-El calendario 2.0TD verificado incluido cubre 2026 en Península y Baleares. El perfil
+El calendario 2.0TD verificado incluido cubre 2026 y 2027 en Península y Baleares. El perfil
 manual no calcula elegibilidad para exenciones ni todas las bases de otros territorios.
 Los impuestos introducidos no caducan al cambiar de mes o año. No se anuncian como
 terminados los supuestos sin pruebas. [Criterios y límites](docs/reglas-fiscales.md).

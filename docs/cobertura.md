@@ -1,11 +1,11 @@
 # Matriz de cobertura
 
-Funciones disponibles y límites de la versión 0.3.1.
+Funciones disponibles y límites de la versión 0.3.2.
 
 | Módulo | Disponible y verificable | Límite actual |
 | --- | --- | --- |
 | Fija 24 h | Configuración por grupo, precio negativo, revisiones | Sin promociones de duración arbitraria |
-| Tres periodos | Calendario 2.0TD y configuración P1/P2/P3 | Península/Baleares, calendario 2026 |
+| Tres periodos | Calendario 2.0TD y configuración P1/P2/P3 | Península/Baleares, calendarios 2026 y 2027 |
 | PVPC | Descarga directa FEU de REE y sensor del precio actual; opción de entidad existente | Directo para Península/Baleares; requiere Internet, no extrapola horas ni importa días antiguos no descargados |
 | Indexada | Entidad con precio contractual y margen adicional | No construye fórmulas comerciales arbitrarias |
 | Vivienda/EV | Varios precios y expresiones explícitas sin duplicar energía | Sin cupos promocionales automáticos |
