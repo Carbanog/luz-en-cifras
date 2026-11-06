@@ -62,6 +62,11 @@ async def test_late_boundary_counter_preserves_delta_and_closed_original(
     assert entry.runtime_data.history[0] == original
     assert len(entry.runtime_data.history) == 2
     assert entry.runtime_data.history[-1]["supersedes"] == original["id"]
+    if not estimate:
+        assert any(
+            "2 kWh" in warning and "pendiente de reparto" in warning
+            for warning in entry.runtime_data.data.collection_warnings
+        )
     freezer.tick(timedelta(minutes=1))
     hass.states.async_set("sensor.test_energy", "104", ENERGY)
     await hass.async_block_till_done()

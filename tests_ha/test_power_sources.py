@@ -141,11 +141,12 @@ async def test_power_cycle_closes_at_local_boundary_without_carrying_previous_kw
     freezer.tick(timedelta(minutes=2))
     entry.runtime_data._tick(dt_util.now())
     assert entry.runtime_data.history[0]["result"]["total_kwh"] == "0.017"
-    assert entry.runtime_data.data.result is None  # Wait for a measured new-cycle interval.
-    assert "No measurements" in entry.runtime_data.data.error
+    # The last genuine report is still within its TTL. Preserve the minute
+    # after midnight while keeping the previous minute in the closed cycle.
+    assert entry.runtime_data.data.result.total_kwh == Decimal("0.017")
     freezer.tick(timedelta(minutes=1))
     entry.runtime_data._tick(dt_util.now())
-    assert entry.runtime_data.data.result.total_kwh == Decimal("0.017")
+    assert entry.runtime_data.data.result.total_kwh == Decimal("0.033")
 
 
 async def test_flow_accepts_power_and_rejects_incompatible_units(hass, contract):

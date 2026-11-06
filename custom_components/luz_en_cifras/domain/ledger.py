@@ -202,43 +202,50 @@ class MeasurementLedger:
             ]
             if group.subtract_sources:
                 sources = (*group.add_sources, *group.subtract_sources)
-                coverage = {
-                    source: [interval for interval in selected if interval.source_id == source]
-                    for source in sources
-                }
-                if any(not intervals for intervals in coverage.values()):
-                    self.warnings.add(f"{group.name}: esperando cobertura común de contadores")
-                    continue
-                left = max(
-                    min(item.start.astimezone(UTC) for item in values)
-                    for values in coverage.values()
-                )
-                right = min(
-                    max(item.end.astimezone(UTC) for item in values) for values in coverage.values()
-                )
-                aligned = []
-                for interval in selected:
-                    if (
-                        interval.end.astimezone(UTC) <= left
-                        or interval.start.astimezone(UTC) >= right
-                    ):
-                        continue
-                    if not (approximate or interval.estimated) and (
-                        interval.start.astimezone(UTC) < left
-                        or interval.end.astimezone(UTC) > right
-                    ):
-                        continue
-                    clipped = clip_interval(interval, left, right, approximate=approximate)
-                    if clipped is not None:
-                        aligned.append(clipped)
-                if any(not any(item.source_id == source for item in aligned) for source in sources):
-                    self.warnings.add(f"{group.name}: esperando cobertura común de contadores")
-                    continue
-                if aligned != selected:
-                    self.warnings.add(
-                        f"{group.name}: consumos posteriores a la cobertura común pendientes"
+                original = selected
+                while True:
+                    coverage = {
+                        source: [item for item in selected if item.source_id == source]
+                        for source in sources
+                    }
+                    if any(not intervals for intervals in coverage.values()):
+                        selected = []
+                        break
+                    left = max(
+                        min(item.start.astimezone(UTC) for item in values)
+                        for values in coverage.values()
                     )
-                selected = aligned
+                    right = min(
+                        max(item.end.astimezone(UTC) for item in values)
+                        for values in coverage.values()
+                    )
+                    aligned = []
+                    for interval in selected:
+                        if (
+                            interval.end.astimezone(UTC) <= left
+                            or interval.start.astimezone(UTC) >= right
+                        ):
+                            continue
+                        if not (approximate or interval.estimated) and (
+                            interval.start.astimezone(UTC) < left
+                            or interval.end.astimezone(UTC) > right
+                        ):
+                            continue
+                        clipped = clip_interval(interval, left, right, approximate=approximate)
+                        if clipped is not None:
+                            aligned.append(clipped)
+                    if aligned == selected:
+                        break
+                    # Dropping an unsplittable tail can move the common horizon
+                    # again. Recheck every source before comparing residuals.
+                    selected = aligned
+                if not selected:
+                    self.warnings.add(f"{group.name}: esperando cobertura común de contadores")
+                    continue
+                if selected != original:
+                    self.warnings.add(
+                        f"{group.name}: consumos fuera de la cobertura común pendientes"
+                    )
             aliases.append(
                 ConsumptionGroup(
                     group.group_id,

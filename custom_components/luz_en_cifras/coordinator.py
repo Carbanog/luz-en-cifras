@@ -505,7 +505,18 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
                     if isinstance(err, UnconfirmedTaxesError)
                     else "missing_fiscal_rule",
                 )
-            return CoordinatorData(None, str(err), tuple(sorted(self.ledger.warnings)))
+            warnings = set(self.ledger.warnings)
+            if not self.config.get("approximate_intervals", False):
+                boundary = datetime.combine(
+                    self._period.start, datetime.min.time(), ZoneInfo("Europe/Madrid")
+                ).astimezone(UTC)
+                for interval in self.ledger.intervals:
+                    if interval.start.astimezone(UTC) < boundary < interval.end.astimezone(UTC):
+                        warnings.add(
+                            f"{interval.source_id}: {interval.kwh} kWh cruzan el límite del ciclo; "
+                            "lectura conservada pendiente de reparto, sin estimar"
+                        )
+            return CoordinatorData(None, str(err), tuple(sorted(warnings)))
         ir.async_delete_issue(self.hass, DOMAIN, f"fiscal_{self.entry.entry_id}")
         if self.ledger.warnings:
             result = replace(

@@ -171,3 +171,22 @@ def test_comparable_negative_submeter_residual_still_rejects_bad_topology() -> N
         calculate_contract(
             cfg, ledger, BillingPeriod(date(2026, 10, 1), date(2026, 11, 1)), date(2026, 10, 31)
         )
+
+
+def test_unaligned_unsplittable_tails_do_not_leave_different_residual_horizons() -> None:
+    ledger = MeasurementLedger()
+    for source, begin, end, quantity in (
+        ("main", 0, 1, 2),
+        ("main", 1, 3, 1),
+        ("ev", 0, 1, 1),
+        ("ev", 1, 2, 10),
+    ):
+        ledger.intervals.append(
+            MeasuredInterval(
+                source, START + timedelta(hours=begin), START + timedelta(hours=end), D(quantity)
+            )
+        )
+    ledger.price("g", D("0.2"), START)
+    _, samples, _ = ledger.billing_data((ConsumptionGroup("g", "Residual", ("main",), ("ev",)),))
+    assert sum(item.kwh for item in samples if item.source_id == "g|main") == 2
+    assert sum(item.kwh for item in samples if item.source_id == "g|ev") == 1
