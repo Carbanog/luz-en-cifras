@@ -4,9 +4,9 @@ El producto se instala por HACS. Docker es una herramienta opcional de desarroll
 los fixtures de `tests/`, `tests_ha/` y `lab/` son sintéticos y no se instalan como
 sensores del usuario.
 
-## Comprobaciones de 0.3.1
+## Comprobaciones de 0.3.2
 
-La versión pasa **79 pruebas del motor** y **45 pruebas de integración en cada una**
+La versión pasa **90 pruebas del motor** y **51 pruebas de integración en cada una**
 de las siguientes versiones de Home Assistant:
 
 | Home Assistant | pytest-homeassistant-custom-component |
@@ -20,6 +20,12 @@ importación del componente en HA, HACS y Hassfest. Los resultados se consultan 
 commit en [CI](https://github.com/Carbanog/luz-en-cifras/actions/workflows/ci.yml) y
 [validación HA/HACS](https://github.com/Carbanog/luz-en-cifras/actions/workflows/validate.yml).
 Esto no acredita compatibilidad con versiones de HA que no figuren en la matriz.
+
+Las regresiones de continuidad comprueban cambios del día de factura, deltas en
+fronteras con/sin estimación, conservación del original cerrado, recarga de Store,
+calidad del ciclo siguiente y precios idénticos republicados cada 30 minutos.
+El dominio comprueba también cobertura común con huecos internos, residuales
+negativos auténticos, calendario 2027 y ambos cambios de hora.
 
 ## Ejecutar el motor
 

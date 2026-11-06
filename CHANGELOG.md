@@ -1,6 +1,6 @@
 # Changelog
 
-## Pendiente de publicación
+## 0.3.2 — 6 de noviembre de 2026
 
 - Conservación de referencias Wh/kWh y lecturas pendientes entre ciclos, con
   revisiones de cierres automáticos que mantienen sus originales.
@@ -10,6 +10,7 @@
 - Calendario 2.0TD de 2027 y etiquetas P1/P2/P3 en el desglose.
 - Índice temporal de precios y traducción inglesa del asistente.
 - Regresiones de dominio y HA para transiciones, calidad, recarga y cotizaciones.
+- Fija Ubuntu 24.04 en CI para conservar disponibilidad de Python 3.14.2.
 
 ## 0.3.1 — 25 de octubre de 2026
 

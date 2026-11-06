@@ -1,5 +1,21 @@
 # Actualización y compatibilidad
 
+## Continuidad de ciclos en 0.3.2
+
+Actualiza desde HACS y reinicia HA. Se conservan contratos, identificadores,
+mediciones y cierres; configuración minor 4 y almacenamiento esquema 3 no cambian.
+No elimines entradas ni vuelvas a crear los contratos.
+
+El calendario editado entra en vigor al terminar el ciclo abierto. Los contadores
+mantienen su referencia en la frontera y las lecturas tardías añaden revisiones
+del cierre anterior conservando el original. Los incrementos que no pueden
+repartirse exactamente quedan pendientes, salvo que hayas autorizado estimación.
+Consulta [continuidad entre ciclos](continuidad-de-ciclos.md).
+
+La corrección no recupera automáticamente incrementos omitidos por versiones
+anteriores: conserva los nuevos desde su instalación. Guarda un respaldo antes
+de actualizar y revisa calidad y fuentes después del reinicio.
+
 ## Impuestos manuales en 0.3.1
 
 La configuración pasa de minor 3 a **minor 4**. El almacenamiento de mediciones

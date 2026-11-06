@@ -115,12 +115,13 @@ async def test_identical_dynamic_quote_freshness_and_real_expiry(hass, contract,
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     initial = hass.states.get("sensor.quote").last_updated
-    freezer.tick(timedelta(hours=2))
-    if repeated:
-        hass.states.async_set("sensor.quote", "0.12", {"unit_of_measurement": "€/kWh"})
-        assert hass.states.get("sensor.quote").last_updated == initial
-        assert hass.states.get("sensor.quote").last_reported > initial
-    entry.runtime_data._tick(dt_util.now())
+    for _ in range(4):
+        freezer.tick(timedelta(minutes=30))
+        if repeated:
+            hass.states.async_set("sensor.quote", "0.12", {"unit_of_measurement": "€/kWh"})
+            assert hass.states.get("sensor.quote").last_updated == initial
+            assert hass.states.get("sensor.quote").last_reported > initial
+        entry.runtime_data._tick(dt_util.now())
     freezer.tick(timedelta(minutes=1))
     hass.states.async_set("sensor.test_energy", "101", ENERGY)
     await hass.async_block_till_done()
