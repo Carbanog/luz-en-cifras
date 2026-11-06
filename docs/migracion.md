@@ -1,5 +1,12 @@
 # Actualización y compatibilidad
 
+## Calendario recurrente en 0.3.3
+
+Actualiza desde HACS y reinicia HA. No tienes que modificar el contrato ni añadir
+años: el calendario 2.0TD usa reglas recurrentes locales sin consultas a Internet.
+Impuestos manuales, identificadores, configuración minor 4 y Store esquema 3
+permanecen iguales. Los cierres históricos no se recalculan automáticamente.
+
 ## Continuidad de ciclos en 0.3.2
 
 Actualiza desde HACS y reinicia HA. Se conservan contratos, identificadores,

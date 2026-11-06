@@ -15,7 +15,10 @@ factura indexada completa: debes aportar una entidad que incluya la fórmula pac
 
 El calendario eléctrico no equivale al laboral de cada comunidad. Aplica fines de
 semana, 6 de enero y festivos nacionales fijos no sustituibles, excluyendo los
-festivos móviles. La verificación incluida cubre 2026 y 2027. Fuentes:
+festivos móviles y traslados. Desde 0.3.3, las fechas se generan mediante reglas
+recurrentes para el año de la lectura, sin tabla de años permitidos, acceso a
+Internet ni mantenimiento anual. Se aplica la regla vigente: un cambio normativo
+sí requeriría actualizarla. Fuentes de la regla y contraste de fechas:
 [Circular 3/2020, artículo 7](https://www.boe.es/buscar/act.php?id=BOE-A-2020-1066) y
 [calendario oficial 2026](https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-21667) y
 [calendario oficial 2027](https://www.boe.es/eli/es/res/2026/10/08/(1)).

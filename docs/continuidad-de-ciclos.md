@@ -59,10 +59,14 @@ Se mantiene el formato de configuración y almacenamiento existente. No elimines
 contratos para aplicar la corrección. Conserva un respaldo antes de actualizar y
 consulta [migración y recuperación](migracion.md).
 
-## Calendario 2027
+## Calendario sin caducidad anual
 
-Se han verificado las fechas fijas nacionales y el 6 de enero conforme al
+Desde 0.3.3 se calculan por reglas recurrentes las fechas fijas nacionales y el
+6 de enero, además de los fines de semana y horarios diarios, conforme al
 [artículo 7 de la Circular 3/2020](https://www.boe.es/buscar/act.php?id=BOE-A-2020-1066#a7)
 y al [calendario oficial de 2027](https://www.boe.es/eli/es/res/2026/10/08/(1)).
 No se convierten en valle los festivos móviles, autonómicos o trasladados.
-Los años sin calendario verificado se rechazan explícitamente.
+No hay una lista de años permitidos ni consultas de calendario por Internet.
+Los años bisiestos y el cambio de año no requieren actualizar la integración.
+La regla se mantiene mientras no cambie la normativa; no se afirma conocer por
+adelantado cambios legales futuros. Los impuestos siguen siendo manuales.

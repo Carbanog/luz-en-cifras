@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
@@ -10,27 +10,11 @@ from .errors import ConfigurationError
 from .models import EnergyRate
 
 # Circular 3/2020, art. 7.3: fixed national non-substitutable holidays plus Jan 6.
-# Calendar is intentionally bounded to the verified year; no silent extrapolation.
-VERIFIED_YEARS = frozenset({2026, 2027})
-# 2027: BOE-A-2026-21254; art. 7.3 excludes movable holidays and transfers.
-HOLIDAYS = {
-    year: frozenset(
-        date(year, month, day)
-        for month, day in (
-            (1, 1),
-            (1, 6),
-            (5, 1),
-            (8, 15),
-            (10, 12),
-            (11, 1),
-            (12, 6),
-            (12, 8),
-            (12, 25),
-        )
-    )
-    for year in VERIFIED_YEARS
-}
-HOLIDAYS_2026 = HOLIDAYS[2026]
+# These month/day rules recur without an annual table or network request.
+# A change to the legal tariff rules still requires reviewing this policy.
+FIXED_VALLEY_DATES = frozenset(
+    {(1, 1), (1, 6), (5, 1), (8, 15), (10, 12), (11, 1), (12, 6), (12, 8), (12, 25)}
+)
 
 
 def period_20td(instant: datetime, zone: str = "Europe/Madrid") -> str:
@@ -38,9 +22,7 @@ def period_20td(instant: datetime, zone: str = "Europe/Madrid") -> str:
     if instant.tzinfo is None or instant.utcoffset() is None:
         raise ConfigurationError("Tariff timestamp must be timezone-aware")
     local = instant.astimezone(ZoneInfo(zone))
-    if local.year not in HOLIDAYS:
-        raise ConfigurationError("No verified 2.0TD holiday calendar for this year")
-    if local.weekday() >= 5 or local.date() in HOLIDAYS[local.year] or local.hour < 8:
+    if local.weekday() >= 5 or (local.month, local.day) in FIXED_VALLEY_DATES or local.hour < 8:
         return "P3"
     if zone in {"Africa/Ceuta", "Africa/Melilla"}:
         peak = 11 <= local.hour < 15 or 19 <= local.hour < 23

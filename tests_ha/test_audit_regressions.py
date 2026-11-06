@@ -15,6 +15,30 @@ ENERGY = {"unit_of_measurement": "kWh", "device_class": "energy"}
 D = Decimal
 
 
+async def test_three_period_contract_crosses_unlisted_year_offline(hass, contract, freezer):
+    freezer.move_to("2027-12-31 23:59:00+01:00")
+    contract["groups"][0].update(
+        tariff_mode="three_period", p1_price="0.3", p2_price="0.2", p3_price="0.1"
+    )
+    hass.states.async_set("sensor.test_energy", "100", ENERGY)
+    entry = MockConfigEntry(domain=DOMAIN, data=contract, title="Fixture", version=1)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    freezer.tick(timedelta(minutes=1))
+    hass.states.async_set("sensor.test_energy", "101", ENERGY)
+    await hass.async_block_till_done()
+    assert D(entry.runtime_data.history[0]["result"]["total_kwh"]) == 1
+    freezer.tick(timedelta(minutes=1))
+    hass.states.async_set("sensor.test_energy", "102", ENERGY)
+    await hass.async_block_till_done()
+    assert entry.runtime_data.billing_period.start == date(2028, 1, 1)
+    assert entry.runtime_data.data.result.total_kwh == 1
+    assert entry.runtime_data.data.result.amount_for("energy") == D("0.1")
+    await hass.config_entries.async_unload(entry.entry_id)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.runtime_data.data.result.amount_for("energy") == D("0.1")
+
+
 async def test_edit_billing_day_defers_calendar_and_preserves_open_ledger(hass, contract, freezer):
     freezer.move_to("2026-10-15 11:00:00+02:00")
     contract.update(power_p1_kw="3", power_p1_eur_per_kw_day="0.1")
