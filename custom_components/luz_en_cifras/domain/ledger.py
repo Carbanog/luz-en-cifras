@@ -9,7 +9,7 @@ from typing import Any
 
 from .errors import ConfigurationError
 from .history import json_safe
-from .intervals import MeasuredInterval, allocate_interval, clip_interval
+from .intervals import MeasuredInterval, allocate_interval, clip_interval, common_coverage
 from .models import ConsumptionGroup, EnergyRate, EnergySample
 from .prices import PriceIndex
 
@@ -202,6 +202,7 @@ class MeasurementLedger:
             ]
             if group.subtract_sources:
                 sources = (*group.add_sources, *group.subtract_sources)
+                selected.sort(key=lambda item: (item.source_id, item.start.astimezone(UTC)))
                 original = selected
                 while True:
                     coverage = {
@@ -211,29 +212,23 @@ class MeasurementLedger:
                     if any(not intervals for intervals in coverage.values()):
                         selected = []
                         break
-                    left = max(
-                        min(item.start.astimezone(UTC) for item in values)
-                        for values in coverage.values()
-                    )
-                    right = min(
-                        max(item.end.astimezone(UTC) for item in values)
-                        for values in coverage.values()
-                    )
                     aligned = []
-                    for interval in selected:
-                        if (
-                            interval.end.astimezone(UTC) <= left
-                            or interval.start.astimezone(UTC) >= right
-                        ):
-                            continue
-                        if not (approximate or interval.estimated) and (
-                            interval.start.astimezone(UTC) < left
-                            or interval.end.astimezone(UTC) > right
-                        ):
-                            continue
-                        clipped = clip_interval(interval, left, right, approximate=approximate)
-                        if clipped is not None:
-                            aligned.append(clipped)
+                    for left, right in common_coverage(coverage):
+                        for interval in selected:
+                            if (
+                                interval.end.astimezone(UTC) <= left
+                                or interval.start.astimezone(UTC) >= right
+                            ):
+                                continue
+                            if not (approximate or interval.estimated) and (
+                                interval.start.astimezone(UTC) < left
+                                or interval.end.astimezone(UTC) > right
+                            ):
+                                continue
+                            clipped = clip_interval(interval, left, right, approximate=approximate)
+                            if clipped is not None:
+                                aligned.append(clipped)
+                    aligned.sort(key=lambda item: (item.source_id, item.start.astimezone(UTC)))
                     if aligned == selected:
                         break
                     # Dropping an unsplittable tail can move the common horizon

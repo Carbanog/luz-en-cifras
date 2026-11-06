@@ -42,6 +42,37 @@ def normalize_price(value: Decimal, unit: str) -> Decimal:
     raise ConfigurationError(f"Unsupported price unit: {unit}")
 
 
+def common_coverage(
+    sources: dict[str, list[MeasuredInterval]],
+) -> tuple[tuple[datetime, datetime], ...]:
+    """Intersect genuinely measured windows, preserving gaps inside their horizon."""
+    common: list[tuple[datetime, datetime]] | None = None
+    for intervals in sources.values():
+        merged: list[tuple[datetime, datetime]] = []
+        for item in sorted(intervals, key=lambda value: value.start.astimezone(UTC)):
+            start, end = item.start.astimezone(UTC), item.end.astimezone(UTC)
+            if merged and start <= merged[-1][1]:
+                merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+            else:
+                merged.append((start, end))
+        if common is None:
+            common = merged
+            continue
+        overlap = []
+        left = right = 0
+        while left < len(common) and right < len(merged):
+            start = max(common[left][0], merged[right][0])
+            end = min(common[left][1], merged[right][1])
+            if start < end:
+                overlap.append((start, end))
+            if common[left][1] <= merged[right][1]:
+                left += 1
+            else:
+                right += 1
+        common = overlap
+    return tuple(common or ())
+
+
 def clip_interval(
     interval: MeasuredInterval, start: datetime, end: datetime, *, approximate: bool = False
 ) -> MeasuredInterval | None:

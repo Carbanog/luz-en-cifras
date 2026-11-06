@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   quality:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Check out repository
@@ -49,9 +49,10 @@ jobs:
 
   home-assistant:
     name: HA ${{ matrix.homeassistant }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     strategy:
+      fail-fast: false
       matrix:
         include:
           - homeassistant: "2026.10.2"

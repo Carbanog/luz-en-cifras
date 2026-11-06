@@ -190,3 +190,25 @@ def test_unaligned_unsplittable_tails_do_not_leave_different_residual_horizons()
     _, samples, _ = ledger.billing_data((ConsumptionGroup("g", "Residual", ("main",), ("ev",)),))
     assert sum(item.kwh for item in samples if item.source_id == "g|main") == 2
     assert sum(item.kwh for item in samples if item.source_id == "g|ev") == 1
+
+
+def test_common_coverage_excludes_internal_submeter_gaps() -> None:
+    ledger = MeasurementLedger()
+    for source, begin, end, quantity in (
+        ("main", 0, 3, 6),
+        ("ev", 0, 1, 1),
+        ("ev", 2, 3, 1),
+    ):
+        ledger.intervals.append(
+            MeasuredInterval(
+                source,
+                START + timedelta(hours=begin),
+                START + timedelta(hours=end),
+                D(quantity),
+                estimated=True,
+            )
+        )
+    ledger.price("g", D("0.2"), START)
+    _, samples, _ = ledger.billing_data((ConsumptionGroup("g", "Residual", ("main",), ("ev",)),))
+    assert sum(item.kwh for item in samples if item.source_id == "g|main") == 4
+    assert sum(item.kwh for item in samples if item.source_id == "g|ev") == 2
