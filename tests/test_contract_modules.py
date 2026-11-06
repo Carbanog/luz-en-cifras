@@ -16,7 +16,7 @@ from custom_components.luz_en_cifras.domain import (
     PowerCharge,
 )
 from custom_components.luz_en_cifras.domain.billing import calculate_contract
-from custom_components.luz_en_cifras.domain.errors import ConfigurationError, IncompleteDataError
+from custom_components.luz_en_cifras.domain.errors import IncompleteDataError
 from custom_components.luz_en_cifras.domain.fiscal import configured_rule, household_rule
 from custom_components.luz_en_cifras.domain.history import reconcile, snapshot
 from custom_components.luz_en_cifras.domain.ledger import MeasurementLedger
@@ -61,9 +61,10 @@ def test_movable_easter_holiday_is_not_valley() -> None:
     assert period_20td(datetime(2026, 4, 3, 12, tzinfo=ZONE)) == "P1"
 
 
-def test_calendar_does_not_assume_unknown_year() -> None:
-    with pytest.raises(ConfigurationError):
-        period_20td(datetime(2028, 1, 1, tzinfo=ZONE))
+def test_calendar_repeats_fixed_rules_without_an_annual_table() -> None:
+    for year in (2028, 2030, 2050, 2100, 2400):
+        assert period_20td(datetime(year, 1, 1, 12, tzinfo=ZONE)) == "P3"
+        assert period_20td(datetime(year, 12, 8, 12, tzinfo=ZONE)) == "P3"
 
 
 def test_autumn_day_has_25_hourly_rates() -> None:

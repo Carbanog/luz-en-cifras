@@ -316,7 +316,9 @@ Los dashboards se copian por separado; HACS no modifica tus paneles existentes.
 | Histórico anterior a la instalación | Sin importación de Recorder/Datadis ni reconstrucción automática |
 | Cuotas planas y promociones complejas | Sin regularización específica automática |
 
-El calendario 2.0TD verificado incluido cubre 2026 y 2027 en Península y Baleares. El perfil
+El calendario 2.0TD de Península/Baleares se calcula mediante reglas recurrentes:
+no caduca al cambiar de año, no necesita Internet ni una actualización anual.
+Un cambio de normativa tarifaria sí requiere revisar esas reglas. El perfil
 manual no calcula elegibilidad para exenciones ni todas las bases de otros territorios.
 Los impuestos introducidos no caducan al cambiar de mes o año. No se anuncian como
 terminados los supuestos sin pruebas. [Criterios y límites](docs/reglas-fiscales.md).

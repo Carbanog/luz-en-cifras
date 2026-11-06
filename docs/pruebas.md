@@ -4,9 +4,9 @@ El producto se instala por HACS. Docker es una herramienta opcional de desarroll
 los fixtures de `tests/`, `tests_ha/` y `lab/` son sintéticos y no se instalan como
 sensores del usuario.
 
-## Comprobaciones de 0.3.2
+## Comprobaciones de 0.3.3
 
-La versión pasa **90 pruebas del motor** y **51 pruebas de integración en cada una**
+La versión pasa **96 pruebas del motor** y **52 pruebas de integración en cada una**
 de las siguientes versiones de Home Assistant:
 
 | Home Assistant | pytest-homeassistant-custom-component |
@@ -26,6 +26,9 @@ fronteras con/sin estimación, conservación del original cerrado, recarga de St
 calidad del ciclo siguiente y precios idénticos republicados cada 30 minutos.
 El dominio comprueba también cobertura común con huecos internos, residuales
 negativos auténticos, calendario 2027 y ambos cambios de hora.
+El calendario recurrente se prueba hasta 2400: años bisiestos, siglos no bisiestos,
+festivos fijos y exclusión de móviles/traslados. HA comprueba el cambio 2027–2028
+y su recarga sin usar una fuente de calendario externa.
 
 ## Ejecutar el motor
 

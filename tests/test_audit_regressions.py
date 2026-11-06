@@ -117,8 +117,6 @@ def test_verified_2027_fixed_holidays_are_valley() -> None:
 def test_2027_movable_holiday_and_regional_transfer_are_not_national_valley() -> None:
     assert period_20td(datetime(2027, 3, 26, 12, tzinfo=ZONE)) == "P1"
     assert period_20td(datetime(2027, 8, 16, 12, tzinfo=ZONE)) == "P1"
-    with pytest.raises(ConfigurationError):
-        period_20td(datetime(2028, 1, 1, tzinfo=ZONE))
 
 
 def test_three_period_invoice_lines_preserve_labels_and_prices() -> None:

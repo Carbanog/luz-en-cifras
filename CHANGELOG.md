@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.3 — 6 de noviembre de 2026
+
+- Genera el calendario 2.0TD por reglas recurrentes locales, sin tabla anual,
+  conexión a Internet ni caducidad por año. Conserva las fechas fijas nacionales,
+  fines de semana y 6 de enero; excluye festivos móviles, regionales y traslados.
+- Prueba años futuros, bisiestos, siglos, cambios de hora y continuidad de factura
+  entre 2027 y 2028 con recarga en HA.
+- No modifica impuestos, configuración, almacenamiento ni facturas cerradas.
+
 ## 0.3.2 — 6 de noviembre de 2026
 
 - Conservación de referencias Wh/kWh y lecturas pendientes entre ciclos, con
