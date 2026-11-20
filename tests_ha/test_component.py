@@ -5,12 +5,69 @@ from datetime import timedelta
 from decimal import Decimal
 
 import pytest
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util import dt as dt_util
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.luz_en_cifras.const import DOMAIN
+
+
+async def test_frequent_readings_preserve_energy_and_batch_invoice_states(hass, contract, freezer):
+    freezer.move_to("2026-10-23 12:00:00+00:00")
+    meter = "sensor.test_energy"
+    energy = "sensor.casa_vivienda_energia"
+    cost = "sensor.casa_vivienda_coste_de_energia"
+    attributes = {"unit_of_measurement": "kWh", "device_class": "energy"}
+    hass.states.async_set(meter, "100", attributes)
+    entry = MockConfigEntry(domain=DOMAIN, data=contract, title="Casa", version=1)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The first usable reading makes the previously unavailable invoice visible immediately.
+    freezer.tick(timedelta(seconds=1))
+    hass.states.async_set(meter, "100.001", attributes)
+    await hass.async_block_till_done()
+    assert Decimal(hass.states.get(energy).state) == Decimal("0.001")
+
+    energy_changes = []
+
+    @callback
+    def record_change(event):
+        energy_changes.append(event)
+
+    remove_listener = async_track_state_change_event(hass, [energy], record_change)
+    try:
+        for reading in range(2, 31):
+            freezer.tick(timedelta(seconds=2))
+            hass.states.async_set(meter, str(Decimal(100) + Decimal(reading) / 1000), attributes)
+            await hass.async_block_till_done()
+        assert not energy_changes
+        assert entry.runtime_data.data.result.total_kwh == Decimal("0.030")
+        assert entry.runtime_data.data.result.amount_for("energy") == Decimal("0.006")
+
+        freezer.tick(timedelta(seconds=1))
+        entry.runtime_data._tick(dt_util.now())
+        await hass.async_block_till_done()
+        assert len(energy_changes) == 1
+        assert Decimal(hass.states.get(energy).state) == Decimal("0.030")
+        assert Decimal(hass.states.get(cost).state) == Decimal("0.01")
+
+        # A new sample can change the precise cost without changing published cents.
+        last_cost_change = hass.states.get(cost).last_updated
+        freezer.tick(timedelta(seconds=2))
+        hass.states.async_set(meter, "100.031", attributes)
+        await hass.async_block_till_done()
+        freezer.tick(timedelta(seconds=58))
+        entry.runtime_data._tick(dt_util.now())
+        await hass.async_block_till_done()
+        assert hass.states.get(cost).last_updated == last_cost_change
+        assert entry.runtime_data.data.result.amount_for("energy") == Decimal("0.0062")
+    finally:
+        remove_listener()
 
 
 async def test_setup_collect_unload_reload_preserves_measurements(hass, contract, freezer, caplog):

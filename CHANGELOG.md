@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.4
+
+- Agrupa las actualizaciones normales de los sensores de factura cada minuto
+  para reducir el historial de Recorder. Los cambios de ciclo y de calidad se
+  publican al detectarse.
+- Publica los importes de los sensores en céntimos y el precio medio con cuatro
+  decimales. El cálculo y la exportación conservan su precisión.
+
 ## 0.3.3 — 6 de noviembre de 2026
 
 - Genera el calendario 2.0TD por reglas recurrentes locales, sin tabla anual,
