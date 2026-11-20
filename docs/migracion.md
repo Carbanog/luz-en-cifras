@@ -1,5 +1,17 @@
 # Actualización y compatibilidad
 
+## Frecuencia de publicación en 0.3.4
+
+La factura y los sensores derivados reflejan normalmente las lecturas nuevas en
+la actualización del siguiente minuto. Los cambios de ciclo y calidad se muestran
+al detectarse. La integración sigue procesando cada lectura y conserva los
+importes internos y exportados con su precisión habitual. Los sensores de coste
+publican céntimos y el precio medio, cuatro decimales.
+
+Actualiza desde HACS y reinicia Home Assistant. La versión mantiene los
+identificadores y el esquema de datos. La medida reduce los registros nuevos
+de Recorder y conserva el historial que ya existe.
+
 ## Calendario recurrente en 0.3.3
 
 Actualiza desde HACS y reinicia HA. No tienes que modificar el contrato ni añadir

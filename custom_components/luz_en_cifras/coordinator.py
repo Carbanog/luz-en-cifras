@@ -46,6 +46,14 @@ class CoordinatorData:
     error: str | None
     collection_warnings: tuple[str, ...] = ()
 
+    @property
+    def quality(self) -> str:
+        if self.result is None:
+            return "error"
+        if self.collection_warnings or self.result.quality == DataQuality.PARTIAL:
+            return "partial"
+        return "complete"
+
 
 class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
     """Keep raw data, effective prices and frozen historical calculations."""
@@ -220,7 +228,7 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
             await self._pvpc.async_refresh(when)
             if not self._stopping:
                 self._capture_prices(_now())
-                self._publish()
+                self._publish(notify=True)
         finally:
             self._pvpc_task = None
 
@@ -242,11 +250,12 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
         self._roll(local.date(), when=local)
         self._collect_power(local)
         self._capture_prices(local)
-        self._publish()
+        self._publish(notify=True)
 
     @callback
     def _handle_state_event(self, event: Event) -> None:
         now = _now()
+        previous_period = self._period
         self._roll(now.date(), when=now)
         source = event.data["entity_id"]
         state = event.data.get("new_state")
@@ -255,11 +264,17 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
             self._capture_prices(now)
         if source in self.source_ids:
             self._collect_source(source, now, state)
-        self._publish()
+        self._publish(notify=self._period != previous_period)
 
-    def _publish(self) -> None:
+    def _publish(self, *, notify: bool) -> None:
         self._store.async_delay_save(self._serialize, 10)
-        self.async_set_updated_data(self._calculate())
+        data = self._calculate()
+        if notify or data.quality != self.data.quality:
+            self.async_set_updated_data(data)
+        else:
+            # Retain the latest calculation without writing every reading to HA.
+            # The minute tick publishes it even if no more inputs arrive.
+            self.data = data
 
     def _capture_prices(self, when: datetime) -> None:
         active_groups = {group["group_id"] for group in self.config["groups"]}

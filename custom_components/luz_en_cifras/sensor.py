@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -25,7 +25,13 @@ from homeassistant.util import dt as dt_util
 
 from .const import CONF_CONTRACT_ID, CONF_CONTRACT_NAME, CONF_SHOW_SECONDARY, DOMAIN
 from .coordinator import CoordinatorData, LuzEnCifrasCoordinator
-from .domain import DataQuality, InvoiceResult
+from .domain import InvoiceResult
+
+
+def _published_amount(value: Decimal, precision: str) -> Decimal:
+    """Publish currency and price at useful precision, independently of billing."""
+    rounded = value.quantize(Decimal(precision), rounding=ROUND_HALF_UP)
+    return rounded if rounded else rounded.copy_abs()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -241,12 +247,7 @@ class LuzBaseSensor(CoordinatorEntity[LuzEnCifrasCoordinator], SensorEntity):
 
     @property
     def _quality(self) -> str:
-        data: CoordinatorData = self.coordinator.data
-        if data.result is None:
-            return "error"
-        if data.collection_warnings or data.result.quality == DataQuality.PARTIAL:
-            return "partial"
-        return "complete"
+        return self.coordinator.data.quality
 
 
 class LuzContractSensor(LuzBaseSensor):
@@ -267,7 +268,13 @@ class LuzContractSensor(LuzBaseSensor):
     @property
     def native_value(self) -> Decimal | int | str | None:
         result = self.coordinator.data.result
-        return self.entity_description.value_fn(result) if result else None
+        value = self.entity_description.value_fn(result) if result else None
+        if isinstance(value, Decimal):
+            if self.device_class == SensorDeviceClass.MONETARY:
+                return _published_amount(value, "0.01")
+            if self.entity_description.key == "effective_price":
+                return _published_amount(value, "0.0001")
+        return value
 
 
 class LuzQualitySensor(LuzBaseSensor):
@@ -324,13 +331,14 @@ class LuzGroupSensor(LuzBaseSensor):
         ]
         if not lines:
             return None
-        return sum(
+        value = sum(
             (
                 (line.quantity or Decimal()) if self.metric == "energy" else line.amount
                 for line in lines
             ),
             Decimal(),
         )
+        return _published_amount(value, "0.01") if self.metric == "cost" else value
 
 
 class LuzPvpcPriceSensor(LuzBaseSensor):
