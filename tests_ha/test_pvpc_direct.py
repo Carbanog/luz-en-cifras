@@ -77,6 +77,28 @@ async def test_direct_pvpc_prices_each_hour_and_restarts_offline_from_published_
         assert any("PVPC directo" in item for item in entry.runtime_data.data.collection_warnings)
 
 
+async def test_pvpc_quote_changes_between_invoice_publications(hass, contract, freezer):
+    freezer.move_to("2026-10-24 12:59:00+00:00")
+    contract["groups"][0]["tariff_mode"] = "pvpc"
+    hass.states.async_set("sensor.test_energy", "100", {"unit_of_measurement": "kWh"})
+    data = published()
+    data.sensors["PVPC"][datetime(2026, 10, 24, 13, tzinfo=UTC)] = 0.3
+    with patch("custom_components.luz_en_cifras.pvpc.PVPCData") as factory:
+        factory.return_value.async_update_all = AsyncMock(return_value=data)
+        entry = MockConfigEntry(domain=DOMAIN, data=contract, title="Casa", version=1)
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        entity_id = "sensor.casa_vivienda_precio_pvpc_sin_impuestos"
+        assert Decimal(hass.states.get(entity_id).state) == Decimal("0.1")
+        assert entry.runtime_data.data.result is None
+
+        freezer.tick(timedelta(minutes=1))
+        entry.runtime_data._tick(dt_util.now())
+        await hass.async_block_till_done()
+        assert Decimal(hass.states.get(entity_id).state) == Decimal("0.3")
+        assert entry.runtime_data.data.result is None
+
+
 async def test_cold_outage_collects_measurements_and_recovers_without_zero_price(
     hass, contract, freezer
 ):

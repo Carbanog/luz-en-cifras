@@ -359,17 +359,7 @@ class LuzPvpcPriceSensor(LuzBaseSensor):
 
     @property
     def native_value(self) -> Decimal | None:
-        now = dt_util.utcnow()
-        matches = [
-            rate
-            for rate in self.coordinator.ledger.rates
-            if rate.group_id == self.group_id
-            and rate.rate_id.startswith("pvpc:")
-            and rate.valid_from.astimezone(UTC) <= now
-            and rate.valid_to is not None
-            and now < rate.valid_to.astimezone(UTC)
-        ]
-        return matches[0].eur_per_kwh if len(matches) == 1 else None
+        return self.coordinator.current_pvpc_price(self.group_id, dt_util.utcnow())
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
