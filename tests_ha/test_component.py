@@ -50,6 +50,11 @@ async def test_frequent_readings_preserve_energy_and_batch_invoice_states(hass, 
         assert entry.runtime_data.data.result.amount_for("energy") == Decimal("0.006")
 
         freezer.tick(timedelta(seconds=1))
+        for _ in range(4):
+            entry.runtime_data._tick(dt_util.now())
+            await hass.async_block_till_done()
+            assert not energy_changes
+            freezer.tick(timedelta(minutes=1))
         entry.runtime_data._tick(dt_util.now())
         await hass.async_block_till_done()
         assert len(energy_changes) == 1
@@ -61,10 +66,11 @@ async def test_frequent_readings_preserve_energy_and_batch_invoice_states(hass, 
         freezer.tick(timedelta(seconds=2))
         hass.states.async_set(meter, "100.031", attributes)
         await hass.async_block_till_done()
-        freezer.tick(timedelta(seconds=58))
+        freezer.tick(timedelta(minutes=4, seconds=58))
         entry.runtime_data._tick(dt_util.now())
         await hass.async_block_till_done()
         assert hass.states.get(cost).last_updated == last_cost_change
+        assert len(energy_changes) == 2
         assert entry.runtime_data.data.result.amount_for("energy") == Decimal("0.0062")
     finally:
         remove_listener()

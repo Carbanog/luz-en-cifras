@@ -1,10 +1,11 @@
 # Actualización y compatibilidad
 
-## Frecuencia de publicación en 0.3.4
+## Frecuencia de publicación desde 0.3.5
 
 La factura y los sensores derivados reflejan normalmente las lecturas nuevas en
-la actualización del siguiente minuto. Los cambios de ciclo y calidad se muestran
-al detectarse. La integración sigue procesando cada lectura y conserva los
+una actualización cada cinco minutos. Los cambios de ciclo y calidad se muestran
+al detectarse. El precio PVPC vigente sigue actualizándose cuando cambia, con la
+comprobación de precio cada minuto. La integración procesa cada lectura y conserva los
 importes internos y exportados con su precisión habitual. Los sensores de coste
 publican céntimos y el precio medio, cuatro decimales.
 

@@ -33,6 +33,7 @@ from .domain.ledger import MeasurementLedger
 from .domain.models import EnergyRate
 
 _LOGGER = logging.getLogger(__name__)
+INVOICE_PUBLICATION_INTERVAL = timedelta(minutes=5)
 
 
 def _now() -> datetime:
@@ -75,6 +76,8 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
         self.revisions: list[dict[str, Any]] = []
         self._pvpc = None
         self._pvpc_task: asyncio.Task | None = None
+        self._published_pvpc: dict[str, Decimal] = {}
+        self._next_invoice_publication = datetime.min.replace(tzinfo=UTC)
         self._stopping = False
 
     @property
@@ -204,6 +207,8 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
             self._collect_source(source, now)
         self._stored_config = self.config
         self.data = self._calculate()
+        self._published_pvpc = self._current_pvpc_prices(now)
+        self._next_invoice_publication = now.astimezone(UTC) + INVOICE_PUBLICATION_INTERVAL
         self.entry.async_on_unload(
             async_track_state_change_event(
                 self.hass, list(self.source_ids | self.price_ids), self._handle_state_event
@@ -227,8 +232,9 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
         try:
             await self._pvpc.async_refresh(when)
             if not self._stopping:
-                self._capture_prices(_now())
-                self._publish(notify=True)
+                now = _now()
+                self._capture_prices(now)
+                self._publish(notify=self._pvpc_price_changed(now))
         finally:
             self._pvpc_task = None
 
@@ -247,10 +253,48 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
     @callback
     def _tick(self, now: datetime) -> None:
         local = now.astimezone(ZoneInfo("Europe/Madrid"))
+        previous_period = self._period
         self._roll(local.date(), when=local)
         self._collect_power(local)
         self._capture_prices(local)
-        self._publish(notify=True)
+        utc = now.astimezone(UTC)
+        invoice_due = utc >= self._next_invoice_publication
+        if invoice_due:
+            self._next_invoice_publication = utc + INVOICE_PUBLICATION_INTERVAL
+        price_changed = self._pvpc_price_changed(now)
+        self._publish(notify=invoice_due or self._period != previous_period or price_changed)
+
+    def _pvpc_price_changed(self, when: datetime) -> bool:
+        current = self._current_pvpc_prices(when)
+        changed = current != self._published_pvpc
+        self._published_pvpc = current
+        return changed
+
+    def _current_pvpc_prices(self, when: datetime) -> dict[str, Decimal]:
+        if self._pvpc is None:
+            return {}
+        prices: dict[str, Decimal] = {}
+        for group in self.config["groups"]:
+            if group.get("tariff_mode") == "pvpc":
+                group_id = group["group_id"]
+                price = self.current_pvpc_price(group_id, when)
+                if price is not None:
+                    prices[group_id] = price
+        return prices
+
+    def current_pvpc_price(self, group_id: str, when: datetime) -> Decimal | None:
+        """Return the unique published quote valid at this instant."""
+        utc = when.astimezone(UTC)
+        matches = [
+            rate.eur_per_kwh
+            for rate in self.ledger.rates
+            if rate.group_id == group_id
+            and rate.rate_id.startswith("pvpc:")
+            and rate.valid_from.astimezone(UTC) <= utc
+            and rate.valid_to is not None
+            and utc < rate.valid_to.astimezone(UTC)
+        ]
+        return matches[0] if len(matches) == 1 else None
 
     @callback
     def _handle_state_event(self, event: Event) -> None:
@@ -273,7 +317,7 @@ class LuzEnCifrasCoordinator(DataUpdateCoordinator[CoordinatorData]):
             self.async_set_updated_data(data)
         else:
             # Retain the latest calculation without writing every reading to HA.
-            # The minute tick publishes it even if no more inputs arrive.
+            # The scheduled publication runs even if no more inputs arrive.
             self.data = data
 
     def _capture_prices(self, when: datetime) -> None:

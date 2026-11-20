@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.5
+
+- Publica los estados ordinarios de facturación cada cinco minutos para reducir
+  el volumen de Recorder. El cálculo sigue utilizando todas las lecturas y se
+  mantienen las comprobaciones de potencia y precios cada minuto.
+- Los cambios de ciclo, calidad y precio PVPC vigente se publican al detectarse.
+
 ## 0.3.4
 
 - Agrupa las actualizaciones normales de los sensores de factura cada minuto
